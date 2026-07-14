@@ -1,0 +1,390 @@
+# TODO.md
+# N.Y Kitchen — Master Task Tracker
+
+> Update this file whenever a task status changes.
+> Authority: `PROJECT_BLUEPRINT.md` → `RULES.md` → `AI_DEVELOPMENT_RULES.md`
+> Current Phase: **Phase 1 — Static UI/UX Prototype and Documentation Preparation**
+
+---
+
+## Documentation
+
+- [x] Create `RULES.md`
+- [x] Create `AI_DEVELOPMENT_RULES.md`
+- [x] Create `PROJECT_STATE.md`
+- [x] Create `CHANGELOG.md`
+- [x] Create `DECISIONS.md`
+- [x] Create `TODO.md`
+- [x] Update `README.md`
+- [x] Create `.aiignore`
+- [x] Create `docs/` directory structure
+- [x] Create all `docs/` Markdown templates
+- [x] Create `ai/` directory structure
+- [x] Create all `ai/` Markdown files
+- [x] Create `skills/` directory structure
+- [x] Create all `skills/*/SKILL.md` files
+- [x] Create `skills/REGISTRY.md`
+- [x] Create `skills/CONTRIBUTING.md`
+- [x] Confirm password hashing algorithm
+- [x] Confirm session expiration policy
+- [x] Confirm account lockout threshold
+- [ ] **Review and approve all generated documentation** (Owner/Supervisor)
+- [ ] Confirm Supabase integration scope (open decision — see `DECISIONS.md` ADR-002)
+
+---
+
+## Architecture
+
+- [ ] Finalize folder structure in `docs/FOLDER_STRUCTURE.md`
+- [ ] Confirm state management choice (Provider) — record in `DECISIONS.md`
+- [ ] Confirm navigation choice (go_router) — record in `DECISIONS.md`
+- [x] Confirm receipt generation packages (printing, pdf)
+- [ ] Confirm chart library (fl_chart)
+- [x] Confirm SQLite package (drift or sqflite)
+- [ ] Design database schema — document in `docs/SQLITE_ARCHITECTURE.md`
+- [ ] Define data synchronization strategy — document in `docs/DATA_SYNCHRONIZATION.md`
+- [ ] Define sync conflict resolution policy — document in `docs/SYNC_CONFLICT_POLICY.md`
+- [ ] Define backup strategy for Android and Windows — document in `docs/BACKUP_STRATEGY.md`
+
+---
+
+## UI/UX (Phase 1 — Static Prototype)
+
+- [x] Set up Figma project and link to `docs/FIGMA_INTEGRATION.md`
+- [x] Define design tokens in `docs/DESIGN_SYSTEM.md`
+- [x] Create Login Screen (branded, responsive, role selector, show/hide password, remember me)
+- [x] Create Admin Dashboard (stat cards, chart, recent transactions, top selling, activities)
+- [x] Create Sales Reports (4 tabs, summary cards, transaction table, search, export, print)
+- [x] Create Food Management (CRUD table, search, add/edit/delete dialogs)
+- [x] Create Account Management (CRUD table, search, add/edit/disable/reset password dialogs)
+- [x] Create Activity Logs (audit table, search, role/date filter, export)
+- [x] Create Account Settings (profile, theme switch, about, version, save button)
+- [x] Create Cashier Home / New Order (3-panel desktop layout)
+- [x] Create Cashier Transaction History
+- [x] Create Cashier Account Settings
+- [x] Create confirmation dialog components (logout, delete)
+- [ ] Create Backup & Restore mockup
+- [ ] Create Unauthorized Page mockup
+- [ ] Create loading state components
+- [ ] Create empty state components
+- [ ] Create error state components
+- [ ] Create receipt preview mockup
+- [ ] Create dark and light theme mockups
+- [ ] Client review and approval of Phase 1 prototype
+
+---
+
+## Flutter (Phase 2+)
+
+> **NOT ALLOWED during Phase 1 static prototype.** Phase 1 is the static UI phase.
+> Begin Phase 2 (architecture, routing, shared widgets) after approval.
+
+- [ ] Set up feature-first folder structure
+- [ ] Configure Material 3 theme
+- [ ] Configure go_router navigation
+- [ ] Create shared widgets
+- [ ] Create domain models
+- [ ] Create repository interfaces
+- [ ] Create service layer
+
+---
+
+## Responsive Design (Phase 2+)
+
+- [ ] Implement mobile layout (drawer nav, single column, bottom sheet)
+- [ ] Implement tablet layout (compact sidebar, floating checkout)
+- [ ] Implement desktop layout (3-panel POS, sidebar nav)
+- [ ] Convert tables to card layouts on mobile
+
+---
+
+## Accessibility
+
+- [ ] Define accessibility requirements in `docs/ACCESSIBILITY.md`
+- [ ] Plan WCAG contrast requirements for color palette
+- [ ] Plan large touch targets (` 48dp) for mobile
+- [ ] Plan semantic labels for screen readers
+- [ ] Test accessibility in Phase 10
+
+---
+
+## SQLite (Phase 3)
+
+- [ ] Select SQLite package (sqflite or drift)
+- [ ] Design `users` table
+- [ ] Design `food_categories` table
+- [ ] Design `food_items` table
+- [ ] Design `transactions` table
+- [ ] Design `transaction_items` table
+- [ ] Design `activity_logs` table
+- [ ] Design `login_attempts` table
+- [ ] Design `app_settings` table
+- [ ] Design `backup_records` table
+- [ ] Implement database initialization
+- [ ] Implement migration strategy
+- [ ] Verify parameterized queries on all operations
+
+---
+
+## Supabase (Future Phase — Optional)
+
+- [ ] Confirm Supabase scope with project owner
+- [ ] Set up development Supabase project
+- [ ] Configure Row-Level Security policies
+- [ ] Configure authentication
+- [ ] Configure storage buckets
+- [ ] Document environment variable setup
+- [ ] Implement cloud backup
+- [ ] Implement synchronization queue
+- [ ] Implement retry policy
+
+---
+
+## Synchronization (Future Phase — Optional)
+
+- [ ] Define sync entity list
+- [ ] Design sync queue table
+- [ ] Implement device identification
+- [ ] Implement last-sync timestamp
+- [ ] Implement pending-sync status
+- [ ] Implement retry on reconnection
+- [ ] Implement duplicate prevention
+- [ ] Implement conflict resolution
+- [ ] Test offline -> online sync
+
+---
+
+## Authentication (Phase 4)
+
+- [ ] Implement login screen logic
+- [ ] Implement password hashing (PBKDF2 SHA-256 per ADR-013)
+- [ ] Implement failed login counter
+- [ ] Implement account lockout (5 attempts, 15 min lockout)
+- [ ] Implement session management
+- [ ] Implement session expiration (12 hours inactivity)
+- [ ] Implement automatic logout
+- [ ] Implement role-based route protection
+- [ ] Implement unauthorized page redirect
+
+---
+
+## Authorization
+
+- [ ] Define route guards in `docs/AUTHORIZATION.md`
+- [ ] Implement Admin route guards
+- [ ] Implement Cashier route guards
+- [ ] Test role bypass attempts
+
+---
+
+## Session Management
+
+- [ ] Define session expiration policy
+- [ ] Implement session token storage
+- [ ] Implement session expiration check
+- [ ] Implement logout session cleanup
+- [ ] Test session timeout behavior
+
+---
+
+## Security
+
+- [ ] Review CIA Triad implementation against `docs/CIA_TRIAD.md`
+- [ ] Complete OWASP checklist in `docs/OWASP_CHECKLIST.md`
+- [ ] Complete ISO/IEC 25010 evaluation in `docs/ISO25010_EVALUATION.md`
+- [ ] Complete threat model in `docs/THREAT_MODEL.md`
+- [ ] Verify no plain-text passwords stored
+- [ ] Verify parameterized queries throughout
+- [ ] Verify activity logs are immutable
+- [ ] Verify no secrets committed to source control
+- [ ] Perform security testing per `docs/SECURITY_TESTING.md`
+
+---
+
+## Activity Logs (Phase 8)
+
+- [ ] Implement automatic logging for all tracked events:
+  - [ ] Login (success and failure)
+  - [ ] Logout
+  - [ ] Transaction completed
+  - [ ] Transaction voided
+  - [ ] Transaction refunded
+  - [ ] Menu item added
+  - [ ] Menu item edited
+  - [ ] Menu item archived
+  - [ ] User created
+  - [ ] User edited
+  - [ ] User deactivated
+  - [ ] Password reset
+  - [ ] Backup created
+  - [ ] Backup restored
+  - [ ] Unauthorized access attempt
+- [ ] Implement read-only log viewer
+- [ ] Implement log search and filters
+- [ ] Implement log export (PDF, CSV)
+
+---
+
+## Transactions (Phase 6)
+
+- [ ] Implement order creation
+- [ ] Implement food item selection
+- [ ] Implement quantity management
+- [ ] Implement payment method selection
+- [ ] Implement checkout process
+- [ ] Implement receipt generation
+- [ ] Implement receipt printing
+- [ ] Implement transaction history
+- [ ] Implement void transaction (Admin only)
+- [ ] Implement refund transaction (Admin only)
+- [ ] Verify completed transactions cannot be deleted
+
+---
+
+## Menu Management (Phase 5)
+
+- [ ] Implement category CRUD
+- [ ] Implement food item CRUD
+- [ ] Implement food image handling (local storage, path-based)
+- [ ] Implement food availability toggle
+- [ ] Implement food archiving
+- [ ] Verify archived food items appear on old receipts
+- [ ] Verify archived food items cannot be added to new orders
+
+---
+
+## User Management (Phase 7)
+
+- [ ] Implement add user
+- [ ] Implement edit user
+- [ ] Implement activate/deactivate user
+- [ ] Implement reset password
+- [ ] Implement unlock account
+- [ ] Implement change user role
+- [ ] Verify final active Admin cannot deactivate itself
+
+---
+
+## Receipts (Phase 6)
+
+- [ ] Define receipt format in `docs/RECEIPT_SYSTEM.md`
+- [ ] Implement receipt number generation (unique)
+- [ ] Implement receipt rendering (business info, items, totals)
+- [ ] Implement receipt preview
+- [ ] Implement receipt printing
+- [ ] Implement receipt reprint (with Activity Log)
+- [ ] Implement receipt storage (local PDF — future)
+
+---
+
+## Reports (Phase 9)
+
+- [ ] Implement daily sales report
+- [ ] Implement weekly sales report
+- [ ] Implement monthly sales report
+- [ ] Implement annual sales report
+- [ ] Implement best-selling foods report
+- [ ] Implement cashier performance report
+- [ ] Implement login/security summary report
+- [ ] Implement report export (PDF, CSV)
+
+---
+
+## Backup and Restore
+
+- [ ] Define backup strategy in `docs/BACKUP_STRATEGY.md`
+- [ ] Implement manual backup
+- [ ] Implement backup history view
+- [ ] Implement backup restore
+- [ ] Implement backup Activity Log
+- [ ] Verify database preserved until restore succeeds
+- [ ] Test backup on Android
+- [ ] Test backup on Windows
+
+---
+
+## Testing
+
+- [ ] Write unit tests for validation rules
+- [ ] Write unit tests for password hashing
+- [ ] Write unit tests for transaction logic
+- [ ] Write widget tests for major screens
+- [ ] Write integration tests for checkout flow
+- [ ] Write integration tests for login flow
+- [ ] Write security tests per `docs/SECURITY_TESTING.md`
+- [ ] Test offline behavior
+- [ ] Test on Android phone
+- [ ] Test on Android tablet
+- [ ] Test on Windows desktop
+
+---
+
+## QA
+
+- [ ] Complete QA checklist in `docs/QA_CHECKLIST.md`
+- [ ] Complete test cases in `docs/TEST_CASES.md`
+- [ ] Verify responsive layouts on all target devices
+- [ ] Verify all validation rules
+- [ ] Verify all activity log triggers
+- [ ] Verify role-based access enforcement
+
+---
+
+## Performance
+
+- [ ] Define performance targets in `docs/PERFORMANCE_PLAN.md`
+- [ ] Profile login flow
+- [ ] Profile transaction save
+- [ ] Profile menu loading
+- [ ] Profile report generation
+- [ ] Optimize SQLite queries
+
+---
+
+## Android Deployment (Phase 11)
+
+- [ ] Configure Android signing
+- [ ] Configure minSdk and targetSdk
+- [ ] Build release APK
+- [ ] Test release build on Android phone
+- [ ] Test release build on Android tablet
+- [ ] Document deployment steps in `docs/ANDROID_DEPLOYMENT.md`
+
+---
+
+## Windows Deployment (Phase 11)
+
+- [ ] Configure Windows build
+- [ ] Build Windows installer
+- [ ] Test on Windows desktop
+- [ ] Document deployment steps in `docs/WINDOWS_DEPLOYMENT.md`
+
+---
+
+## Supabase Deployment (Future Phase — Optional)
+
+- [ ] Set up production Supabase project
+- [ ] Apply RLS policies
+- [ ] Configure production environment variables
+- [ ] Document deployment steps in `docs/SUPABASE_DEPLOYMENT.md`
+
+---
+
+## Presentation (Phase 11)
+
+- [ ] Prepare demo script per `docs/CLIENT_DEMO_PLAN.md`
+- [ ] Prepare final defense slides per `docs/DEFENSE_PLAN.md`
+- [ ] Record demo video (optional)
+- [ ] Prepare presentation per `docs/PRESENTATION.md`
+
+---
+
+## Final Defense (Phase 11)
+
+- [ ] Complete all features
+- [ ] Complete all testing
+- [ ] Complete all documentation
+- [ ] Prepare defense presentation
+- [ ] Practice demo walkthrough
+- [ ] Prepare Q&A responses for security topics
+- [ ] Prepare Q&A responses for architecture decisions

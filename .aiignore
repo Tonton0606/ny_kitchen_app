@@ -1,0 +1,147 @@
+# .aiignore
+# N.Y Kitchen — AI Context Exclusion File
+# This file tells AI tools which files and directories to exclude from context scanning.
+# Do not exclude: PROJECT_BLUEPRINT.md, RULES.md, docs/, ai/, skills/
+
+# ========================
+# Flutter Build Outputs
+# ========================
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.dart_tool/
+
+# ========================
+# Compiled / Generated Files
+# ========================
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+*.gr.dart
+lib/generated/
+lib/l10n/
+
+# ========================
+# IDE and Editor Files
+# ========================
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+
+# ========================
+# Local Secrets and Environment
+# ========================
+.env
+.env.local
+.env.production
+.env.development
+*.env
+secrets.dart
+supabase_config.dart
+firebase_options.dart
+google-services.json
+GoogleService-Info.plist
+
+# ========================
+# Database Files (Production)
+# ========================
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+databases/
+backups/*.db
+backups/*.sqlite
+
+# ========================
+# Generated Receipts and PDFs
+# ========================
+receipts/
+generated_pdfs/
+*.pdf
+
+# ========================
+# Food Images (Local uploads)
+# ========================
+local_images/
+user_uploaded/
+
+# ========================
+# Log Files (Sensitive)
+# ========================
+*.log
+logs/
+crash_reports/
+
+# ========================
+# Backup Files
+# ========================
+backups/
+*.backup
+*.bak
+
+# ========================
+# Android Build Artifacts
+# ========================
+android/.gradle/
+android/local.properties
+android/app/google-services.json
+android/app/src/main/assets/flutter_assets/
+
+# ========================
+# Windows Build Artifacts
+# ========================
+windows/x64/
+windows/runner/Release/
+windows/runner/Debug/
+
+# ========================
+# iOS/macOS/Web (Not target platforms but may exist)
+# ========================
+ios/Pods/
+ios/.symlinks/
+macos/Pods/
+macos/.symlinks/
+web/build/
+
+# ========================
+# Node (If any tooling is added)
+# ========================
+node_modules/
+
+# ========================
+# Temporary Files
+# ========================
+tmp/
+temp/
+.tmp/
+*.tmp
+
+# ========================
+# Package Lock (Contextually noisy)
+# ========================
+pubspec.lock
+
+# ========================
+# Files NOT to Exclude (Allowlist Reference)
+# ========================
+# PROJECT_BLUEPRINT.md — ALWAYS include
+# RULES.md — ALWAYS include
+# AI_DEVELOPMENT_RULES.md — ALWAYS include
+# PROJECT_STATE.md — ALWAYS include
+# CHANGELOG.md — ALWAYS include
+# TODO.md — ALWAYS include
+# DECISIONS.md — ALWAYS include
+# README.md — ALWAYS include
+# docs/ — ALWAYS include
+# ai/ — ALWAYS include
+# skills/ — ALWAYS include
+# lib/ — ALWAYS include (application source)
+# pubspec.yaml — ALWAYS include
+# analysis_options.yaml — ALWAYS include
