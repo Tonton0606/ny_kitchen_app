@@ -135,13 +135,11 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                         ),
                         const SizedBox(width: 12),
                          Text(
-                          'Profile Details',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
+                           'Profile Details',
+                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                             fontWeight: FontWeight.bold,
+                           ),
+                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -229,13 +227,11 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                         ),
                         const SizedBox(width: 12),
                          Text(
-                          'Application Preferences',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
+                           'Application Preferences',
+                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                             fontWeight: FontWeight.bold,
+                           ),
+                         ),
                       ],
                     ),
                     const SizedBox(height: 16),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'order_item_widget.dart';
+import '../../../shared/widgets/state_placeholders.dart';
 
 class OrderSummaryPanel extends StatelessWidget {
   final List<Map<String, dynamic>> orderItems;
@@ -21,6 +22,7 @@ class OrderSummaryPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     double subtotal = 0;
     for (var item in orderItems) {
       subtotal += (item['food']['price'] as double) * (item['quantity'] as int);
@@ -31,55 +33,32 @@ class OrderSummaryPanel extends StatelessWidget {
 
     return Container(
       width: 350,
-      color: Colors.white,
+      color: cs.surface,
       child: Column(
         children: [
-          Container(
+          Padding(
             padding: const EdgeInsets.all(24),
-            color: Theme.of(context).colorScheme.surface,
-            child:  Row(
+            child: Row(
               children: [
-                Icon(
-                  Icons.shopping_bag_outlined,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Current Order',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Icon(Icons.shopping_bag_outlined, color: cs.onSurface),
+                const SizedBox(width: 8),
+                Text('Current Order',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
                 ),
               ],
             ),
           ),
           Expanded(
             child: orderItems.isEmpty
-                ?  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.remove_shopping_cart,
-                          size: 64,
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'No items in order',
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
+                ? StatePlaceholders.empty(
+                    message: 'Your order is empty. Tap a menu item to add it.',
+                    icon: Icons.shopping_bag_outlined,
+                    context: context,
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.all(24),
                     itemCount: orderItems.length,
-                    separatorBuilder: (context, index) => Divider(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
+                    separatorBuilder: (context, index) => Divider(color: cs.outlineVariant),
                     itemBuilder: (context, index) {
                       return OrderItemWidget(
                         item: orderItems[index],
@@ -93,27 +72,26 @@ class OrderSummaryPanel extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24.0),
             decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
-                ),
-              ],
+              color: cs.surface,
             ),
             child: Column(
               children: [
+                Divider(height: 1, color: cs.outlineVariant),
+                const SizedBox(height: 16),
                 _buildSummaryRow(context, 'Subtotal', subtotal),
                 const SizedBox(height: 8),
                 _buildSummaryRow(context, 'Discount', -discount, isDiscount: true),
                 const SizedBox(height: 8),
                 _buildSummaryRow(context, 'Tax (12%)', tax),
-                Divider(
-                  height: 24,
-                  color: Theme.of(context).colorScheme.outlineVariant,
+                Divider(height: 24, color: cs.outlineVariant),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: _buildSummaryRow(context, 'Total', total, isTotal: true),
                 ),
-                _buildSummaryRow(context, 'Total', total, isTotal: true),
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -122,13 +100,11 @@ class OrderSummaryPanel extends StatelessWidget {
                       child: OutlinedButton(
                         onPressed: orderItems.isEmpty ? null : onClear,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
-                          side: BorderSide(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
+                          foregroundColor: cs.error,
+                          side: BorderSide(color: cs.error),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                         child: const Text('Clear'),
@@ -137,10 +113,13 @@ class OrderSummaryPanel extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       flex: 2,
-                      child: ElevatedButton(
+                      child: FilledButton(
                         onPressed: orderItems.isEmpty ? null : onCheckout,
-                        style: ElevatedButton.styleFrom(
+                        style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                         child: const Text(
                           'Checkout',
@@ -168,30 +147,22 @@ class OrderSummaryPanel extends StatelessWidget {
     bool isTotal = false,
     bool isDiscount = false,
   }) {
+    final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: isTotal
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            fontSize: isTotal ? 20 : 14,
-          ),
+        Text(label,
+          style: isTotal
+              ? TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: cs.onSurface)
+              : textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
-        Text(
-          '₱${amount.abs().toStringAsFixed(2)}',
-          style: TextStyle(
-            color: isDiscount
-                ? Colors.green
-                : (isTotal
-                      ? Theme.of(context).colorScheme.error
-                      : Theme.of(context).colorScheme.onSurface),
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            fontSize: isTotal ? 20 : 14,
-          ),
+        Text('₱${amount.abs().toStringAsFixed(2)}',
+          style: isTotal
+              ? TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: cs.onSurface)
+              : textTheme.bodyMedium?.copyWith(
+                  color: isDiscount ? cs.tertiary : cs.onSurface,
+                ),
         ),
       ],
     );

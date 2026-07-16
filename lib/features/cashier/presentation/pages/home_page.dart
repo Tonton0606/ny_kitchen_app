@@ -3,6 +3,7 @@ import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/utils/responsive.dart';
 import '../widgets/food_card.dart';
 import '../widgets/order_summary_panel.dart';
+import '../../../shared/widgets/state_placeholders.dart';
 
 class CashierHomePage extends StatefulWidget {
   const CashierHomePage({super.key});
@@ -58,19 +59,28 @@ class _CashierHomePageState extends State<CashierHomePage> {
   }
 
   void _checkout() {
-    // Mock checkout action
+    double subtotal = 0;
+    for (var item in _orderItems) {
+      subtotal += (item['food']['price'] as double) * (item['quantity'] as int);
+    }
+    double total = subtotal + subtotal * 0.12;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Checkout Successful'),
-        content: const Text('The transaction has been processed (Mock).'),
+        title: const Text('Complete Order'),
+        content: Text('Process this order of ₱${total.toStringAsFixed(2)}?'),
         actions: [
           TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _clearOrder();
             },
-            child: const Text('OK'),
+            child: const Text('Confirm'),
           ),
         ],
       ),
@@ -89,6 +99,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
               children: [
                 _buildTopBar(),
                 _buildCategories(),
+                Divider(height: 1, thickness: 1, color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
                 Expanded(child: _buildFoodGrid(isMobile)),
               ],
             ),
@@ -110,40 +121,54 @@ class _CashierHomePageState extends State<CashierHomePage> {
         ],
       ),
       floatingActionButton: isMobile
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => DraggableScrollableSheet(
-                    initialChildSize: 0.8,
-                    minChildSize: 0.5,
-                    maxChildSize: 0.95,
-                    builder: (_, controller) => OrderSummaryPanel(
-                      orderItems: _orderItems,
-                      onIncrease: _increaseQuantity,
-                      onDecrease: _decreaseQuantity,
-                      onRemove: _removeItem,
-                      onClear: _clearOrder,
-                      onCheckout: () {
-                        Navigator.pop(context);
-                        _checkout();
-                      },
+          ? Stack(
+              clipBehavior: Clip.none,
+              children: [
+                FloatingActionButton.extended(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => DraggableScrollableSheet(
+                        initialChildSize: 0.8,
+                        minChildSize: 0.5,
+                        maxChildSize: 0.95,
+                        builder: (_, controller) => OrderSummaryPanel(
+                          orderItems: _orderItems,
+                          onIncrease: _increaseQuantity,
+                          onDecrease: _decreaseQuantity,
+                          onRemove: _removeItem,
+                          onClear: _clearOrder,
+                          onCheckout: () {
+                            Navigator.pop(context);
+                            _checkout();
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  icon: const Icon(Icons.shopping_cart),
+                  label: const Text('Cart'),
+                ),
+                if (_orderItems.isNotEmpty)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Badge(
+                      label: Text('${_orderItems.length}'),
                     ),
                   ),
-                );
-              },
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.black,
-              icon: const Icon(Icons.shopping_cart),
-              label: Text('${_orderItems.length} Items'),
+              ],
             )
           : null,
     );
   }
 
   Widget _buildTopBar() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -153,39 +178,39 @@ class _CashierHomePageState extends State<CashierHomePage> {
             children: [
               Text(
                 'New Order',
-                style: TextStyle(
-                  fontSize: 24,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: cs.onSurface,
                 ),
               ),
               Text(
                 'Select items for the customer',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                style: TextStyle(color: cs.onSurfaceVariant),
               ),
             ],
           ),
           const Spacer(),
-          SizedBox(
-            width: 300,
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search food...',
-                prefixIcon:  Icon(
-                  Icons.search,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 300),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search food...',
+                  prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                  filled: true,
+                  fillColor: cs.surfaceContainerLow,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                 ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                onChanged: (value) => setState(() => _searchQuery = value),
               ),
-              onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
         ],
@@ -194,6 +219,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
   }
 
   Widget _buildCategories() {
+    final cs = Theme.of(context).colorScheme;
     return SizedBox(
       height: 60,
       child: ListView.builder(
@@ -211,16 +237,14 @@ class _CashierHomePageState extends State<CashierHomePage> {
               onSelected: (selected) {
                 if (selected) setState(() => _selectedCategoryId = cat['id']);
               },
-              selectedColor: Theme.of(context).colorScheme.primary,
-              backgroundColor: Colors.white,
+              selectedColor: cs.primary,
+              backgroundColor: cs.surfaceContainerLow,
               labelStyle: TextStyle(
-                color: isSelected
-                    ? Colors.black
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                color: isSelected ? Colors.white : cs.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(14),
               ),
             ),
           );
@@ -245,18 +269,15 @@ class _CashierHomePageState extends State<CashierHomePage> {
     }).toList();
 
     if (displayedFoods.isEmpty) {
-      return  Center(
-        child: Text(
-          'No food items found.',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
+      return StatePlaceholders.empty(
+        message: 'No menu items match your search. Try a different category or search term.',
+        icon: Icons.search_off,
+        context: context,
       );
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: isMobile ? 2 : 3,
         childAspectRatio: 0.8,

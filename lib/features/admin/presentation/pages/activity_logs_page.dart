@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/state_placeholders.dart';
+import '../../../shared/widgets/status_badge.dart';
 
 class ActivityLogsPage extends StatefulWidget {
   const ActivityLogsPage({super.key});
@@ -116,18 +118,24 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
             ),
           ),
           Expanded(
-            child: Card(
-              margin: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 2,
+            child: filteredLogs.isEmpty
+                ? StatePlaceholders.empty(
+                    context: context,
+                    message: 'No activity logs match your filters.',
+                    icon: Icons.security_outlined,
+                  )
+                : Card(
+                    margin: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+              elevation: 0,
               child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingRowHeight: 48,
-                  dataRowMinHeight: 44,
-                  dataRowMaxHeight: 52,
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        headingRowHeight: 48,
+                        dataRowMinHeight: 44,
+                        dataRowMaxHeight: 52,
                   columnSpacing: 24,
                   columns: const [
                     DataColumn(
@@ -232,61 +240,20 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                           ),
                         ),
                         DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: log['role'] == 'Admin'
-                                  ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1)
-                                  : (log['role'] == 'Cashier'
-                                        ? Theme.of(context).colorScheme.primary
-                                              .withValues(alpha: 0.1)
-                                        : Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant
-                                              .withValues(alpha: 0.1)),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              log['role'],
-                              style: TextStyle(
-                                color: log['role'] == 'Admin'
-                                    ? Theme.of(context).colorScheme.tertiary
-                                    : (log['role'] == 'Cashier'
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.onSurfaceVariant),
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          StatusBadge(
+                            text: log['role'],
+                            color: log['role'] == 'Admin'
+                                ? Theme.of(context).colorScheme.tertiary
+                                : (log['role'] == 'Cashier'
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context).colorScheme.onSurfaceVariant),
                           ),
                         ),
                         DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              log['module'],
-                              style:  TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                          StatusBadge(
+                            text: log['module'],
+                            color: Theme.of(context).colorScheme.onSurface,
+                            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                           ),
                         ),
                         DataCell(
@@ -296,23 +263,9 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                           ),
                         ),
                         DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              log['status'],
-                              style: TextStyle(
-                                color: statusColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          StatusBadge(
+                            text: log['status'],
+                            color: statusColor,
                           ),
                         ),
                         DataCell(
@@ -322,27 +275,14 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                           ),
                         ),
                         DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              log['ip'],
-                              style:  TextStyle(
-                                fontFamily: 'monospace',
-                                fontSize: 12,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
+                          Text(
+                            log['ip'],
+                            style:  TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),

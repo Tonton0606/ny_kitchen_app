@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/state_placeholders.dart';
 
 class SalesReportsPage extends StatefulWidget {
   const SalesReportsPage({super.key});
@@ -221,9 +222,12 @@ class _SalesReportsPageState extends State<SalesReportsPage>
           ),
           const SizedBox(height: 24),
           Card(
-            elevation: 2,
+            elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -265,7 +269,16 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                   ),
                 ),
                 const Divider(height: 1),
-                SingleChildScrollView(
+                MockData.transactions.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 48),
+                        child: StatePlaceholders.empty(
+                          context: context,
+                          message: 'No transactions found for this period.',
+                          icon: Icons.receipt_long_outlined,
+                        ),
+                      )
+                    : SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     headingRowHeight: 44,
@@ -439,8 +452,13 @@ class _SalesReportsPageState extends State<SalesReportsPage>
     String subtitle,
   ) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Row(
@@ -461,17 +479,14 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                 children: [
                   Text(
                     title,
-                    style:  TextStyle(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 11,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style:  TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),

@@ -6,28 +6,24 @@ class AccountSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child:  Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Account Settings',
-                  style: TextStyle(
-                    fontSize: 24,
+                Text('Account Settings',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: cs.onSurface,
                   ),
                 ),
-                Text(
-                  'Manage your profile and preferences',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                Text('Manage your profile and preferences',
+                  style: TextStyle(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -38,23 +34,20 @@ class AccountSettingsPage extends StatelessWidget {
               children: [
                  CircleAvatar(
                   radius: 50,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Icon(Icons.person, size: 50, color: Colors.white),
+                  backgroundColor: cs.primary,
+                  child: Icon(Icons.person, size: 50, color: cs.onPrimary),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'John Doe',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
                  Text(
-                  'Cashier',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 16,
-                  ),
-                ),
+                   'Cashier',
+                   textAlign: TextAlign.center,
+                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+                 ),
                 const SizedBox(height: 32),
                 _buildSettingsTile(
                   context: context,
@@ -94,22 +87,18 @@ class AccountSettingsPage extends StatelessWidget {
     required String title,
     required VoidCallback onTap,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        side:  BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
-        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: cs.outlineVariant),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).colorScheme.onSurface),
+        leading: Icon(icon, color: cs.onSurface),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-        trailing:  Icon(
-          Icons.chevron_right,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
         onTap: onTap,
       ),
     );

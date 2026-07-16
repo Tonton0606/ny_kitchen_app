@@ -8,11 +8,16 @@ class FoodCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final isAvailable = food['isAvailable'] as bool;
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      elevation: 2,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3)),
+      ),
       child: InkWell(
         onTap: isAvailable ? onAdd : null,
         child: Column(
@@ -25,12 +30,12 @@ class FoodCard extends StatelessWidget {
                   Image.network(food['image'], fit: BoxFit.cover),
                   if (!isAvailable)
                     Container(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      child:  Center(
+                      color: cs.surface.withValues(alpha: 0.7),
+                      child: Center(
                         child: Text(
                           'Unavailable',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                            color: cs.onSurface.withValues(alpha: 0.6),
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -47,10 +52,9 @@ class FoodCard extends StatelessWidget {
                 children: [
                   Text(
                     food['name'],
-                    style:  TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: cs.onSurface,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -58,8 +62,8 @@ class FoodCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     food['category'],
-                    style:  TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    style: TextStyle(
+                      color: cs.onSurfaceVariant,
                       fontSize: 12,
                     ),
                   ),
@@ -69,23 +73,19 @@ class FoodCard extends StatelessWidget {
                     children: [
                       Text(
                         '₱${food['price'].toStringAsFixed(2)}',
-                        style:  TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.error,
+                          color: cs.primary,
                           fontSize: 16,
                         ),
                       ),
                       if (isAvailable)
                         Container(
-                          decoration:  BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
+                          decoration: BoxDecoration(
+                            color: cs.primary,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
-                            Icons.add,
-                            size: 24,
-                            color: Colors.black,
-                          ),
+                          child: const Icon(Icons.add, size: 24, color: Colors.white),
                         ),
                     ],
                   ),

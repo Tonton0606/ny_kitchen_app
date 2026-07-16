@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../auth/presentation/pages/login_page.dart';
 
 class CashierNavRail extends StatelessWidget {
   final int selectedIndex;
@@ -11,6 +12,7 @@ class CashierNavRail extends StatelessWidget {
   });
 
   void _showLogoutDialog(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -23,12 +25,15 @@ class CashierNavRail extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              // Handle logout logic here in future
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+                (route) => false,
+              );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Colors.white,
+              backgroundColor: cs.error,
+              foregroundColor: cs.onError,
             ),
             child: const Text('Logout'),
           ),
@@ -39,34 +44,26 @@ class CashierNavRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return NavigationRail(
       selectedIndex: selectedIndex,
       onDestinationSelected: onDestinationSelected,
       labelType: NavigationRailLabelType.all,
-      backgroundColor: Colors.white,
-      selectedIconTheme:  IconThemeData(
-        color: Theme.of(context).colorScheme.primary,
-      ),
-      selectedLabelTextStyle:  TextStyle(
-        color: Theme.of(context).colorScheme.onSurface,
+      backgroundColor: cs.surface,
+      selectedIconTheme: IconThemeData(color: cs.primary),
+      selectedLabelTextStyle: TextStyle(
+        color: cs.onSurface,
         fontWeight: FontWeight.bold,
       ),
-      unselectedIconTheme:  IconThemeData(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-      unselectedLabelTextStyle:  TextStyle(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
+      unselectedIconTheme: IconThemeData(color: cs.onSurfaceVariant),
+      unselectedLabelTextStyle: TextStyle(color: cs.onSurfaceVariant),
       leading: Padding(
         padding: const EdgeInsets.only(bottom: 24.0, top: 16.0),
         child: CircleAvatar(
-          backgroundColor: Theme.of(
-            context,
-          ).colorScheme.primary.withValues(alpha: 0.2),
-          child:  Text(
-            'NY',
+          backgroundColor: cs.primary.withValues(alpha: 0.2),
+          child: Text('NY',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
+              color: cs.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -78,10 +75,7 @@ class CashierNavRail extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 24.0),
             child: IconButton(
-              icon:  Icon(
-                Icons.logout,
-                color: Theme.of(context).colorScheme.error,
-              ),
+              icon: Icon(Icons.logout, color: cs.error),
               tooltip: 'Logout',
               onPressed: () => _showLogoutDialog(context),
             ),

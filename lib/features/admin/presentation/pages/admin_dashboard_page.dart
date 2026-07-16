@@ -6,8 +6,15 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/responsive_data_table.dart';
 import '../../../shared/widgets/status_badge.dart';
 
-class AdminDashboardPage extends StatelessWidget {
+class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
+
+  @override
+  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
+}
+
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  int _selectedPeriod = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +38,7 @@ class AdminDashboardPage extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 8),
-                     Text(
+                    Text(
                       'Overview of today\'s business performance',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -39,14 +46,17 @@ class AdminDashboardPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    _buildPeriodChip(context, 'Today', true),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip(context, 'Week', false),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip(context, 'Month', false),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildPeriodChip(context, 'Today', 0),
+                      const SizedBox(width: 8),
+                      _buildPeriodChip(context, 'Week', 1),
+                      const SizedBox(width: 8),
+                      _buildPeriodChip(context, 'Month', 2),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -57,7 +67,7 @@ class AdminDashboardPage extends StatelessWidget {
               mainAxisSpacing: 16,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: isMobile ? 3.5 : 2.2,
+              childAspectRatio: isMobile ? 3.5 : isTablet ? 2.5 : 2.0,
               children: [
                 _buildStatCard(context, 
                   'Today\'s Revenue',
@@ -145,28 +155,33 @@ class AdminDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPeriodChip(BuildContext context, String label, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? Theme.of(context).colorScheme.primary
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
+  Widget _buildPeriodChip(BuildContext context, String label, int index) {
+    final cs = Theme.of(context).colorScheme;
+    final isSelected = _selectedPeriod == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedPeriod = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outlineVariant,
+              ? cs.primary
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? cs.primary
+                : cs.outlineVariant,
+          ),
         ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isSelected
-              ? Colors.black
-              : Theme.of(context).colorScheme.onSurfaceVariant,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected
+                ? Colors.white
+                : cs.onSurfaceVariant,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );
@@ -180,16 +195,22 @@ class AdminDashboardPage extends StatelessWidget {
     Color color,
   ) {
     return Card(
-      elevation: 2,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(icon, color: color, size: 28),
             ),
@@ -201,19 +222,17 @@ class AdminDashboardPage extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style:  TextStyle(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 13,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style:  TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -235,7 +254,13 @@ class AdminDashboardPage extends StatelessWidget {
 
   Widget _buildSectionCard(BuildContext context, String title, Widget content) {
     return Card(
-      elevation: 2,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -246,10 +271,8 @@ class AdminDashboardPage extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style:  TextStyle(
-                    fontSize: 18,
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 if (title == 'Recent Transactions')
@@ -276,19 +299,13 @@ class AdminDashboardPage extends StatelessWidget {
   }
 
   Widget _buildChartPlaceholder(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    return Container(
+      height: 200,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
-      child: Container(
-        height: 200,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Row(
@@ -302,16 +319,14 @@ class AdminDashboardPage extends StatelessWidget {
                     width: 24,
                     height: height,
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.7),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     d['hour'],
-                    style:  TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -321,7 +336,7 @@ class AdminDashboardPage extends StatelessWidget {
             }).toList(),
           ),
           const SizedBox(height: 12),
-           Text(
+          Text(
             'Sales Trend (Hourly)',
             style: TextStyle(
               fontSize: 12,
@@ -329,7 +344,6 @@ class AdminDashboardPage extends StatelessWidget {
             ),
           ),
         ],
-      ),
       ),
     );
   }
@@ -363,7 +377,7 @@ class AdminDashboardPage extends StatelessWidget {
         ]);
       },
       buildCard: (tx) {
-        return const SizedBox.shrink(); // Not used for this phase
+        return const SizedBox.shrink();
       },
     );
   }
@@ -384,15 +398,13 @@ class AdminDashboardPage extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.15),
+                  color: Theme.of(context).colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
                   child: Text(
                     '#${item['rank']}',
-                    style:  TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                       color: Theme.of(context).colorScheme.onSurface,
@@ -407,15 +419,14 @@ class AdminDashboardPage extends StatelessWidget {
                   children: [
                     Text(
                       item['name'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${item['sold']} sold',
-                      style:  TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -425,9 +436,8 @@ class AdminDashboardPage extends StatelessWidget {
               ),
               Text(
                 '\u20b1${(item['revenue'] as double).toStringAsFixed(0)}',
-                style: const TextStyle(
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
                 ),
               ),
             ],
@@ -476,15 +486,14 @@ class AdminDashboardPage extends StatelessWidget {
                   children: [
                     Text(
                       log['action'],
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
-                        fontSize: 13,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${log['user']} \u2022 ${log['timestamp']}',
-                      style:  TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),

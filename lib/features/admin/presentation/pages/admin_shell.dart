@@ -48,7 +48,7 @@ class _AdminShellState extends State<AdminShell> {
     final isMobile = Responsive.isMobile(context);
 
     return Scaffold(
-      appBar: isMobile ? AppBar(title: Text(_titles[_selectedIndex])) : null,
+      appBar: isMobile ? AppBar(title: Text(_titles[_selectedIndex]), elevation: 0) : null,
       drawer: isMobile
           ? AdminDrawer(
               selectedIndex: _selectedIndex,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/state_placeholders.dart';
+import '../../../shared/widgets/status_badge.dart';
 
 class AccountManagementPage extends StatefulWidget {
   const AccountManagementPage({super.key});
@@ -480,18 +482,24 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             ),
           ),
           Expanded(
-            child: Card(
-              margin: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 2,
+            child: filteredUsers.isEmpty
+                ? StatePlaceholders.empty(
+                    context: context,
+                    message: 'No accounts match your search.',
+                    icon: Icons.people_outline,
+                  )
+                : Card(
+                    margin: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+              elevation: 0,
               child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingRowHeight: 48,
-                  dataRowMinHeight: 52,
-                  dataRowMaxHeight: 60,
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        headingRowHeight: 48,
+                        dataRowMinHeight: 52,
+                        dataRowMaxHeight: 60,
                   columnSpacing: 24,
                   columns: const [
                     DataColumn(
@@ -581,57 +589,19 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                           ),
                         ),
                         DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: user['role'] == 'Admin'
-                                  ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1)
-                                  : Theme.of(context).colorScheme.primary
-                                        .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              user['role'],
-                              style: TextStyle(
-                                color: user['role'] == 'Admin'
-                                    ? Theme.of(context).colorScheme.tertiary
-                                    : Theme.of(context).colorScheme.primary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          StatusBadge(
+                            text: user['role'],
+                            color: user['role'] == 'Admin'
+                                ? Theme.of(context).colorScheme.tertiary
+                                : Theme.of(context).colorScheme.primary,
                           ),
                         ),
                         DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isActive
-                                  ? AppColors.success.withValues(alpha: 0.1)
-                                  : Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant
-                                        .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              user['status'],
-                              style: TextStyle(
-                                color: isActive
-                                    ? AppColors.success
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          StatusBadge(
+                            text: user['status'],
+                            color: isActive
+                                ? AppColors.success
+                                : Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         DataCell(

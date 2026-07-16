@@ -1,39 +1,42 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/mock_data.dart';
+import '../../../shared/widgets/state_placeholders.dart';
 
 class TransactionHistoryPage extends StatelessWidget {
   const TransactionHistoryPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child:  Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Transaction History',
-                  style: TextStyle(
-                    fontSize: 24,
+                Text('Transaction History',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: cs.onSurface,
                   ),
                 ),
-                Text(
-                  'View today\'s past orders',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                Text('View today\'s past orders',
+                  style: TextStyle(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
+            child: MockData.transactions.isEmpty
+                ? StatePlaceholders.empty(
+                    message: 'No transactions yet.',
+                    icon: Icons.receipt_long,
+                    context: context,
+                  )
+                : ListView.builder(
               padding: const EdgeInsets.all(24),
               itemCount: MockData.transactions.length,
               itemBuilder: (context, index) {
@@ -44,24 +47,20 @@ class TransactionHistoryPage extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 16),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    side:  BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: cs.outlineVariant),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(24),
                     leading: CircleAvatar(
                       backgroundColor: isVoided
-                          ? Theme.of(context).colorScheme.outlineVariant
-                          : Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.2),
+                          ? cs.outlineVariant
+                          : cs.primary.withValues(alpha: 0.2),
                       child: Icon(
                         isVoided ? Icons.block : Icons.receipt,
-                        color: isVoided
-                            ? Theme.of(context).colorScheme.onSurfaceVariant
-                            : Theme.of(context).colorScheme.primary,
+                              color: isVoided
+                                  ? cs.onSurfaceVariant
+                                  : cs.primary,
                       ),
                     ),
                     title: Row(
@@ -80,12 +79,8 @@ class TransactionHistoryPage extends StatelessWidget {
                           '₱${tx['total'].toStringAsFixed(2)}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: isVoided
-                                ? Theme.of(context).colorScheme.onSurfaceVariant
-                                : Theme.of(context).colorScheme.error,
-                            decoration: isVoided
-                                ? TextDecoration.lineThrough
-                                : null,
+                            color: isVoided ? cs.onSurfaceVariant : cs.error,
+                            decoration: isVoided ? TextDecoration.lineThrough : null,
                           ),
                         ),
                       ],
@@ -107,20 +102,16 @@ class TransactionHistoryPage extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: isVoided
-                                    ? Theme.of(
-                                        context,
-                                      ).colorScheme.outlineVariant
-                                    : Colors.green.withValues(alpha: 0.1),
+                                    ? cs.outlineVariant
+                                    : cs.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 tx['status'],
                                 style: TextStyle(
                                   color: isVoided
-                                      ? Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant
-                                      : Colors.green,
+                                      ? cs.onSurfaceVariant
+                                      : cs.primary,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -130,10 +121,7 @@ class TransactionHistoryPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    trailing:  Icon(
-                      Icons.chevron_right,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
                     onTap: () {
                       // Action to view details
                     },

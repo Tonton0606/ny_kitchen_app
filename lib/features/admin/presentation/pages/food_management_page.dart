@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/state_placeholders.dart';
+import '../../../shared/widgets/status_badge.dart';
 
 class FoodManagementPage extends StatefulWidget {
   const FoodManagementPage({super.key});
@@ -471,199 +473,187 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
             ),
           ),
           Expanded(
-            child: Card(
-              margin: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 2,
+            child: filteredFoods.isEmpty
+                ? StatePlaceholders.empty(
+                    context: context,
+                    message: 'No menu items match your search.',
+                    icon: Icons.restaurant_menu_outlined,
+                  )
+                : Card(
+                    margin: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+              elevation: 0,
               child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingRowHeight: 48,
-                  dataRowMinHeight: 52,
-                  dataRowMaxHeight: 60,
-                  columnSpacing: 24,
-                  columns: const [
-                    DataColumn(
-                      label: Text(
-                        'Image',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'Name',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'Category',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'Price',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'Status',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'Actions',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                  rows: filteredFoods.map((food) {
-                    final isAvailable = food['isAvailable'] as bool;
-                    return DataRow(
-                      cells: [
-                        DataCell(
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                food['image'],
-                                width: 48,
-                                height: 48,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => Container(
-                                  width: 48,
-                                  height: 48,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.outlineVariant,
-                                  child:  Icon(
-                                    Icons.image,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        headingRowHeight: 48,
+                        dataRowMinHeight: 52,
+                        dataRowMaxHeight: 60,
+                        columnSpacing: 24,
+                        columns: const [
+                          DataColumn(
+                            label: Text(
+                              'Image',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Name',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Category',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Price',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Status',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Actions',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                        rows: filteredFoods.map((food) {
+                          final isAvailable = food['isAvailable'] as bool;
+                          return DataRow(
+                            cells: [
+                              DataCell(
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      food['image'],
+                                      width: 48,
+                                      height: 48,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, _, _) => Container(
+                                        width: 48,
+                                        height: 48,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.outlineVariant,
+                                        child: Icon(
+                                          Icons.image,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Text(
-                            food['name'],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              food['category'],
-                              style:  TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                              DataCell(
+                                Text(
+                                  food['name'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Text(
-                            '\u20b1${food['price'].toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isAvailable
-                                  ? AppColors.success.withValues(alpha: 0.1)
-                                  : Theme.of(
+                              DataCell(
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
                                       context,
-                                    ).colorScheme.error.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              isAvailable ? 'Available' : 'Unavailable',
-                              style: TextStyle(
-                                color: isAvailable
-                                    ? AppColors.success
-                                    : Theme.of(context).colorScheme.error,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                    ).colorScheme.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    food['category'],
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Row(
-                            children: [
-                              _buildActionButton(
-                                icon: Icons.edit_outlined,
-                                color: Theme.of(context).colorScheme.primary,
-                                tooltip: 'Edit',
-                                onPressed: () =>
-                                    _showEditFoodDialog(context, food),
+                              DataCell(
+                                Text(
+                                  '\u20b1${food['price'].toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(width: 4),
-                              _buildActionButton(
-                                icon: Icons.delete_outline,
-                                color: Theme.of(context).colorScheme.error,
-                                tooltip: 'Delete',
-                                onPressed: () =>
-                                    _showDeleteDialog(context, food),
+                              DataCell(
+                                StatusBadge(
+                                  text: isAvailable ? 'Available' : 'Unavailable',
+                                  color: isAvailable
+                                      ? AppColors.success
+                                      : Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                              DataCell(
+                                Row(
+                                  children: [
+                                    _buildActionButton(
+                                      icon: Icons.edit_outlined,
+                                      color: Theme.of(context).colorScheme.primary,
+                                      tooltip: 'Edit',
+                                      onPressed: () =>
+                                          _showEditFoodDialog(context, food),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    _buildActionButton(
+                                      icon: Icons.delete_outline,
+                                      color: Theme.of(context).colorScheme.error,
+                                      tooltip: 'Delete',
+                                      onPressed: () =>
+                                          _showDeleteDialog(context, food),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
           ),
         ],
       ),

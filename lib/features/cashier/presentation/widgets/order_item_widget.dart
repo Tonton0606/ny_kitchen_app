@@ -26,11 +26,11 @@ class OrderItemWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(10),
             child: Image.network(
               food['image'],
-              width: 50,
-              height: 50,
+              width: 56,
+              height: 56,
               fit: BoxFit.cover,
             ),
           ),
@@ -41,7 +41,7 @@ class OrderItemWidget extends StatelessWidget {
               children: [
                 Text(
                   food['name'],
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -63,7 +63,7 @@ class OrderItemWidget extends StatelessWidget {
                 onPressed: onDecrease,
                 iconSize: 20,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
               ),
               const SizedBox(width: 8),
               Text(
@@ -77,14 +77,14 @@ class OrderItemWidget extends StatelessWidget {
                 onPressed: onIncrease,
                 iconSize: 20,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
               ),
             ],
           ),
           const SizedBox(width: 16),
           Text(
             '₱${total.toStringAsFixed(2)}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/widgets/app_logo.dart';
-import '../../../../../core/utils/responsive.dart';
 import '../../../../auth/presentation/pages/login_page.dart';
 
 class AdminNavRail extends StatelessWidget {
@@ -61,42 +59,40 @@ class AdminNavRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final isTablet = Responsive.isTablet(context);
 
     return NavigationRail(
       selectedIndex: selectedIndex,
       onDestinationSelected: onDestinationSelected,
-      labelType: isTablet ? NavigationRailLabelType.selected : NavigationRailLabelType.all,
+      labelType: NavigationRailLabelType.all,
+      minWidth: 80,
       backgroundColor: cs.surface,
       indicatorColor: cs.primaryContainer,
       selectedIconTheme: IconThemeData(color: cs.primary),
       selectedLabelTextStyle: TextStyle(color: cs.onSurface, fontWeight: FontWeight.bold, fontSize: 13),
       unselectedIconTheme: IconThemeData(color: cs.onSurfaceVariant),
       unselectedLabelTextStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
-      leading: const Padding(
-        padding: EdgeInsets.only(bottom: 24, top: 16),
-        child: AppLogo(size: 48, borderRadius: 14),
+      leading: Padding(
+        padding: const EdgeInsets.only(bottom: 24.0, top: 16.0),
+        child: CircleAvatar(
+          backgroundColor: cs.primary.withValues(alpha: 0.2),
+          child: Text('NY',
+            style: TextStyle(
+              color: cs.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       ),
       trailing: Expanded(
         child: Align(
           alignment: Alignment.bottomCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Divider(height: 1, color: cs.outlineVariant),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: IconButton(
-                  icon: Icon(Icons.logout, color: cs.error),
-                  tooltip: 'Logout',
-                  onPressed: () => _showLogoutDialog(context),
-                ),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 24.0),
+            child: IconButton(
+              icon: Icon(Icons.logout, color: cs.error),
+              tooltip: 'Logout',
+              onPressed: () => _showLogoutDialog(context),
+            ),
           ),
         ),
       ),

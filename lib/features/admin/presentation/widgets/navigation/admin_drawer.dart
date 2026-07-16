@@ -80,9 +80,9 @@ class AdminDrawer extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text('Admin Portal', style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('Admin Portal', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.black)),
                 const SizedBox(height: 4),
-                Text('N.Y Kitchen POS', style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                Text('N.Y Kitchen POS', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
               ],
             ),
           ),
@@ -127,7 +127,7 @@ class AdminDrawer extends StatelessWidget {
         ),
       ),
       selected: isSelected,
-      selectedTileColor: cs.primaryContainer.withValues(alpha: 0.5),
+      selectedTileColor: cs.primaryContainer.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onTap: () {
         onDestinationSelected(index);
