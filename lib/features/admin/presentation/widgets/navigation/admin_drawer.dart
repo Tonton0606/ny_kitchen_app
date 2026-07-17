@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../auth/presentation/pages/login_page.dart';
 
 class AdminDrawer extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
+  final VoidCallback? onSettingsTap;
 
   const AdminDrawer({
     super.key,
     required this.selectedIndex,
     required this.onDestinationSelected,
+    this.onSettingsTap,
   });
 
   void _showLogoutDialog(BuildContext context) {
@@ -20,17 +23,17 @@ class AdminDrawer extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
+                color: AppColors.brandRed.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.logout, color: Theme.of(context).colorScheme.error, size: 28),
+              child: const Icon(Icons.logout, color: AppColors.brandRed, size: 28),
             ),
             const SizedBox(width: 16),
             const Expanded(child: Text('Confirm Logout', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
           ],
         ),
         content: Text('Are you sure you want to log out of your account?',
-          style: TextStyle(fontSize: 15, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          style: const TextStyle(fontSize: 15, color: AppColors.mutedText),
         ),
         actions: [
           TextButton(
@@ -46,7 +49,7 @@ class AdminDrawer extends StatelessWidget {
               );
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: AppColors.brandRed,
               foregroundColor: Colors.white,
             ),
             child: const Text('Logout', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
@@ -58,51 +61,56 @@ class AdminDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Drawer(
+      backgroundColor: AppColors.darkCharcoal,
       child: Column(
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(color: cs.primary),
+            decoration: const BoxDecoration(color: AppColors.darkCharcoal),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 60, height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Center(
-                    child: Text('NY',
-                      style: TextStyle(color: cs.primary, fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: 1),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    onSettingsTap?.call();
+                  },
+                  child: Container(
+                    width: 60, height: 60,
+                    decoration: BoxDecoration(
+                      color: AppColors.goldenYellow,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Center(
+                      child: Text('NY',
+                        style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: 1),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text('Admin Portal', style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text('Admin Portal', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                Text('N.Y Kitchen POS', style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                const Text('N.Y Kitchen POS', style: TextStyle(color: Colors.white70, fontSize: 13)),
               ],
             ),
           ),
           Expanded(
             child: ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               children: [
-                _buildItem(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', 0, cs, context),
-                _buildItem(Icons.bar_chart_outlined, Icons.bar_chart, 'Sales Reports', 1, cs, context),
-                _buildItem(Icons.restaurant_menu_outlined, Icons.restaurant_menu, 'Food Management', 2, cs, context),
-                _buildItem(Icons.people_outline, Icons.people, 'Account Management', 3, cs, context),
-                _buildItem(Icons.security_outlined, Icons.security, 'Activity Logs', 4, cs, context),
-                _buildItem(Icons.settings_outlined, Icons.settings, 'Account Settings', 5, cs, context),
+                _buildItem(Icons.space_dashboard_outlined, Icons.space_dashboard, 'Dashboard', 0, context),
+                _buildItem(Icons.trending_up_outlined, Icons.trending_up, 'Sales Reports', 1, context),
+                _buildItem(Icons.menu_book_outlined, Icons.menu_book, 'Food Management', 2, context),
+                _buildItem(Icons.badge_outlined, Icons.badge, 'Account Management', 3, context),
+                _buildItem(Icons.assignment_outlined, Icons.assignment, 'Activity Logs', 4, context),
               ],
             ),
           ),
-          Divider(height: 1, color: cs.outlineVariant),
+          const Divider(height: 1, color: Colors.white12),
           ListTile(
-            leading: Icon(Icons.logout, color: cs.error),
-            title: Text('Logout', style: TextStyle(color: cs.error, fontWeight: FontWeight.w600)),
+            leading: const Icon(Icons.logout, color: AppColors.brandRed),
+            title: const Text('Logout', style: TextStyle(color: AppColors.brandRed, fontWeight: FontWeight.w600)),
             onTap: () {
               Navigator.pop(context);
               _showLogoutDialog(context);
@@ -114,20 +122,20 @@ class AdminDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildItem(IconData icon, IconData selectedIcon, String title, int index, ColorScheme cs, BuildContext context) {
+  Widget _buildItem(IconData icon, IconData selectedIcon, String title, int index, BuildContext context) {
     final isSelected = selectedIndex == index;
     return ListTile(
       leading: Icon(isSelected ? selectedIcon : icon,
-        color: isSelected ? cs.primary : cs.onSurfaceVariant,
+        color: isSelected ? AppColors.goldenYellow : Colors.white70,
       ),
       title: Text(title,
         style: TextStyle(
-          color: isSelected ? cs.onSurface : cs.onSurfaceVariant,
+          color: isSelected ? Colors.white : Colors.white70,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       selected: isSelected,
-      selectedTileColor: cs.primaryContainer.withValues(alpha: 0.5),
+      selectedTileColor: AppColors.goldenYellow.withValues(alpha: 0.15),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onTap: () {
         onDestinationSelected(index);

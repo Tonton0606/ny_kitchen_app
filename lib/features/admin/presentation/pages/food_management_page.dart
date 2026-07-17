@@ -11,166 +11,10 @@ class FoodManagementPage extends StatefulWidget {
 
 class _FoodManagementPageState extends State<FoodManagementPage> {
   String _searchQuery = '';
+  bool _showAddFood = false;
 
-  void _showAddFoodDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child:  Icon(
-                Icons.add_circle_outline,
-                color: Theme.of(context).colorScheme.primary,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            const Text(
-              'Add Food Item',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        content: SizedBox(
-          width: 400,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                      style: BorderStyle.solid,
-                    ),
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                         Icon(
-                          Icons.image_outlined,
-                          size: 36,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Tap to add image',
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Food Name',
-                    hintText: 'Enter food name',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
-                  ),
-                  items: MockData.categories
-                      .where((c) => c['name'] != 'All Foods')
-                      .map(
-                        (c) => DropdownMenuItem(
-                          value: c['name'] as String,
-                          child: Text(c['name']),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (val) {},
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Price',
-                    hintText: '0.00',
-                    prefixText: '\u20b1 ',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  title: const Text('Available'),
-                  subtitle: const Text('Show this item on the menu'),
-                  value: true,
-                  onChanged: (val) {},
-                  activeTrackColor: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.5),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text(
-              'Save Item',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  void _openAddFood() => setState(() => _showAddFood = true);
+  void _closeAddFood() => setState(() => _showAddFood = false);
 
   void _showEditFoodDialog(BuildContext context, Map<String, dynamic> food) {
     final isAvailable = food['isAvailable'] as bool;
@@ -186,12 +30,12 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  color: AppColors.goldenYellow.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.edit_outlined,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: AppColors.goldenYellow,
                 size: 28,
               ),
             ),
@@ -236,7 +80,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
+                    fillColor: Colors.white,
                   ),
                   controller: TextEditingController(text: food['name']),
                 ),
@@ -248,7 +92,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
+                    fillColor: Colors.white,
                   ),
                   initialValue: food['category'],
                   items: MockData.categories
@@ -271,7 +115,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
+                    fillColor: Colors.white,
                   ),
                   controller: TextEditingController(
                     text: food['price'].toStringAsFixed(2),
@@ -304,7 +148,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: AppColors.goldenYellow,
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -341,7 +185,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
               ),
               child:  Icon(
                 Icons.delete_outline,
-                color: Theme.of(context).colorScheme.error,
+                color: AppColors.brandRed,
                 size: 28,
               ),
             ),
@@ -361,7 +205,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
               'Are you sure you want to delete "${food['name']}"?',
               style:  TextStyle(
                 fontSize: 15,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppColors.mutedText,
               ),
             ),
             const SizedBox(height: 8),
@@ -369,7 +213,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
               'This action cannot be undone.',
               style: TextStyle(
                 fontSize: 13,
-                color: Theme.of(context).colorScheme.error,
+                color: AppColors.brandRed,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -386,7 +230,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: AppColors.brandRed,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -413,8 +257,10 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     }).toList();
 
     return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
@@ -424,24 +270,24 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Food Management',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
                     ),
-                    SizedBox(height: 8),
-                    Text(
+                    const SizedBox(height: 8),
+                    const Text(
                       'Add, edit, and manage menu items',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      style: TextStyle(color: AppColors.mutedText, fontSize: 15),
                     ),
                   ],
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => _showAddFoodDialog(context),
+                  onPressed: _openAddFood,
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Add Food'),
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.goldenYellow,
+                    foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 12,
@@ -465,18 +311,19 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
+                  fillColor: Colors.white,
                 ),
               ),
             ),
           ),
           Expanded(
-            child: Card(
+            child: Container(
               margin: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              shape: RoundedRectangleBorder(
+              decoration: BoxDecoration(
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.softBorder),
               ),
-              elevation: 2,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
@@ -595,7 +442,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                             child: Text(
                               food['category'],
                               style:  TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
+                                color: AppColors.goldenYellow,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -630,7 +477,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                               style: TextStyle(
                                 color: isAvailable
                                     ? AppColors.success
-                                    : Theme.of(context).colorScheme.error,
+                                    : AppColors.brandRed,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -642,7 +489,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                             children: [
                               _buildActionButton(
                                 icon: Icons.edit_outlined,
-                                color: Theme.of(context).colorScheme.primary,
+                                color: AppColors.goldenYellow,
                                 tooltip: 'Edit',
                                 onPressed: () =>
                                     _showEditFoodDialog(context, food),
@@ -650,7 +497,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                               const SizedBox(width: 4),
                               _buildActionButton(
                                 icon: Icons.delete_outline,
-                                color: Theme.of(context).colorScheme.error,
+                                color: AppColors.brandRed,
                                 tooltip: 'Delete',
                                 onPressed: () =>
                                     _showDeleteDialog(context, food),
@@ -664,6 +511,154 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                 ),
               ),
             ),
+            ),
+          ],
+        ),
+        if (_showAddFood) _buildAddFoodPanel(),
+      ],
+    ),
+  );
+  }
+
+  Widget _buildAddFoodPanel() {
+    return Positioned.fill(
+      child: Row(
+        children: [
+          Container(
+            width: 500,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(right: BorderSide(color: AppColors.softBorder)),
+              boxShadow: const [
+                BoxShadow(color: Colors.black26, blurRadius: 12, offset: Offset(4, 0)),
+              ],
+            ),
+            child: Column(
+              children: [
+                _buildPanelHeader(),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(24),
+                    children: [
+                      Container(
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: AppColors.softBorder.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.softBorder),
+                        ),
+                        child: const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.image_outlined, size: 36, color: AppColors.mutedText),
+                              SizedBox(height: 8),
+                              Text('Tap to add image', style: TextStyle(color: AppColors.mutedText, fontSize: 13)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Food Name',
+                          hintText: 'Enter food name',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(
+                          labelText: 'Category',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        items: MockData.categories
+                            .where((c) => c['name'] != 'All Foods')
+                            .map((c) => DropdownMenuItem(value: c['name'] as String, child: Text(c['name'])))
+                            .toList(),
+                        onChanged: (val) {},
+                      ),
+                      const SizedBox(height: 16),
+                      const TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Price',
+                          hintText: '0.00',
+                          prefixText: '\u20b1 ',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 16),
+                      SwitchListTile(
+                        title: const Text('Available', style: TextStyle(fontWeight: FontWeight.w500, color: AppColors.darkCharcoal)),
+                        subtitle: const Text('Show this item on the menu', style: TextStyle(color: AppColors.mutedText)),
+                        value: true,
+                        onChanged: (val) {},
+                        activeTrackColor: AppColors.goldenYellow.withValues(alpha: 0.5),
+                        activeThumbColor: AppColors.goldenYellow,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: _closeAddFood,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.goldenYellow,
+                            foregroundColor: Colors.black,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Save Item', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: _closeAddFood,
+              child: Container(color: Colors.black38),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPanelHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.softBorder)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.goldenYellow.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.add_circle_outline, color: AppColors.goldenYellow, size: 20),
+          ),
+          const SizedBox(width: 12),
+          const Text('Add Food Item', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal)),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.close),
+            color: AppColors.darkCharcoal,
+            onPressed: _closeAddFood,
           ),
         ],
       ),

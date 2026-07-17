@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/food_image.dart';
 
 class FoodCard extends StatelessWidget {
   final Map<String, dynamic> food;
   final VoidCallback onAdd;
+  final VoidCallback? onRemove;
+  final bool isInCart;
 
-  const FoodCard({super.key, required this.food, required this.onAdd});
+  const FoodCard({
+    super.key,
+    required this.food,
+    required this.onAdd,
+    this.onRemove,
+    this.isInCart = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,9 +22,18 @@ class FoodCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      elevation: 2,
+      elevation: isInCart ? 2 : 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isInCart ? AppColors.goldenYellow : AppColors.softBorder,
+          width: isInCart ? 2 : 1,
+        ),
+      ),
       child: InkWell(
-        onTap: isAvailable ? onAdd : null,
+        onTap: isAvailable
+            ? (isInCart ? onRemove : onAdd)
+            : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -22,21 +41,9 @@ class FoodCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(food['image'], fit: BoxFit.cover),
-                  if (!isAvailable)
-                    Container(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      child:  Center(
-                        child: Text(
-                          'Unavailable',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ),
+                  FoodImage(food: food),
+                  if (isInCart)
+                    Container(color: AppColors.goldenYellow.withValues(alpha: 0.15)),
                 ],
               ),
             ),
@@ -47,7 +54,7 @@ class FoodCard extends StatelessWidget {
                 children: [
                   Text(
                     food['name'],
-                    style:  TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                       color: Theme.of(context).colorScheme.onSurface,
@@ -58,36 +65,19 @@ class FoodCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     food['category'],
-                    style:  TextStyle(
+                    style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '₱${food['price'].toStringAsFixed(2)}',
-                        style:  TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.error,
-                          fontSize: 16,
-                        ),
-                      ),
-                      if (isAvailable)
-                        Container(
-                          decoration:  BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.add,
-                            size: 24,
-                            color: Colors.black,
-                          ),
-                        ),
-                    ],
+                  Text(
+                    '₱${food['price'].toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),

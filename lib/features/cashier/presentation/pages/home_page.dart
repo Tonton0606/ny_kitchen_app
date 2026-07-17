@@ -51,6 +51,12 @@ class _CashierHomePageState extends State<CashierHomePage> {
     });
   }
 
+  void _removeFoodFromCart(String foodId) {
+    setState(() {
+      _orderItems.removeWhere((item) => item['food']['id'] == foodId);
+    });
+  }
+
   void _clearOrder() {
     setState(() {
       _orderItems.clear();
@@ -62,7 +68,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Checkout Successful'),
+        title: const Text('Checkout Successful', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         content: const Text('The transaction has been processed (Mock).'),
         actions: [
           TextButton(
@@ -217,7 +223,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
                 color: isSelected
                     ? Colors.black
                     : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontWeight: FontWeight.bold,
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -255,6 +261,8 @@ class _CashierHomePageState extends State<CashierHomePage> {
       );
     }
 
+    final foodIdsInCart = _orderItems.map((item) => item['food']['id'] as String).toSet();
+
     return GridView.builder(
       padding: const EdgeInsets.all(24),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -265,9 +273,13 @@ class _CashierHomePageState extends State<CashierHomePage> {
       ),
       itemCount: displayedFoods.length,
       itemBuilder: (context, index) {
+        final food = displayedFoods[index];
+        final inCart = foodIdsInCart.contains(food['id']);
         return FoodCard(
-          food: displayedFoods[index],
-          onAdd: () => _addToOrder(displayedFoods[index]),
+          food: food,
+          isInCart: inCart,
+          onAdd: () => _addToOrder(food),
+          onRemove: () => _removeFoodFromCart(food['id']),
         );
       },
     );

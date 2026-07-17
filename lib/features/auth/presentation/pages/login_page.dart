@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/ny_watermark.dart';
 import '../../../admin/presentation/pages/admin_shell.dart';
 import '../../../cashier/presentation/pages/cashier_shell.dart';
 
@@ -398,87 +399,199 @@ class _PromotionalPanel extends StatelessWidget {
 
     return ColoredBox(
       color: AppColors.goldenYellow,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final minHeight = (constraints.maxHeight - 96).clamp(
-            0.0,
-            double.infinity,
-          );
+      child: Stack(
+        children: [
+          const NyWatermark(),
+          Column(
+        children: [
+          const _PastilHero(),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final minHeight = (constraints.maxHeight - 96).clamp(
+                  0.0,
+                  double.infinity,
+                );
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 64, vertical: 48),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: minHeight),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/images/branding/ny_kitchen_emblem.png',
-                        height: 36,
-                        fit: BoxFit.contain,
-                        semanticLabel: 'N.Y Kitchen emblem',
-                      ),
-                      const SizedBox(width: 9),
-                      const Text(
-                        'N.Y KITCHEN',
-                        style: TextStyle(
-                          color: AppColors.darkCharcoal,
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.6,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 68),
-                  Transform.translate(
-                    offset: const Offset(0, 32),
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 64, vertical: 48),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: minHeight),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'One counter.\nEvery order, tracked.',
-                          style: theme.textTheme.headlineLarge?.copyWith(
-                            color: AppColors.darkCharcoal,
-                            fontSize: 40,
-                            fontWeight: FontWeight.w800,
-                            height: 1.2,
-                            letterSpacing: -0.8,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 560),
-                          child: Text(
-                            'A clear, reliable workspace for taking orders and keeping every transaction organized.',
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: AppColors.darkCharcoal.withValues(
-                                alpha: 0.76,
-                              ),
-                              height: 1.5,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/images/branding/ny_kitchen_emblem.png',
+                              height: 36,
+                              fit: BoxFit.contain,
+                              semanticLabel: 'N.Y Kitchen emblem',
                             ),
-                          ),
+                            const SizedBox(width: 9),
+                            const Text(
+                              'N.Y KITCHEN',
+                              style: TextStyle(
+                                color: AppColors.darkCharcoal,
+                                fontSize: 19,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 48),
-                        const FractionallySizedBox(
-                          widthFactor: 0.82,
-                          alignment: Alignment.centerLeft,
-                          child: _OrderCard(),
+                        const SizedBox(height: 68),
+                        Transform.translate(
+                          offset: const Offset(0, 32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'One counter.\nEvery order, tracked.',
+                                style: theme.textTheme.headlineLarge?.copyWith(
+                                  color: AppColors.darkCharcoal,
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.2,
+                                  letterSpacing: -0.8,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 560),
+                                child: Text(
+                                  'A clear, reliable workspace for taking orders and keeping every transaction organized.',
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    color: AppColors.darkCharcoal.withValues(
+                                      alpha: 0.76,
+                                    ),
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 48),
+                              const FractionallySizedBox(
+                                widthFactor: 0.82,
+                                alignment: Alignment.centerLeft,
+                                child: _OrderCard(),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ],
+                );
+              },
+            ),
+          ),
+          const _PastilHero(),
+        ],
+      ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PastilHero extends StatefulWidget {
+  const _PastilHero();
+
+  @override
+  State<_PastilHero> createState() => _PastilHeroState();
+}
+
+class _PastilHeroState extends State<_PastilHero>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _floatAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+    _floatAnimation = Tween<double>(begin: -8, end: 8).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  static const _images = [
+    'assets/images/branding/pastil_boiled_egg-removebg-preview.png',
+    'assets/images/branding/pastil_chicken_franks-removebg-preview.png',
+    'assets/images/branding/pastil_hashbrown-removebg-preview.png',
+    'assets/images/branding/pastil_hungarian-removebg-preview.png',
+    'assets/images/branding/pastil_korean_spam-removebg-preview.png',
+    'assets/images/branding/pastil_lumpiang_shanghai-removebg-preview.png',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      alignment: Alignment.center,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: Center(
+              child: Transform.rotate(
+                angle: -0.15,
+                child: Opacity(
+                  opacity: 0.04,
+                  child: Text(
+                    'NY',
+                    style: TextStyle(
+                      color: AppColors.darkCharcoal,
+                      fontSize: 180,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 8,
+                    ),
+                  ),
+                ),
               ),
             ),
-          );
-        },
+          ),
+          AnimatedBuilder(
+            animation: _floatAnimation,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(_floatAnimation.value, 0),
+                child: child,
+              );
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                for (int i = 0; i < _images.length; i++)
+                  Transform.translate(
+                    offset: Offset(
+                      i < _images.length - 1 ? -36.0 : 0,
+                      0,
+                    ),
+                    child: Image.asset(
+                      _images[i],
+                      height: 160 + (i.isEven ? 30 : 0),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

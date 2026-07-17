@@ -5,6 +5,7 @@ import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/responsive_data_table.dart';
 import '../../../shared/widgets/status_badge.dart';
+import '../../../shared/widgets/ny_watermark.dart';
 
 class AdminDashboardPage extends StatelessWidget {
   const AdminDashboardPage({super.key});
@@ -15,7 +16,10 @@ class AdminDashboardPage extends StatelessWidget {
     final isTablet = Responsive.isTablet(context);
 
     return Scaffold(
-      body: SingleChildScrollView(
+      body: Stack(
+        children: [
+          const NyWatermark(),
+          SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -26,16 +30,14 @@ class AdminDashboardPage extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Dashboard',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
                     ),
                     const SizedBox(height: 8),
-                     Text(
+                     const Text(
                       'Overview of today\'s business performance',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      style: TextStyle(color: AppColors.mutedText, fontSize: 15),
                     ),
                   ],
                 ),
@@ -78,14 +80,14 @@ class AdminDashboardPage extends StatelessWidget {
                   '₱425,000.00',
                   '↑ 15.2% vs last month',
                   Icons.show_chart,
-                  Theme.of(context).colorScheme.tertiary,
+                  AppColors.tertiary,
                 ),
                 _buildStatCard(context, 
                   'Active Cashiers',
                   '2',
                   'Currently on shift',
                   Icons.people,
-                  Theme.of(context).colorScheme.primary,
+                  AppColors.goldenYellow,
                 ),
               ],
             ),
@@ -142,6 +144,8 @@ class AdminDashboardPage extends StatelessWidget {
           ],
         ),
       ),
+        ],
+      ),
     );
   }
 
@@ -149,22 +153,16 @@ class AdminDashboardPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isSelected
-            ? Theme.of(context).colorScheme.primary
-            : Colors.transparent,
+        color: isSelected ? AppColors.goldenYellow : Colors.transparent,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outlineVariant,
+          color: isSelected ? AppColors.goldenYellow : AppColors.softBorder,
         ),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: isSelected
-              ? Colors.black
-              : Theme.of(context).colorScheme.onSurfaceVariant,
+          color: isSelected ? Colors.black : AppColors.mutedText,
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
@@ -179,116 +177,115 @@ class AdminDashboardPage extends StatelessWidget {
     IconData icon,
     Color color,
   ) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: color, size: 28),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.softBorder),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style:  TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 13,
-                    ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.mutedText,
+                    fontSize: 13,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style:  TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkCharcoal,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSectionCard(BuildContext context, String title, Widget content) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style:  TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.softBorder),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.darkCharcoal,
+                ),
+              ),
+              if (title == 'Recent Transactions')
+                TextButton(
+                  onPressed: () {},
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'View All',
+                    style: TextStyle(fontSize: 13),
                   ),
                 ),
-                if (title == 'Recent Transactions')
-                  TextButton(
-                    onPressed: () {},
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text(
-                      'View All',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            content,
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          content,
+        ],
       ),
     );
   }
 
   Widget _buildChartPlaceholder(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    return Container(
+      height: 200,
+      decoration: BoxDecoration(
+        color: AppColors.creamBackground,
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+        border: Border.all(color: AppColors.softBorder),
       ),
-      child: Container(
-        height: 200,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Row(
@@ -302,34 +299,28 @@ class AdminDashboardPage extends StatelessWidget {
                     width: 24,
                     height: height,
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.7),
+                      color: AppColors.goldenYellow.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     d['hour'],
-                    style:  TextStyle(
-                      fontSize: 10,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    style: const TextStyle(fontSize: 10, color: AppColors.mutedText),
                   ),
                 ],
               );
             }).toList(),
           ),
           const SizedBox(height: 12),
-           Text(
+          const Text(
             'Sales Trend (Hourly)',
             style: TextStyle(
               fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: AppColors.mutedText,
             ),
           ),
         ],
-      ),
       ),
     );
   }
@@ -348,11 +339,11 @@ class AdminDashboardPage extends StatelessWidget {
         if (isSuccess) {
           badgeColor = AppColors.success;
         } else if (isVoided) {
-          badgeColor = Theme.of(context).colorScheme.error;
+          badgeColor = AppColors.brandRed;
         } else if (isRefunded) {
-          badgeColor = Theme.of(context).colorScheme.tertiary;
+          badgeColor = AppColors.tertiary;
         } else {
-          badgeColor = Theme.of(context).colorScheme.onSurfaceVariant;
+          badgeColor = AppColors.mutedText;
         }
 
         return DataRow(cells: [
@@ -373,7 +364,7 @@ class AdminDashboardPage extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: MockData.topSelling.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
       itemBuilder: (context, index) {
         final item = MockData.topSelling[index];
         return Padding(
@@ -384,18 +375,16 @@ class AdminDashboardPage extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.15),
+                  color: AppColors.goldenYellow.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Center(
+                child: const Center(
                   child: Text(
-                    '#${item['rank']}',
-                    style:  TextStyle(
+                    '#',
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: AppColors.darkCharcoal,
                     ),
                   ),
                 ),
@@ -410,14 +399,15 @@ class AdminDashboardPage extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
+                        color: AppColors.darkCharcoal,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${item['sold']} sold',
-                      style:  TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: AppColors.mutedText,
                       ),
                     ),
                   ],
@@ -428,6 +418,7 @@ class AdminDashboardPage extends StatelessWidget {
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
+                  color: AppColors.darkCharcoal,
                 ),
               ),
             ],
@@ -442,9 +433,10 @@ class AdminDashboardPage extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: MockData.logs.length >= 4 ? 4 : MockData.logs.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
       itemBuilder: (context, index) {
         final log = MockData.logs[index];
+        final isSuccess = log['status'] == 'Success';
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
@@ -452,21 +444,15 @@ class AdminDashboardPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: log['status'] == 'Success'
+                  color: isSuccess
                       ? AppColors.success.withValues(alpha: 0.1)
-                      : Theme.of(
-                          context,
-                        ).colorScheme.error.withValues(alpha: 0.1),
+                      : AppColors.brandRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  log['status'] == 'Success'
-                      ? Icons.check_circle_outline
-                      : Icons.error_outline,
+                  isSuccess ? Icons.check_circle_outline : Icons.error_outline,
                   size: 20,
-                  color: log['status'] == 'Success'
-                      ? AppColors.success
-                      : Theme.of(context).colorScheme.error,
+                  color: isSuccess ? AppColors.success : AppColors.brandRed,
                 ),
               ),
               const SizedBox(width: 12),
@@ -479,14 +465,15 @@ class AdminDashboardPage extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 13,
+                        color: AppColors.darkCharcoal,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${log['user']} \u2022 ${log['timestamp']}',
-                      style:  TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: AppColors.mutedText,
                       ),
                     ),
                   ],

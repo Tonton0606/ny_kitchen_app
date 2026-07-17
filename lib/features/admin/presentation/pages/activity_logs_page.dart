@@ -47,16 +47,14 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Activity Logs',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
                     ),
-                    SizedBox(height: 8),
-                    Text(
+                    const SizedBox(height: 8),
+                    const Text(
                       'System-wide security and audit trail records',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      style: TextStyle(color: AppColors.mutedText, fontSize: 15),
                     ),
                   ],
                 ),
@@ -65,6 +63,8 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                   icon: const Icon(Icons.download, size: 18),
                   label: const Text('Export Logs'),
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.goldenYellow,
+                    foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 12,
@@ -93,7 +93,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                           horizontal: 16,
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface,
+                        fillColor: Colors.white,
                       ),
                     ),
                   ),
@@ -116,12 +116,13 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
             ),
           ),
           Expanded(
-            child: Card(
+            child: Container(
               margin: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              shape: RoundedRectangleBorder(
+              decoration: BoxDecoration(
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.softBorder),
               ),
-              elevation: 2,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
@@ -210,9 +211,9 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     if (isSuccess) {
                       statusColor = AppColors.success;
                     } else if (isFailed) {
-                      statusColor = Theme.of(context).colorScheme.error;
+                      statusColor = AppColors.brandRed;
                     } else {
-                      statusColor = Theme.of(context).colorScheme.tertiary;
+                      statusColor = AppColors.tertiary;
                     }
                     return DataRow(
                       cells: [
@@ -239,28 +240,20 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                             ),
                             decoration: BoxDecoration(
                               color: log['role'] == 'Admin'
-                                  ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1)
+                                  ? AppColors.tertiary.withValues(alpha: 0.1)
                                   : (log['role'] == 'Cashier'
-                                        ? Theme.of(context).colorScheme.primary
-                                              .withValues(alpha: 0.1)
-                                        : Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant
-                                              .withValues(alpha: 0.1)),
+                                        ? AppColors.goldenYellow.withValues(alpha: 0.1)
+                                        : AppColors.mutedText.withValues(alpha: 0.1)),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               log['role'],
                               style: TextStyle(
                                 color: log['role'] == 'Admin'
-                                    ? Theme.of(context).colorScheme.tertiary
+                                    ? AppColors.tertiary
                                     : (log['role'] == 'Cashier'
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.onSurfaceVariant),
+                                          ? AppColors.goldenYellow
+                                          : AppColors.mutedText),
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -281,8 +274,8 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                             ),
                             child: Text(
                               log['module'],
-                              style:  TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
+                              style: const TextStyle(
+                                color: AppColors.darkCharcoal,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -328,10 +321,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.5),
+                              color: AppColors.softBorder.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -339,10 +329,8 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                               style:  TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 12,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
+                              color: AppColors.mutedText,
+                            ),
                             ),
                           ),
                         ),
@@ -367,18 +355,18 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        border: Border.all(color: AppColors.softBorder),
         borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          icon:  Icon(
+          icon:  const Icon(
             Icons.arrow_drop_down,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: AppColors.mutedText,
           ),
-          style:  TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
+          style: const TextStyle(
+            color: AppColors.darkCharcoal,
             fontSize: 13,
           ),
           onChanged: onChanged,
@@ -392,7 +380,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                       Icon(
                         icon,
                         size: 18,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: AppColors.mutedText,
                       ),
                       const SizedBox(width: 8),
                       Text(item),

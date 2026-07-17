@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class AdminAccountSettingsPage extends StatefulWidget {
   const AdminAccountSettingsPage({super.key});
 
   @override
-  State<AdminAccountSettingsPage> createState() =>
-      _AdminAccountSettingsPageState();
+  State<AdminAccountSettingsPage> createState() => _AdminAccountSettingsPageState();
 }
 
 class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
@@ -13,147 +13,104 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-             Text(
-              'Account Settings',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
-             Text(
-              'Manage administrator profile and preferences',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Center(
-              child: Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Stack(
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        child:  Center(
-                          child: Text(
-                            'A',
-                            style: TextStyle(
-                              fontSize: 48,
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white, width: 3),
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 20,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    'Account Settings',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
                   ),
-                  const SizedBox(height: 16),
-                   Text(
-                    'Admin User',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Administrator',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.tertiary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Manage administrator profile and preferences',
+                    style: TextStyle(color: AppColors.mutedText, fontSize: 15),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 32),
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            children: [
+              Center(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Stack(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          width: 88,
+                          height: 88,
                           decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
+                            color: AppColors.goldenYellow.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(44),
                           ),
-                          child:  Icon(
-                            Icons.person_outline,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 24,
+                          child: const Center(
+                            child: Text(
+                              'A',
+                              style: TextStyle(fontSize: 44, color: AppColors.goldenYellow, fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                         Text(
-                          'Profile Details',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.goldenYellow,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.white, width: 3),
+                            ),
+                            child: const Icon(Icons.camera_alt, size: 16, color: Colors.black),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Admin User',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Administrator',
+                        style: TextStyle(color: AppColors.goldenYellow, fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              _buildSection(
+                icon: Icons.person_outline,
+                title: 'Profile Details',
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
                     TextField(
                       decoration: InputDecoration(
                         labelText: 'Full Name',
+                        labelStyle: const TextStyle(fontWeight: FontWeight.w500),
                         prefixIcon: const Icon(Icons.person_outline),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface,
+                        fillColor: Colors.white,
                       ),
                       controller: TextEditingController(text: 'Admin User'),
                     ),
@@ -161,12 +118,11 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                     TextField(
                       decoration: InputDecoration(
                         labelText: 'Username',
+                        labelStyle: const TextStyle(fontWeight: FontWeight.w500),
                         prefixIcon: const Icon(Icons.account_circle_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface,
+                        fillColor: Colors.white,
                       ),
                       controller: TextEditingController(text: 'admin'),
                     ),
@@ -177,144 +133,105 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                       child: ElevatedButton.icon(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Settings saved successfully'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
+                            const SnackBar(content: Text('Settings saved successfully'), behavior: SnackBarBehavior.floating),
                           );
                         },
                         icon: const Icon(Icons.save_outlined, size: 20),
-                        label: const Text(
-                          'Save Changes',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        label: const Text('Save Changes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          backgroundColor: AppColors.goldenYellow,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
+              const SizedBox(height: 16),
+              _buildSection(
+                icon: Icons.palette_outlined,
+                title: 'Application Preferences',
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.palette_outlined,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                         Text(
-                          'Application Preferences',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     SwitchListTile(
-                      title: const Text(
-                        'Dark Theme',
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: const Text(
-                        'Enable dark mode for the application interface',
-                      ),
+                      title: const Text('Dark Theme', style: TextStyle(fontWeight: FontWeight.w500, color: AppColors.darkCharcoal)),
+                      subtitle: const Text('Enable dark mode for the application interface', style: TextStyle(color: AppColors.mutedText)),
                       value: _darkTheme,
                       onChanged: (val) => setState(() => _darkTheme = val),
-                      activeTrackColor: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.5),
+                      activeTrackColor: AppColors.goldenYellow.withValues(alpha: 0.5),
+                      activeThumbColor: AppColors.goldenYellow,
                       secondary: Icon(
                         _darkTheme ? Icons.dark_mode : Icons.light_mode,
-                        color: _darkTheme
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: _darkTheme ? AppColors.goldenYellow : AppColors.mutedText,
                       ),
                       contentPadding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                     ),
-                    const Divider(height: 24),
+                    const Divider(height: 24, color: AppColors.softBorder),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.1),
+                          color: AppColors.goldenYellow.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child:  Icon(
-                          Icons.info_outline,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 24,
-                        ),
+                        child: const Icon(Icons.info_outline, color: AppColors.goldenYellow, size: 24),
                       ),
-                      title: const Text(
-                        'About Application',
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: const Text(
-                        'N.Y Kitchen Secure Order and Sales Management System',
-                      ),
+                      title: const Text('About Application', style: TextStyle(fontWeight: FontWeight.w500, color: AppColors.darkCharcoal)),
+                      subtitle: const Text('N.Y Kitchen Secure Order and Sales Management System', style: TextStyle(color: AppColors.mutedText)),
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.1),
+                          color: AppColors.goldenYellow.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child:  Text(
-                          'v1.0.0',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
+                        child: const Text('v1.0.0', style: TextStyle(color: AppColors.goldenYellow, fontWeight: FontWeight.bold, fontSize: 13)),
                       ),
                       onTap: () {},
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildSection({
+    required IconData icon,
+    required String title,
+    required Widget child,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.softBorder),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppColors.goldenYellow, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal)),
+            ],
+          ),
+          child,
+        ],
       ),
     );
   }

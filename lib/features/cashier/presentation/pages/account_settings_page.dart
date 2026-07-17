@@ -1,116 +1,114 @@
 import 'package:flutter/material.dart';
-
+import '../../../../core/theme/app_colors.dart';
 
 class AccountSettingsPage extends StatelessWidget {
   const AccountSettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child:  Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Account Settings',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Account Settings',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
                   ),
-                ),
-                Text(
-                  'Manage your profile and preferences',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Manage your profile and preferences',
+                    style: TextStyle(color: AppColors.mutedText, fontSize: 15),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                 CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Icon(Icons.person, size: 50, color: Colors.white),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    const CircleAvatar(
+                      radius: 44,
+                      backgroundColor: AppColors.goldenYellow,
+                      child: Icon(Icons.person, size: 44, color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'John Doe',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Cashier',
+                      style: TextStyle(fontSize: 15, color: AppColors.mutedText),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'John Doe',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                 Text(
-                  'Cashier',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                _buildSettingsTile(
-                  context: context,
-                  icon: Icons.person_outline,
-                  title: 'Edit Profile',
-                  onTap: () {},
-                ),
-                _buildSettingsTile(
-                  context: context,
-                  icon: Icons.lock_outline,
-                  title: 'Change Password',
-                  onTap: () {},
-                ),
-                _buildSettingsTile(
-                  context: context,
-                  icon: Icons.print_outlined,
-                  title: 'Printer Settings',
-                  onTap: () {},
-                ),
-                _buildSettingsTile(
-                  context: context,
-                  icon: Icons.help_outline,
-                  title: 'Help & Support',
-                  onTap: () {},
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 32),
+              _buildTile(
+                icon: Icons.person_outline,
+                title: 'Edit Profile',
+                onTap: () {},
+              ),
+              _buildTile(
+                icon: Icons.lock_outline,
+                title: 'Change Password',
+                onTap: () {},
+              ),
+              _buildTile(
+                icon: Icons.print_outlined,
+                title: 'Printer Settings',
+                onTap: () {},
+              ),
+              _buildTile(
+                icon: Icons.help_outline,
+                title: 'Help & Support',
+                onTap: () {},
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildSettingsTile({
-    required BuildContext context,
+  Widget _buildTile({
     required IconData icon,
     required String title,
     required VoidCallback onTap,
   }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        side:  BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).colorScheme.onSurface),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-        trailing:  Icon(
-          Icons.chevron_right,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        tileColor: Colors.white,
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.goldenYellow.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: AppColors.goldenYellow, size: 24),
         ),
+        title: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.darkCharcoal)),
+        trailing: const Icon(Icons.chevron_right, color: AppColors.mutedText),
         onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.softBorder),
+        ),
       ),
     );
   }

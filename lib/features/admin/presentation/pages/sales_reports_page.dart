@@ -39,16 +39,14 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Sales Reports',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
                     ),
-                    SizedBox(height: 8),
-                    Text(
+                    const SizedBox(height: 8),
+                    const Text(
                       'View, filter, and export sales data',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      style: TextStyle(color: AppColors.mutedText, fontSize: 15),
                     ),
                   ],
                 ),
@@ -85,12 +83,12 @@ class _SalesReportsPageState extends State<SalesReportsPage>
           const SizedBox(height: 16),
           TabBar(
             controller: _tabController,
-            labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: Theme.of(
-              context,
-            ).colorScheme.onSurfaceVariant,
-            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelColor: AppColors.goldenYellow,
+            unselectedLabelColor: AppColors.mutedText,
+            indicatorColor: AppColors.goldenYellow,
             indicatorSize: TabBarIndicatorSize.tab,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             tabs: const [
               Tab(text: 'Today'),
               Tab(text: 'Weekly'),
@@ -162,7 +160,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surface,
+                    fillColor: Colors.white,
                   ),
                 ),
               ),
@@ -207,23 +205,24 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                 'Total Orders',
                 orders,
                 Icons.receipt_long,
-                Theme.of(context).colorScheme.tertiary,
+                AppColors.tertiary,
                 'Completed transactions',
               ),
               _buildSummaryCard(
                 'Completion Rate',
                 completionRate,
                 Icons.check_circle,
-                Theme.of(context).colorScheme.primary,
+                AppColors.goldenYellow,
                 'Successful rate',
               ),
             ],
           ),
           const SizedBox(height: 24),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.softBorder),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -233,12 +232,12 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                       Text(
+                      const Text(
                         'Transactions',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: AppColors.darkCharcoal,
                         ),
                       ),
                       Container(
@@ -247,15 +246,13 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.1),
+                          color: AppColors.goldenYellow.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '$period Report',
-                          style:  TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
+                          style: const TextStyle(
+                            color: AppColors.goldenYellow,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -264,7 +261,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                     ],
                   ),
                 ),
-                const Divider(height: 1),
+                const Divider(height: 1, color: AppColors.softBorder),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
@@ -346,13 +343,11 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                       if (isSuccess) {
                         statusColor = AppColors.success;
                       } else if (isVoided) {
-                        statusColor = Theme.of(context).colorScheme.error;
+                        statusColor = AppColors.brandRed;
                       } else if (isRefunded) {
-                        statusColor = Theme.of(context).colorScheme.tertiary;
+                        statusColor = AppColors.tertiary;
                       } else {
-                        statusColor = Theme.of(
-                          context,
-                        ).colorScheme.onSurfaceVariant;
+                        statusColor = AppColors.mutedText;
                       }
                       return DataRow(
                         cells: [
@@ -438,56 +433,57 @@ class _SalesReportsPageState extends State<SalesReportsPage>
     Color color,
     String subtitle,
   ) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 24),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.softBorder),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style:  TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 11,
-                    ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.mutedText,
+                    fontSize: 11,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style:  TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkCharcoal,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style:  TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 9,
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: AppColors.mutedText,
+                    fontSize: 9,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

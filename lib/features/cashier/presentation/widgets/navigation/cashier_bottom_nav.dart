@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/app_colors.dart';
 
 class CashierBottomNav extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onItemSelected;
+  final VoidCallback? onSettingsTap;
 
   const CashierBottomNav({
     super.key,
     required this.selectedIndex,
     required this.onItemSelected,
+    this.onSettingsTap,
   });
 
   @override
@@ -15,24 +18,25 @@ class CashierBottomNav extends StatelessWidget {
     return BottomNavigationBar(
       currentIndex: selectedIndex,
       onTap: onItemSelected,
-      selectedItemColor: Theme.of(context).colorScheme.primary,
-      unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
-      showUnselectedLabels: true,
+      backgroundColor: AppColors.darkCharcoal,
+      selectedItemColor: AppColors.goldenYellow,
+      unselectedItemColor: Colors.white54,
+      showSelectedLabels: false,
+      showUnselectedLabels: false,
+      type: BottomNavigationBarType.fixed,
+      elevation: 0,
+      selectedIconTheme: const IconThemeData(size: 30),
+      unselectedIconTheme: const IconThemeData(size: 24),
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
+          icon: Icon(Icons.table_restaurant_outlined),
+          activeIcon: Icon(Icons.table_restaurant),
           label: 'Home',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.receipt_long_outlined),
-          activeIcon: Icon(Icons.receipt_long),
+          icon: Icon(Icons.history_outlined),
+          activeIcon: Icon(Icons.history),
           label: 'History',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: 'Account',
         ),
       ],
     );

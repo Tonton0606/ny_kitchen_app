@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../auth/presentation/pages/login_page.dart';
 
 class CashierNavRail extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
+  final VoidCallback? onSettingsTap;
 
   const CashierNavRail({
     super.key,
     required this.selectedIndex,
     required this.onDestinationSelected,
+    this.onSettingsTap,
   });
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Logout'),
+        title: const Text('Confirm Logout', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(
@@ -24,10 +28,14 @@ class CashierNavRail extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              // Handle logout logic here in future
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+                (_) => false,
+              );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: AppColors.brandRed,
               foregroundColor: Colors.white,
             ),
             child: const Text('Logout'),
@@ -39,72 +47,80 @@ class CashierNavRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationRail(
-      selectedIndex: selectedIndex,
-      onDestinationSelected: onDestinationSelected,
-      labelType: NavigationRailLabelType.all,
-      backgroundColor: Colors.white,
-      selectedIconTheme:  IconThemeData(
-        color: Theme.of(context).colorScheme.primary,
-      ),
-      selectedLabelTextStyle:  TextStyle(
-        color: Theme.of(context).colorScheme.onSurface,
-        fontWeight: FontWeight.bold,
-      ),
-      unselectedIconTheme:  IconThemeData(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-      unselectedLabelTextStyle:  TextStyle(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-      leading: Padding(
-        padding: const EdgeInsets.only(bottom: 24.0, top: 16.0),
-        child: CircleAvatar(
-          backgroundColor: Theme.of(
-            context,
-          ).colorScheme.primary.withValues(alpha: 0.2),
-          child:  Text(
-            'NY',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+    return SizedBox(
+      width: 76,
+      child: NavigationRail(
+        selectedIndex: selectedIndex,
+        onDestinationSelected: onDestinationSelected,
+        labelType: NavigationRailLabelType.none,
+        backgroundColor: AppColors.darkCharcoal,
+        selectedIconTheme: const IconThemeData(
+          color: AppColors.goldenYellow,
+          size: 32,
         ),
-      ),
-      trailing: Expanded(
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 24.0),
-            child: IconButton(
-              icon:  Icon(
-                Icons.logout,
-                color: Theme.of(context).colorScheme.error,
+        unselectedIconTheme: const IconThemeData(
+          color: Colors.white54,
+          size: 26,
+        ),
+        indicatorColor: AppColors.goldenYellow.withValues(alpha: 0.25),
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        groupAlignment: -0.25,
+        leading: Padding(
+          padding: const EdgeInsets.only(bottom: 16.0, top: 12.0),
+          child: GestureDetector(
+            onTap: onSettingsTap,
+            child: const MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: AppColors.goldenYellow,
+                child: Text(
+                  'NY',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ),
-              tooltip: 'Logout',
-              onPressed: () => _showLogoutDialog(context),
             ),
           ),
         ),
+        trailing: Expanded(
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Divider(height: 1, color: Colors.white12, indent: 16, endIndent: 16),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: IconButton(
+                    icon: const Icon(Icons.logout, color: Colors.white54),
+                    tooltip: 'Logout',
+                    onPressed: () => _showLogoutDialog(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        destinations: const [
+          NavigationRailDestination(
+            icon: Icon(Icons.table_restaurant_outlined),
+            selectedIcon: Icon(Icons.table_restaurant),
+            label: Text('Home'),
+          ),
+          NavigationRailDestination(
+            icon: Icon(Icons.history_outlined),
+            selectedIcon: Icon(Icons.history),
+            label: Text('History'),
+          ),
+        ],
       ),
-      destinations: const [
-        NavigationRailDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home),
-          label: Text('Home'),
-        ),
-        NavigationRailDestination(
-          icon: Icon(Icons.receipt_long_outlined),
-          selectedIcon: Icon(Icons.receipt_long),
-          label: Text('History'),
-        ),
-        NavigationRailDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person),
-          label: Text('Account'),
-        ),
-      ],
     );
   }
 }

@@ -16,7 +16,7 @@ class MockData {
       'category': 'Rice Meals',
       'price': 120.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Adobo',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Adobo&font=raleway',
     },
     {
       'id': '2',
@@ -24,7 +24,7 @@ class MockData {
       'category': 'Rice Meals',
       'price': 150.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Sisig',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Sisig&font=raleway',
     },
     {
       'id': '3',
@@ -32,7 +32,7 @@ class MockData {
       'category': 'Rice Meals',
       'price': 140.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Tapa',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Tapa&font=raleway',
     },
     {
       'id': '4',
@@ -40,7 +40,7 @@ class MockData {
       'category': 'Snacks',
       'price': 50.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Lumpia',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Lumpia&font=raleway',
     },
     {
       'id': '5',
@@ -48,7 +48,7 @@ class MockData {
       'category': 'Desserts',
       'price': 80.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Halo-Halo',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Halo-Halo&font=raleway',
     },
     {
       'id': '6',
@@ -56,7 +56,7 @@ class MockData {
       'category': 'Pasta',
       'price': 100.0,
       'isAvailable': false,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Pancit',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Pancit&font=raleway',
     },
     {
       'id': '7',
@@ -64,8 +64,7 @@ class MockData {
       'category': 'Rice Meals',
       'price': 130.0,
       'isAvailable': true,
-      'image':
-          'https://via.placeholder.com/150/FFC107/333333?text=Fried+Chicken',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Fried+Chicken&font=raleway',
     },
     {
       'id': '8',
@@ -73,8 +72,7 @@ class MockData {
       'category': 'Rice Meals',
       'price': 110.0,
       'isAvailable': true,
-      'image':
-          'https://via.placeholder.com/150/FFC107/333333?text=Burger+Steak',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Burger+Steak&font=raleway',
     },
     {
       'id': '9',
@@ -82,7 +80,7 @@ class MockData {
       'category': 'Rice Meals',
       'price': 160.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Bulalo',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Bulalo&font=raleway',
     },
     {
       'id': '10',
@@ -90,7 +88,7 @@ class MockData {
       'category': 'Snacks',
       'price': 65.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Fries',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Fries&font=raleway',
     },
     {
       'id': '11',
@@ -98,7 +96,7 @@ class MockData {
       'category': 'Desserts',
       'price': 60.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Leche+Flan',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Leche+Flan&font=raleway',
     },
     {
       'id': '12',
@@ -106,7 +104,7 @@ class MockData {
       'category': 'Beverages',
       'price': 55.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Iced+Coffee',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Iced+Coffee&font=raleway',
     },
     {
       'id': '13',
@@ -114,7 +112,7 @@ class MockData {
       'category': 'Beverages',
       'price': 45.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Coke+Float',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Coke+Float&font=raleway',
     },
     {
       'id': '14',
@@ -122,7 +120,7 @@ class MockData {
       'category': 'Pasta',
       'price': 110.0,
       'isAvailable': true,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Carbonara',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Carbonara&font=raleway',
     },
     {
       'id': '15',
@@ -130,7 +128,7 @@ class MockData {
       'category': 'Specials',
       'price': 135.0,
       'isAvailable': false,
-      'image': 'https://via.placeholder.com/150/FFC107/333333?text=Bicol',
+      'image': 'https://placehold.co/300x200/FFCA05/2B241A?text=Bicol&font=raleway',
     },
   ];
 
@@ -224,7 +222,7 @@ class MockData {
       'username': 'admin',
       'role': 'Admin',
       'status': 'Active',
-      'avatar': 'https://via.placeholder.com/150/FFC107/333333?text=A',
+      'avatar': 'https://placehold.co/150x150/FFCA05/2B241A?text=A&font=raleway',
     },
     {
       'id': 'U002',
@@ -232,7 +230,7 @@ class MockData {
       'username': 'john.doe',
       'role': 'Cashier',
       'status': 'Active',
-      'avatar': 'https://via.placeholder.com/150/FFC107/333333?text=JD',
+      'avatar': 'https://placehold.co/150x150/FFCA05/2B241A?text=JD&font=raleway',
     },
     {
       'id': 'U003',
@@ -240,7 +238,7 @@ class MockData {
       'username': 'jane.s',
       'role': 'Cashier',
       'status': 'Disabled',
-      'avatar': 'https://via.placeholder.com/150/FFC107/333333?text=JS',
+      'avatar': 'https://placehold.co/150x150/FFCA05/2B241A?text=JS&font=raleway',
     },
     {
       'id': 'U004',
@@ -248,7 +246,7 @@ class MockData {
       'username': 'mike.r',
       'role': 'Cashier',
       'status': 'Active',
-      'avatar': 'https://via.placeholder.com/150/FFC107/333333?text=MR',
+      'avatar': 'https://placehold.co/150x150/FFCA05/2B241A?text=MR&font=raleway',
     },
     {
       'id': 'U005',
@@ -256,7 +254,7 @@ class MockData {
       'username': 'sarah.l',
       'role': 'Cashier',
       'status': 'Active',
-      'avatar': 'https://via.placeholder.com/150/FFC107/333333?text=SL',
+      'avatar': 'https://placehold.co/150x150/FFCA05/2B241A?text=SL&font=raleway',
     },
   ];
 
