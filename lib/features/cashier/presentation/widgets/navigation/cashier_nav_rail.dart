@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../auth/presentation/pages/login_page.dart';
 
@@ -18,7 +19,10 @@ class CashierNavRail extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Logout', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Confirm Logout',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(
@@ -56,11 +60,11 @@ class CashierNavRail extends StatelessWidget {
         backgroundColor: AppColors.darkCharcoal,
         selectedIconTheme: const IconThemeData(
           color: AppColors.goldenYellow,
-          size: 32,
+          size: 27,
         ),
         unselectedIconTheme: const IconThemeData(
           color: Colors.white54,
-          size: 26,
+          size: 27,
         ),
         indicatorColor: AppColors.goldenYellow.withValues(alpha: 0.25),
         indicatorShape: RoundedRectangleBorder(
@@ -94,12 +98,21 @@ class CashierNavRail extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Divider(height: 1, color: Colors.white12, indent: 16, endIndent: 16),
+                const Divider(
+                  height: 1,
+                  color: Colors.white12,
+                  indent: 16,
+                  endIndent: 16,
+                ),
                 const SizedBox(height: 12),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0),
                   child: IconButton(
-                    icon: const Icon(Icons.logout, color: Colors.white54),
+                    icon: const Icon(
+                      Symbols.logout_rounded,
+                      color: Colors.white54,
+                      weight: 500,
+                    ),
                     tooltip: 'Logout',
                     onPressed: () => _showLogoutDialog(context),
                   ),
@@ -110,13 +123,15 @@ class CashierNavRail extends StatelessWidget {
         ),
         destinations: const [
           NavigationRailDestination(
-            icon: Icon(Icons.table_restaurant_outlined),
-            selectedIcon: Icon(Icons.table_restaurant),
+            icon: Icon(Symbols.table_restaurant_rounded, weight: 500),
             label: Text('Home'),
           ),
           NavigationRailDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history),
+            icon: Icon(Symbols.receipt_long_rounded, weight: 500),
+            label: Text('Orders'),
+          ),
+          NavigationRailDestination(
+            icon: Icon(Symbols.history_rounded, weight: 500),
             label: Text('History'),
           ),
         ],

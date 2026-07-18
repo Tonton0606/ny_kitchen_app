@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/utils/responsive.dart';
 import '../widgets/food_card.dart';
@@ -63,24 +64,76 @@ class _CashierHomePageState extends State<CashierHomePage> {
     });
   }
 
-  void _checkout() {
-    // Mock checkout action
-    showDialog(
+  Future<void> _confirmClearOrder() async {
+    final shouldClear = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Checkout Successful', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        content: const Text('The transaction has been processed (Mock).'),
+        title: const Text('Clear current order?'),
+        content: const Text(
+          'All items in this order will be removed. This cannot be undone.',
+        ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _clearOrder();
-            },
-            child: const Text('OK'),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep order'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Clear order'),
           ),
         ],
       ),
     );
+
+    if (shouldClear == true) _clearOrder();
+  }
+
+  Future<void> _checkout() async {
+    final subtotal = _orderItems.fold<double>(
+      0,
+      (sum, item) =>
+          sum + (item['food']['price'] as double) * (item['quantity'] as int),
+    );
+    final total = subtotal * 1.12;
+    final itemCount = _orderItems.fold<int>(
+      0,
+      (sum, item) => sum + (item['quantity'] as int),
+    );
+
+    final completed = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (context, animation, secondaryAnimation) => Align(
+        alignment: Alignment.centerRight,
+        child: _CheckoutDialog(total: total, itemCount: itemCount),
+      ),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(1, 0),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+          child: child,
+        );
+      },
+    );
+
+    if (completed != true || !mounted) return;
+
+    _clearOrder();
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Payment complete. Order has been submitted.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   @override
@@ -100,7 +153,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
             ),
           ),
           if (!isMobile)
-             VerticalDivider(
+            VerticalDivider(
               width: 1,
               color: Theme.of(context).colorScheme.outlineVariant,
             ),
@@ -110,7 +163,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
               onIncrease: _increaseQuantity,
               onDecrease: _decreaseQuantity,
               onRemove: _removeItem,
-              onClear: _clearOrder,
+              onClear: _confirmClearOrder,
               onCheckout: _checkout,
             ),
         ],
@@ -131,7 +184,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
                       onIncrease: _increaseQuantity,
                       onDecrease: _decreaseQuantity,
                       onRemove: _removeItem,
-                      onClear: _clearOrder,
+                      onClear: _confirmClearOrder,
                       onCheckout: () {
                         Navigator.pop(context);
                         _checkout();
@@ -143,7 +196,9 @@ class _CashierHomePageState extends State<CashierHomePage> {
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.black,
               icon: const Icon(Icons.shopping_cart),
-              label: Text('${_orderItems.length} Items'),
+              label: Text(
+                '${_orderItems.fold<int>(0, (sum, item) => sum + (item['quantity'] as int))} Items',
+              ),
             )
           : null,
     );
@@ -154,14 +209,16 @@ class _CashierHomePageState extends State<CashierHomePage> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
-           Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'New Order',
                 style: TextStyle(
                   fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'serif',
+                  letterSpacing: -0.4,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
@@ -179,7 +236,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search food...',
-                prefixIcon:  Icon(
+                prefixIcon: Icon(
                   Icons.search,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -219,6 +276,11 @@ class _CashierHomePageState extends State<CashierHomePage> {
               },
               selectedColor: Theme.of(context).colorScheme.primary,
               backgroundColor: Colors.white,
+              side: BorderSide(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.outlineVariant,
+              ),
               labelStyle: TextStyle(
                 color: isSelected
                     ? Colors.black
@@ -228,6 +290,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
           );
         },
@@ -251,7 +314,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
     }).toList();
 
     if (displayedFoods.isEmpty) {
-      return  Center(
+      return Center(
         child: Text(
           'No food items found.',
           style: TextStyle(
@@ -261,7 +324,9 @@ class _CashierHomePageState extends State<CashierHomePage> {
       );
     }
 
-    final foodIdsInCart = _orderItems.map((item) => item['food']['id'] as String).toSet();
+    final foodIdsInCart = _orderItems
+        .map((item) => item['food']['id'] as String)
+        .toSet();
 
     return GridView.builder(
       padding: const EdgeInsets.all(24),
@@ -282,6 +347,228 @@ class _CashierHomePageState extends State<CashierHomePage> {
           onRemove: () => _removeFoodFromCart(food['id']),
         );
       },
+    );
+  }
+}
+
+class _CheckoutDialog extends StatefulWidget {
+  const _CheckoutDialog({required this.total, required this.itemCount});
+
+  final double total;
+  final int itemCount;
+
+  @override
+  State<_CheckoutDialog> createState() => _CheckoutDialogState();
+}
+
+class _CheckoutDialogState extends State<_CheckoutDialog> {
+  final _cashController = TextEditingController();
+  String? _cashError;
+
+  double? get _cashReceived => double.tryParse(_cashController.text.trim());
+
+  @override
+  void dispose() {
+    _cashController.dispose();
+    super.dispose();
+  }
+
+  void _completeCheckout() {
+    if (_cashReceived == null || _cashReceived! < widget.total) {
+      setState(() => _cashError = 'Enter an amount that covers the total');
+      return;
+    }
+    Navigator.pop(context, true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final change = (_cashReceived ?? 0) - widget.total;
+
+    return Material(
+      color: Colors.white,
+      child: SafeArea(
+        child: SizedBox(
+          width: MediaQuery.sizeOf(context).width.clamp(0.0, 420.0),
+          height: double.infinity,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 12, 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Complete checkout',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Review and collect cash payment.',
+                            style: TextStyle(
+                              color: AppColors.mutedText,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      tooltip: 'Close checkout',
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: AppColors.softBorder),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: AppColors.creamBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.softBorder),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${widget.itemCount} ${widget.itemCount == 1 ? 'item' : 'items'} in this order',
+                              style: const TextStyle(
+                                color: AppColors.mutedText,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'TOTAL DUE',
+                              style: TextStyle(
+                                color: AppColors.mutedText,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '₱${widget.total.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: AppColors.darkCharcoal,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      const Row(
+                        children: [
+                          Icon(Icons.payments_outlined, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Cash payment',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _cashController,
+                        autofocus: true,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Cash received',
+                          prefixText: '₱ ',
+                          errorText: _cashError,
+                        ),
+                        onChanged: (_) => setState(() => _cashError = null),
+                        onSubmitted: (_) => _completeCheckout(),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color: change > 0
+                              ? AppColors.successSurface
+                              : Colors.grey.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Change due',
+                              style: TextStyle(color: AppColors.mutedText),
+                            ),
+                            Text(
+                              '₱${change > 0 ? change.toStringAsFixed(2) : '0.00'}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: AppColors.softBorder)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: FilledButton(
+                        onPressed: _completeCheckout,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.goldenYellow,
+                          foregroundColor: AppColors.darkCharcoal,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text('Accept payment'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

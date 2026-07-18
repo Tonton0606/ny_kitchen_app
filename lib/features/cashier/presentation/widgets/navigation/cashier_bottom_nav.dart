@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../../../../core/theme/app_colors.dart';
 
 class CashierBottomNav extends StatelessWidget {
@@ -25,17 +26,19 @@ class CashierBottomNav extends StatelessWidget {
       showUnselectedLabels: false,
       type: BottomNavigationBarType.fixed,
       elevation: 0,
-      selectedIconTheme: const IconThemeData(size: 30),
-      unselectedIconTheme: const IconThemeData(size: 24),
+      selectedIconTheme: const IconThemeData(size: 26),
+      unselectedIconTheme: const IconThemeData(size: 26),
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.table_restaurant_outlined),
-          activeIcon: Icon(Icons.table_restaurant),
+          icon: Icon(Symbols.table_restaurant_rounded, weight: 500),
           label: 'Home',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.history_outlined),
-          activeIcon: Icon(Icons.history),
+          icon: Icon(Symbols.receipt_long_rounded, weight: 500),
+          label: 'Orders',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Symbols.history_rounded, weight: 500),
           label: 'History',
         ),
       ],

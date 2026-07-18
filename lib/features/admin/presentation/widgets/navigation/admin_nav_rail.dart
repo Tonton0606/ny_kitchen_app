@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../auth/presentation/pages/login_page.dart';
 
@@ -26,19 +27,33 @@ class AdminNavRail extends StatelessWidget {
                 color: AppColors.brandRed.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.logout, color: AppColors.brandRed, size: 28),
+              child: const Icon(
+                Symbols.logout_rounded,
+                color: AppColors.brandRed,
+                size: 28,
+                weight: 500,
+              ),
             ),
             const SizedBox(width: 16),
-            const Expanded(child: Text('Confirm Logout', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+            const Expanded(
+              child: Text(
+                'Confirm Logout',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
-        content: Text('Are you sure you want to log out of your account?',
+        content: Text(
+          'Are you sure you want to log out of your account?',
           style: const TextStyle(fontSize: 15, color: AppColors.mutedText),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
           ),
           FilledButton(
             onPressed: () {
@@ -52,7 +67,10 @@ class AdminNavRail extends StatelessWidget {
               backgroundColor: AppColors.brandRed,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Logout', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Logout',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -70,11 +88,11 @@ class AdminNavRail extends StatelessWidget {
         backgroundColor: AppColors.darkCharcoal,
         selectedIconTheme: const IconThemeData(
           color: AppColors.goldenYellow,
-          size: 32,
+          size: 27,
         ),
         unselectedIconTheme: const IconThemeData(
           color: Colors.white54,
-          size: 26,
+          size: 27,
         ),
         indicatorColor: AppColors.goldenYellow.withValues(alpha: 0.25),
         indicatorShape: RoundedRectangleBorder(
@@ -108,12 +126,21 @@ class AdminNavRail extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Divider(height: 1, color: Colors.white12, indent: 16, endIndent: 16),
+                const Divider(
+                  height: 1,
+                  color: Colors.white12,
+                  indent: 16,
+                  endIndent: 16,
+                ),
                 const SizedBox(height: 12),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0),
                   child: IconButton(
-                    icon: const Icon(Icons.logout, color: Colors.white54),
+                    icon: const Icon(
+                      Symbols.logout_rounded,
+                      color: Colors.white54,
+                      weight: 500,
+                    ),
                     tooltip: 'Logout',
                     onPressed: () => _showLogoutDialog(context),
                   ),
@@ -123,11 +150,26 @@ class AdminNavRail extends StatelessWidget {
           ),
         ),
         destinations: const [
-          NavigationRailDestination(icon: Icon(Icons.space_dashboard_outlined), selectedIcon: Icon(Icons.space_dashboard), label: Text('Dashboard')),
-          NavigationRailDestination(icon: Icon(Icons.trending_up_outlined), selectedIcon: Icon(Icons.trending_up), label: Text('Sales')),
-          NavigationRailDestination(icon: Icon(Icons.menu_book_outlined), selectedIcon: Icon(Icons.menu_book), label: Text('Food')),
-          NavigationRailDestination(icon: Icon(Icons.badge_outlined), selectedIcon: Icon(Icons.badge), label: Text('Accounts')),
-          NavigationRailDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment), label: Text('Logs')),
+          NavigationRailDestination(
+            icon: Icon(Symbols.dashboard_rounded, weight: 500),
+            label: Text('Dashboard'),
+          ),
+          NavigationRailDestination(
+            icon: Icon(Symbols.trending_up_rounded, weight: 500),
+            label: Text('Sales'),
+          ),
+          NavigationRailDestination(
+            icon: Icon(Symbols.menu_book_rounded, weight: 500),
+            label: Text('Food'),
+          ),
+          NavigationRailDestination(
+            icon: Icon(Symbols.badge_rounded, weight: 500),
+            label: Text('Accounts'),
+          ),
+          NavigationRailDestination(
+            icon: Icon(Symbols.assignment_rounded, weight: 500),
+            label: Text('Logs'),
+          ),
         ],
       ),
     );

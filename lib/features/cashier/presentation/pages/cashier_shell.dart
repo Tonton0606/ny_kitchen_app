@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/responsive.dart';
 import 'home_page.dart';
+import 'orders_page.dart';
 import 'transaction_history_page.dart';
 import 'account_settings_page.dart';
 import '../widgets/navigation/cashier_nav_rail.dart';
@@ -23,10 +24,15 @@ class _CashierShellState extends State<CashierShell> {
 
   final List<Widget> _pages = const [
     CashierHomePage(),
+    OrdersPage(),
     TransactionHistoryPage(),
   ];
 
-  final List<String> _titles = ['Order', 'History'];
+  final List<String> _titles = [
+    'Cashier',
+    'Active Orders',
+    'Transaction History',
+  ];
 
   void _onItemTapped(int index) {
     if (_showSettings) _closeSettings();
@@ -128,7 +134,9 @@ class _CashierShellState extends State<CashierShell> {
             _titles[_selectedIndex],
             style: TextStyle(
               fontSize: 15,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'serif',
+              letterSpacing: 0.1,
               color: isMobile ? Colors.white : AppColors.mutedText,
             ),
           ),
@@ -155,7 +163,11 @@ class _CashierShellState extends State<CashierShell> {
               color: Colors.white,
               border: Border(left: BorderSide(color: AppColors.softBorder)),
               boxShadow: const [
-                BoxShadow(color: Colors.black26, blurRadius: 12, offset: Offset(4, 0)),
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 12,
+                  offset: Offset(4, 0),
+                ),
               ],
             ),
             child: Column(

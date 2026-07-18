@@ -31,9 +31,7 @@ class FoodCard extends StatelessWidget {
         ),
       ),
       child: InkWell(
-        onTap: isAvailable
-            ? (isInCart ? onRemove : onAdd)
-            : null,
+        onTap: isAvailable ? onAdd : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -43,7 +41,9 @@ class FoodCard extends StatelessWidget {
                 children: [
                   FoodImage(food: food),
                   if (isInCart)
-                    Container(color: AppColors.goldenYellow.withValues(alpha: 0.15)),
+                    Container(
+                      color: AppColors.goldenYellow.withValues(alpha: 0.15),
+                    ),
                 ],
               ),
             ),

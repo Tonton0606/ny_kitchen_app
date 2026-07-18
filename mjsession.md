@@ -5,7 +5,7 @@
 > **Junior Dev (JD):** Antigravity (Me)
 > **Idea Generator (User):** The User
 > **Focus:** UI Improvements
-> **Last Updated:** 2026-07-17
+> **Last Updated:** 2026-07-18
 
 ---
 
@@ -146,4 +146,30 @@ All changes since the previous `main` commit (`66c774e` — login screen redesig
 - All admin pages refactored: `Dashboard`, `Sales Reports`, `Food Management`, `Account Management`, `Activity Logs`, `Admin Account Settings`
 - All pages use flat cards with `softBorder`, gold accent icons, consistent typography (22px bold titles, 14px muted subtitles)
 
+---
+
+## Session Summary - 2026-07-18
+
+### Navigation and Typography
+- Replaced prominent cashier/admin navigation glyphs with Material Symbols Rounded at weight 500.
+- Removed selected-state icon size jumps; selection now relies on the existing gold color and indicator.
+- Standardized cashier page titles and formalized shell labels as `Cashier`, `Active Orders`, and `Transaction History`.
+
+### Cashier Workspace
+- Added the Active Orders destination, status filters, order cards, status progression, and supporting mock order data.
+- Unified food-category and active-order filter boxes with matching spacing, borders, rounded corners, and selected state.
+- Refined Transaction History to use the same compact card layout and spacing as Active Orders.
+- Changed repeated food-card taps to increase quantity instead of removing the cart line.
+- Updated the mobile cart badge to report total item quantity rather than distinct cart lines.
+
+### Checkout UX
+- Replaced the immediate mock-success dialog with a cash checkout flow.
+- Checkout opens as a full-height right-side panel aligned with the cart and slides in over a dimmed backdrop.
+- Added total review, cash-received validation, live change calculation, cancel/close controls, and completion feedback.
+- Removed card payment based on the current cash-only requirement.
+- Added confirmation before clearing the current order.
+
+### Verification
+- `flutter analyze`: no issues found.
+- `flutter test`: all 22 tests passed.
 

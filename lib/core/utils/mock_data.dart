@@ -369,6 +369,96 @@ class MockData {
     {'rank': 5, 'name': 'Burger Steak', 'sold': 22, 'revenue': 2420.0},
   ];
 
+  static final List<Map<String, dynamic>> orders = [
+    {
+      'orderNo': 'ORD-001',
+      'customer': 'Walk-in',
+      'cashier': 'John Doe',
+      'items': [
+        {'name': 'Chicken Adobo', 'qty': 2, 'price': 120.0},
+        {'name': 'Rice', 'qty': 2, 'price': 15.0},
+      ],
+      'total': 270.0,
+      'payment': 'Cash',
+      'status': 'Taken',
+      'time': '10:00 AM',
+      'notes': '',
+    },
+    {
+      'orderNo': 'ORD-002',
+      'customer': 'Walk-in',
+      'cashier': 'John Doe',
+      'items': [
+        {'name': 'Halo-Halo', 'qty': 1, 'price': 80.0},
+      ],
+      'total': 80.0,
+      'payment': 'GCash',
+      'status': 'Preparing',
+      'time': '10:15 AM',
+      'notes': 'Less sweet',
+    },
+    {
+      'orderNo': 'ORD-003',
+      'customer': 'Walk-in',
+      'cashier': 'Jane Smith',
+      'items': [
+        {'name': 'Pork Sisig', 'qty': 1, 'price': 150.0},
+        {'name': 'Rice', 'qty': 1, 'price': 15.0},
+        {'name': 'Coke Float', 'qty': 1, 'price': 45.0},
+      ],
+      'total': 210.0,
+      'payment': 'Cash',
+      'status': 'Ready',
+      'time': '10:30 AM',
+      'notes': '',
+    },
+    {
+      'orderNo': 'ORD-004',
+      'customer': 'Walk-in',
+      'cashier': 'John Doe',
+      'items': [
+        {'name': 'Beef Tapa', 'qty': 2, 'price': 140.0},
+        {'name': 'Rice', 'qty': 2, 'price': 15.0},
+        {'name': 'Iced Coffee', 'qty': 1, 'price': 55.0},
+      ],
+      'total': 365.0,
+      'payment': 'Maya',
+      'status': 'Taken',
+      'time': '10:45 AM',
+      'notes': 'Extra rice',
+    },
+    {
+      'orderNo': 'ORD-005',
+      'customer': 'Walk-in',
+      'cashier': 'Jane Smith',
+      'items': [
+        {'name': 'Chicken Adobo', 'qty': 1, 'price': 120.0},
+        {'name': 'Rice', 'qty': 1, 'price': 15.0},
+        {'name': 'French Fries', 'qty': 1, 'price': 65.0},
+        {'name': 'Coke Float', 'qty': 1, 'price': 45.0},
+      ],
+      'total': 245.0,
+      'payment': 'Cash',
+      'status': 'Served',
+      'time': '11:00 AM',
+      'notes': '',
+    },
+    {
+      'orderNo': 'ORD-006',
+      'customer': 'Juan Dela Cruz',
+      'cashier': 'John Doe',
+      'items': [
+        {'name': 'Burger Steak', 'qty': 1, 'price': 110.0},
+        {'name': 'French Fries', 'qty': 1, 'price': 65.0},
+      ],
+      'total': 175.0,
+      'payment': 'GCash',
+      'status': 'Preparing',
+      'time': '11:20 AM',
+      'notes': 'No onions',
+    },
+  ];
+
   static final List<Map<String, dynamic>> dailyRevenue = [
     {'hour': '8AM', 'amount': 1250.0},
     {'hour': '9AM', 'amount': 2100.0},

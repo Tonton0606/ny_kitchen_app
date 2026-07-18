@@ -12,7 +12,7 @@ class TransactionHistoryPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -21,12 +21,21 @@ class TransactionHistoryPage extends StatelessWidget {
                   children: [
                     const Text(
                       'Transaction History',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'serif',
+                        letterSpacing: -0.4,
+                        color: AppColors.darkCharcoal,
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     const Text(
                       "View today's past orders",
-                      style: TextStyle(color: AppColors.mutedText, fontSize: 15),
+                      style: TextStyle(
+                        color: AppColors.mutedText,
+                        fontSize: 15,
+                      ),
                     ),
                   ],
                 ),
@@ -35,26 +44,31 @@ class TransactionHistoryPage extends StatelessWidget {
           ),
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
               itemCount: MockData.transactions.length,
               itemBuilder: (context, index) {
                 final tx = MockData.transactions[index];
                 final isVoided = tx['status'] == 'Voided';
 
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: 12),
                   elevation: 0,
+                  color: AppColors.surfaceWhite,
                   shape: RoundedRectangleBorder(
-                    side:  BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
+                    side: BorderSide(
+                      color: Colors.grey.withValues(alpha: 0.15),
                     ),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.all(24),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     leading: CircleAvatar(
+                      radius: 18,
                       backgroundColor: isVoided
-                          ? Theme.of(context).colorScheme.outlineVariant
+                          ? Colors.grey.withValues(alpha: 0.1)
                           : Theme.of(
                               context,
                             ).colorScheme.primary.withValues(alpha: 0.2),
@@ -71,7 +85,8 @@ class TransactionHistoryPage extends StatelessWidget {
                         Text(
                           tx['receiptNo'],
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
                             decoration: isVoided
                                 ? TextDecoration.lineThrough
                                 : null,
@@ -80,7 +95,8 @@ class TransactionHistoryPage extends StatelessWidget {
                         Text(
                           '₱${tx['total'].toStringAsFixed(2)}',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
                             color: isVoided
                                 ? Theme.of(context).colorScheme.onSurfaceVariant
                                 : Theme.of(context).colorScheme.error,
@@ -94,17 +110,21 @@ class TransactionHistoryPage extends StatelessWidget {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         Text(
                           '${tx['date']} • ${tx['items']} Items • ${tx['payment']}',
+                          style: const TextStyle(
+                            color: AppColors.mutedText,
+                            fontSize: 12,
+                          ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
-                                vertical: 4,
+                                vertical: 3,
                               ),
                               decoration: BoxDecoration(
                                 color: isVoided
@@ -112,7 +132,7 @@ class TransactionHistoryPage extends StatelessWidget {
                                         context,
                                       ).colorScheme.outlineVariant
                                     : Colors.green.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 tx['status'],
@@ -123,7 +143,7 @@ class TransactionHistoryPage extends StatelessWidget {
                                         ).colorScheme.onSurfaceVariant
                                       : Colors.green,
                                   fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
@@ -131,7 +151,7 @@ class TransactionHistoryPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    trailing:  Icon(
+                    trailing: Icon(
                       Icons.chevron_right,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
