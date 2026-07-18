@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:ny_kitchen_app/features/auth/presentation/pages/login_page.dart';
 import 'package:ny_kitchen_app/core/theme/app_theme.dart';
+import 'package:ny_kitchen_app/features/cashier/presentation/widgets/navigation/cashier_nav_rail.dart';
+import 'package:ny_kitchen_app/features/admin/presentation/widgets/navigation/admin_nav_rail.dart';
 
 void main() {
   Widget buildApp() {
@@ -235,6 +239,172 @@ void main() {
       expect(tester.takeException(), isNull);
 
       tester.view.platformDispatcher.clearTextScaleFactorTestValue();
+    });
+  });
+
+  group('Nav Rail Expansion and Platform Tests', () {
+    testWidgets('CashierNavRail on Windows Desktop allows toggling expansion', (
+      WidgetTester tester,
+    ) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+
+      int selectedIndex = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Row(
+              children: [
+                CashierNavRail(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (val) {
+                    selectedIndex = val;
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Verify the menu button is present and layout starts collapsed (76px)
+      final toggleFinder = find.byIcon(Symbols.menu);
+      expect(toggleFinder, findsOneWidget);
+      expect(tester.getSize(find.byType(CashierNavRail)).width, 76.0);
+
+      // Tap to expand
+      await tester.tap(toggleFinder);
+      await tester.pumpAndSettle();
+
+      // Verify menu_open is present and layout is expanded (240px)
+      expect(find.byIcon(Symbols.menu_open), findsOneWidget);
+      expect(tester.getSize(find.byType(CashierNavRail)).width, 240.0);
+
+      // Verify text label is visible
+      expect(find.text('Orders'), findsOneWidget);
+
+      // Tap menu_open to collapse
+      await tester.tap(find.byIcon(Symbols.menu_open));
+      await tester.pumpAndSettle();
+
+      // Verify collapsed state again
+      expect(find.byIcon(Symbols.menu), findsOneWidget);
+      expect(tester.getSize(find.byType(CashierNavRail)).width, 76.0);
+
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('CashierNavRail on Android has no toggle and is fixed width (76px)', (
+      WidgetTester tester,
+    ) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Row(
+              children: [
+                CashierNavRail(
+                  selectedIndex: 0,
+                  onDestinationSelected: (_) {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Verify toggle button is not present
+      expect(find.byIcon(Symbols.menu), findsNothing);
+      expect(find.byIcon(Symbols.menu_open), findsNothing);
+
+      // Verify width remains exactly 76px
+      expect(tester.getSize(find.byType(CashierNavRail)).width, 76.0);
+
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('AdminNavRail on Windows Desktop allows toggling expansion', (
+      WidgetTester tester,
+    ) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+
+      int selectedIndex = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Row(
+              children: [
+                AdminNavRail(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (val) {
+                    selectedIndex = val;
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Verify the menu button is present and layout starts collapsed (76px)
+      final toggleFinder = find.byIcon(Symbols.menu);
+      expect(toggleFinder, findsOneWidget);
+      expect(tester.getSize(find.byType(AdminNavRail)).width, 76.0);
+
+      // Tap to expand
+      await tester.tap(toggleFinder);
+      await tester.pumpAndSettle();
+
+      // Verify menu_open is present and layout is expanded (240px)
+      expect(find.byIcon(Symbols.menu_open), findsOneWidget);
+      expect(tester.getSize(find.byType(AdminNavRail)).width, 240.0);
+
+      // Verify text label is visible
+      expect(find.text('Sales'), findsOneWidget);
+
+      // Tap menu_open to collapse
+      await tester.tap(find.byIcon(Symbols.menu_open));
+      await tester.pumpAndSettle();
+
+      // Verify collapsed state again
+      expect(find.byIcon(Symbols.menu), findsOneWidget);
+      expect(tester.getSize(find.byType(AdminNavRail)).width, 76.0);
+
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('AdminNavRail on Android has no toggle and is fixed width (76px)', (
+      WidgetTester tester,
+    ) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Row(
+              children: [
+                AdminNavRail(
+                  selectedIndex: 0,
+                  onDestinationSelected: (_) {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Verify toggle button is not present
+      expect(find.byIcon(Symbols.menu), findsNothing);
+      expect(find.byIcon(Symbols.menu_open), findsNothing);
+
+      // Verify width remains exactly 76px
+      expect(tester.getSize(find.byType(AdminNavRail)).width, 76.0);
+
+      debugDefaultTargetPlatformOverride = null;
     });
   });
 }

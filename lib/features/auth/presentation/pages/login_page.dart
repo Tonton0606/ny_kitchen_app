@@ -122,7 +122,7 @@ class _LoginPageState extends State<LoginPage>
           0.0,
           double.infinity,
         );
-
+  
         return SingleChildScrollView(
           padding: EdgeInsets.symmetric(
             horizontal: horizontalPadding,
@@ -408,15 +408,17 @@ class _PromotionalPanel extends StatelessWidget {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final minHeight = (constraints.maxHeight - 96).clamp(
+                    final minHeight = (constraints.maxHeight - 56).clamp(
                       0.0,
                       double.infinity,
                     );
 
                     return SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 64,
-                        vertical: 48,
+                      padding: const EdgeInsets.only(
+                        left: 64,
+                        right: 64,
+                        top: 32,
+                        bottom: 24,
                       ),
                       child: ConstrainedBox(
                         constraints: BoxConstraints(minHeight: minHeight),
@@ -446,47 +448,45 @@ class _PromotionalPanel extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 68),
-                            Transform.translate(
-                              offset: const Offset(0, 32),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'One counter.\nEvery order, tracked.',
-                                    style: theme.textTheme.headlineLarge
+                            const SizedBox(height: 32),
+                            const SizedBox(height: 8),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'One counter.\nEvery order, tracked.',
+                                  style: theme.textTheme.headlineLarge
+                                      ?.copyWith(
+                                        color: AppColors.darkCharcoal,
+                                        fontSize: 40,
+                                        fontWeight: FontWeight.w800,
+                                        height: 1.2,
+                                        letterSpacing: -0.8,
+                                      ),
+                                ),
+                                const SizedBox(height: 16),
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 560,
+                                  ),
+                                  child: Text(
+                                    'A clear, reliable workspace for taking orders and keeping every transaction organized.',
+                                    style: theme.textTheme.bodyLarge
                                         ?.copyWith(
-                                          color: AppColors.darkCharcoal,
-                                          fontSize: 40,
-                                          fontWeight: FontWeight.w800,
-                                          height: 1.2,
-                                          letterSpacing: -0.8,
+                                          color: AppColors.darkCharcoal
+                                              .withValues(alpha: 0.76),
+                                          height: 1.5,
                                         ),
                                   ),
-                                  const SizedBox(height: 24),
-                                  ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 560,
-                                    ),
-                                    child: Text(
-                                      'A clear, reliable workspace for taking orders and keeping every transaction organized.',
-                                      style: theme.textTheme.bodyLarge
-                                          ?.copyWith(
-                                            color: AppColors.darkCharcoal
-                                                .withValues(alpha: 0.76),
-                                            height: 1.5,
-                                          ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 48),
-                                  const FractionallySizedBox(
-                                    widthFactor: 0.82,
-                                    alignment: Alignment.centerLeft,
-                                    child: _OrderCard(),
-                                  ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(height: 24),
+                                const FractionallySizedBox(
+                                  widthFactor: 0.82,
+                                  alignment: Alignment.centerLeft,
+                                  child: _OrderCard(),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -495,7 +495,7 @@ class _PromotionalPanel extends StatelessWidget {
                   },
                 ),
               ),
-              const _PastilHero(),
+              const _PastilHero(isReversed: true),
             ],
           ),
         ],
@@ -505,7 +505,9 @@ class _PromotionalPanel extends StatelessWidget {
 }
 
 class _PastilHero extends StatefulWidget {
-  const _PastilHero();
+  const _PastilHero({this.isReversed = false});
+
+  final bool isReversed;
 
   @override
   State<_PastilHero> createState() => _PastilHeroState();
@@ -546,8 +548,10 @@ class _PastilHeroState extends State<_PastilHero>
 
   @override
   Widget build(BuildContext context) {
+    final displayImages = widget.isReversed ? _images.reversed.toList() : _images;
+
     return Container(
-      height: 200,
+      height: 150,
       alignment: Alignment.center,
       child: Stack(
         clipBehavior: Clip.none,
@@ -562,7 +566,7 @@ class _PastilHeroState extends State<_PastilHero>
                     'NY',
                     style: TextStyle(
                       color: AppColors.darkCharcoal,
-                      fontSize: 180,
+                      fontSize: 140,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 8,
                     ),
@@ -583,12 +587,12 @@ class _PastilHeroState extends State<_PastilHero>
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                for (int i = 0; i < _images.length; i++)
+                for (int i = 0; i < displayImages.length; i++)
                   Transform.translate(
-                    offset: Offset(i < _images.length - 1 ? -36.0 : 0, 0),
+                    offset: Offset(i < displayImages.length - 1 ? -36.0 : 0, 0),
                     child: Image.asset(
-                      _images[i],
-                      height: 160 + (i.isEven ? 30 : 0),
+                      displayImages[i],
+                      height: 110 + (i.isEven ? 25 : 0),
                       fit: BoxFit.contain,
                     ),
                   ),

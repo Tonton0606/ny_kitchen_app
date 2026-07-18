@@ -24,7 +24,6 @@ class TransactionHistoryPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        fontFamily: 'serif',
                         letterSpacing: -0.4,
                         color: AppColors.darkCharcoal,
                       ),
@@ -63,8 +62,9 @@ class TransactionHistoryPage extends StatelessWidget {
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 10,
+                      vertical: 12,
                     ),
+                    horizontalTitleGap: 12,
                     leading: CircleAvatar(
                       radius: 18,
                       backgroundColor: isVoided
@@ -110,7 +110,7 @@ class TransactionHistoryPage extends StatelessWidget {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
                           '${tx['date']} • ${tx['items']} Items • ${tx['payment']}',
                           style: const TextStyle(
@@ -118,13 +118,13 @@ class TransactionHistoryPage extends StatelessWidget {
                             fontSize: 12,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
-                                vertical: 3,
+                                vertical: 4,
                               ),
                               decoration: BoxDecoration(
                                 color: isVoided
@@ -151,9 +151,12 @@ class TransactionHistoryPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    trailing: Icon(
-                      Icons.chevron_right,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    trailing: Padding(
+                      padding: const EdgeInsets.only(right: 4.0),
+                      child: Icon(
+                        Icons.chevron_right,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     onTap: () {
                       // Action to view details
