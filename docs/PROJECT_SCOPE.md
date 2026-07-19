@@ -70,4 +70,4 @@ Define the approved scope of the N.Y Kitchen application to prevent scope creep 
 ---
 
 ## TODO
-- [ ] Get scope sign-off from supervisor before Phase 1 prototype begins
+- [ ] Get scope and prototype sign-off from supervisor before backend implementation begins

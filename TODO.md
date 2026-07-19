@@ -3,7 +3,7 @@
 
 > Update this file whenever a task status changes.
 > Authority: `PROJECT_BLUEPRINT.md` → `RULES.md` → `AI_DEVELOPMENT_RULES.md`
-> Current Phase: **Phase 1 — Static UI/UX Prototype and Documentation Preparation**
+> Current Phase: **LUMORA Phase 4 — Validate, for Project Phase 1 static UI/UX**
 
 ---
 
@@ -35,7 +35,7 @@
 
 ## Architecture
 
-- [ ] Finalize folder structure in `docs/FOLDER_STRUCTURE.md`
+- [x] Finalize folder structure in `docs/FOLDER_STRUCTURE.md`
 - [ ] Confirm state management choice (Provider) — record in `DECISIONS.md`
 - [ ] Confirm navigation choice (go_router) — record in `DECISIONS.md`
 - [x] Confirm receipt generation packages (printing, pdf)
@@ -65,35 +65,35 @@
 - [x] Create confirmation dialog components (logout, delete)
 - [ ] Create Backup & Restore mockup
 - [ ] Create Unauthorized Page mockup
-- [ ] Create loading state components
-- [ ] Create empty state components
-- [ ] Create error state components
+- [x] Create loading state components
+- [x] Create empty state components
+- [x] Create error state components
 - [ ] Create receipt preview mockup
 - [ ] Create dark and light theme mockups
 - [ ] Client review and approval of Phase 1 prototype
 
 ---
 
-## Flutter (Phase 2+)
+## Flutter Foundations (Phase 1 prototype; backend architecture deferred)
 
-> **NOT ALLOWED during Phase 1 static prototype.** Phase 1 is the static UI phase.
-> Begin Phase 2 (architecture, routing, shared widgets) after approval.
+> Material 3 theme, feature folders, and shared presentation widgets exist for the prototype.
+> State management, routing, models, repositories, services, and backend integration remain deferred until approval.
 
-- [ ] Set up feature-first folder structure
-- [ ] Configure Material 3 theme
+- [x] Set up feature-first folder structure
+- [x] Configure Material 3 theme (light prototype)
 - [ ] Configure go_router navigation
-- [ ] Create shared widgets
+- [x] Create shared widgets
 - [ ] Create domain models
 - [ ] Create repository interfaces
 - [ ] Create service layer
 
 ---
 
-## Responsive Design (Phase 2+)
+## Responsive Design (Phase 1 prototype)
 
-- [ ] Implement mobile layout (drawer nav, single column, bottom sheet)
-- [ ] Implement tablet layout (compact sidebar, floating checkout)
-- [ ] Implement desktop layout (3-panel POS, sidebar nav)
+- [x] Implement mobile layout (drawer nav, single column, bottom sheet)
+- [x] Implement tablet layout (compact sidebar, floating checkout)
+- [x] Implement desktop layout (3-panel POS, sidebar nav)
 - [ ] Convert tables to card layouts on mobile
 
 ---

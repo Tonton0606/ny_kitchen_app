@@ -10,18 +10,14 @@ Define the design tokens, component specifications, and visual language for N.Y 
 
 ---
 
-## Color Tokens (To Be Finalized)
+## Color Tokens (Phase 1 implementation)
 
 ```
-// Provisional — Define exact hex values before Phase 1 prototype
-Primary:         #FFD600  (Yellow)
-PrimaryVariant:  #F9A825
-Secondary:       #D32F2F  (Red)
-Surface:         #FFFFFF  (White)
-Background:      #F5F5F5
-OnPrimary:       #000000  (Black)
-OnSurface:       #212121
-Error:           #B00020
+Primary seed:    #FFB300  (deep amber-yellow)
+Tertiary:        #7C5800  (dark amber)
+Success:         #2E7D32  (semantic success)
+Info:            #1565C0  (semantic information)
+Color system:    Material 3 `ColorScheme.fromSeed` in `lib/core/theme/app_theme.dart`
 ```
 
 ## Typography Scale
@@ -60,6 +56,6 @@ Error:           #B00020
 ---
 
 ## TODO
-- [ ] Finalize all color tokens before Phase 1 prototype
+- [x] Finalize Phase 1 color tokens in `lib/core/theme/app_colors.dart`
 - [ ] Create component library in Figma
 - [ ] Link Figma file in docs/FIGMA_INTEGRATION.md

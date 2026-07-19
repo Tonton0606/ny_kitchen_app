@@ -105,6 +105,7 @@ class _OrdersPageState extends State<OrdersPage> {
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
+              if (!mounted) return;
               setState(() => order['status'] = nextStatus);
               ScaffoldMessenger.of(context)
                 ..clearSnackBars()
@@ -114,8 +115,10 @@ class _OrdersPageState extends State<OrdersPage> {
                     behavior: SnackBarBehavior.floating,
                     action: SnackBarAction(
                       label: 'Undo',
-                      onPressed: () =>
-                          setState(() => order['status'] = _flow[currentIdx]),
+                      onPressed: () {
+                        if (!mounted) return;
+                        setState(() => order['status'] = _flow[currentIdx]);
+                      },
                     ),
                   ),
                 );

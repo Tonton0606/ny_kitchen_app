@@ -34,4 +34,5 @@ List and describe all approved application modules. No additional modules may be
 ---
 
 ## TODO
-- [ ] Create detailed screen specifications for each module before Phase 1 prototype
+- [x] Create detailed screen specifications for the implemented Phase 1 modules
+- [ ] Complete specifications for future Backup and Restore and Unauthorized screens

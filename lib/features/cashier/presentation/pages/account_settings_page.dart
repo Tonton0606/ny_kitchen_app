@@ -19,7 +19,12 @@ class AccountSettingsPage extends StatelessWidget {
                 children: [
                   const Text(
                     'Account Settings',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                      color: AppColors.darkCharcoal,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -46,12 +51,19 @@ class AccountSettingsPage extends StatelessWidget {
                     const SizedBox(height: 16),
                     const Text(
                       'John Doe',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal),
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.darkCharcoal,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Cashier',
-                      style: TextStyle(fontSize: 15, color: AppColors.mutedText),
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: AppColors.mutedText,
+                      ),
                     ),
                   ],
                 ),
@@ -91,23 +103,36 @@ class AccountSettingsPage extends StatelessWidget {
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        tileColor: Colors.white,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.goldenYellow.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          tileColor: Colors.white,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.goldenYellow.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: AppColors.goldenYellow, size: 24),
           ),
-          child: Icon(icon, color: AppColors.goldenYellow, size: 24),
-        ),
-        title: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.darkCharcoal)),
-        trailing: const Icon(Icons.chevron_right, color: AppColors.mutedText),
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: AppColors.softBorder),
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: AppColors.darkCharcoal,
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right, color: AppColors.mutedText),
+          onTap: onTap,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: AppColors.softBorder),
+          ),
         ),
       ),
     );

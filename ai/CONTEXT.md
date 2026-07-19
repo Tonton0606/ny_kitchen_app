@@ -35,7 +35,8 @@
 - Supabase service-role key must NEVER be in the Flutter client.
 
 ## Development Phases
-- Phase 1: Static UI/UX Prototype (CURRENT)
+- Project Phase 1: Static UI/UX Prototype (implemented)
+- LUMORA Phase 4: Validate (CURRENT)
 - Phase 2: Architecture Setup
 - Phase 3: SQLite Integration
 - Phase 4: Authentication
@@ -47,8 +48,10 @@
 - Phase 10: Security Hardening and QA
 - Phase 11: Deployment and Defense
 
-## Color Palette (Provisional)
-- Primary: Yellow
-- Secondary: Red
-- Surface: White
+## Color Palette (Phase 1 implementation)
+- Primary seed: Deep amber-yellow (`#FFB300`)
+- Tertiary: Dark amber (`#7C5800`)
+- Semantic success: Green (`#2E7D32`)
+- Semantic info: Blue (`#1565C0`)
+- Material 3 `ColorScheme.fromSeed` is implemented in `lib/core/theme/app_theme.dart`.
 - Text: Black

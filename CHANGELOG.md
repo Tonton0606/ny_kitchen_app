@@ -44,6 +44,8 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 - **Account Management**: Complete dialogs for Add Cashier, Edit, Reset Password, Disable/Enable with proper form fields and confirmation messaging, search/filter functionality.
 - **Activity Logs**: Added search by user/action/module, role filter dropdown, date filter dropdown, role and module colored badges, monospace IP styling.
 - **Account Settings**: Added profile picture with camera icon overlay, role badge, theme switch with dark mode icon, about section, save button with feedback.
+- **Admin design merge**: Consolidated the polished Material 3 login, admin navigation, dashboard, reports, food, account, activity-log, and settings UI into the Phase 1 prototype.
+- **Cashier UI**: Refined cashier navigation, ordering, active orders, and settings presentation while retaining mock data only.
 
 ### Fixed
 
@@ -61,6 +63,9 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 - Resolved unused `app_colors.dart` imports across multiple modules.
 - Fixed `curly_braces_in_flow_control_structures` warnings in `ActivityLogsPage`.
 - Applied Material 3 design polish to `LoginPage`, replacing hardcoded `AppColors` with `Theme.of(context).colorScheme` and enhancing the desktop split layout with branded visuals.
+- Added mounted guards around order status updates and undo actions after dialog navigation.
+- Wrapped cashier account-settings tiles in a transparent `Material` surface so ListTile ink feedback is visible.
+- Completed LUMORA Phase 4 validation: `flutter analyze` reports zero issues and all 26 widget tests pass.
 
 ### Security
 
