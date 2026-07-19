@@ -3,7 +3,7 @@
 
 > Update this file whenever a task status changes.
 > Authority: `PROJECT_BLUEPRINT.md` → `RULES.md` → `AI_DEVELOPMENT_RULES.md`
-> Current Phase: **LUMORA Phase 4 — Validate, for Project Phase 1 static UI/UX**
+> Current Phase: **Pre-Phase 5 Cloud Sync Validation; SQLite remains the offline source of truth**
 
 ---
 
@@ -157,10 +157,10 @@
 ## Authentication (Phase 4)
 
 - [ ] Implement login screen logic
-- [ ] Implement password hashing (PBKDF2 SHA-256 per ADR-013)
+- [x] Implement current password hashing (`crypto` SHA-256; stronger KDF review remains pending)
 - [ ] Implement failed login counter
-- [ ] Implement account lockout (5 attempts, 15 min lockout)
-- [ ] Implement session management
+- [x] Implement account lockout (5 failed attempts)
+- [x] Implement in-memory session management
 - [ ] Implement session expiration (12 hours inactivity)
 - [ ] Implement automatic logout
 - [ ] Implement role-based route protection

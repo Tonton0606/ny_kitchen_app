@@ -1,14 +1,98 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/utils/responsive.dart';
 import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/database/repositories/transaction_repository.dart';
 import '../../../shared/widgets/responsive_data_table.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/ny_watermark.dart';
+import '../shared/widgets/sales_chart.dart';
+import 'package:intl/intl.dart';
 
-class AdminDashboardPage extends StatelessWidget {
+class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
+
+  @override
+  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
+}
+
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  final TransactionRepository _txRepo = TransactionRepository();
+  List<Map<String, dynamic>> _recentTransactions = [];
+  double _todayRevenue = 0;
+  int _todayOrders = 0;
+  double _monthlyRevenue = 0;
+  List<Map<String, dynamic>> _hourlyData = [];
+
+  bool _isLoading = true;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      _loadDashboardData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadDashboardData() async {
+    final transactions = await _txRepo.getAllTransactions();
+    final now = DateTime.now();
+
+    double tRev = 0;
+    int tOrders = 0;
+    double mRev = 0;
+
+    // Process hourly data for today
+    Map<int, double> hourlyRev = {
+      8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
+    };
+
+    for (var tx in transactions) {
+      if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
+
+      final dateStr = tx['created_at'];
+      final date = DateTime.tryParse(dateStr) ?? DateTime.now();
+
+      if (date.year == now.year && date.month == now.month) {
+        mRev += (tx['total_amount'] as num).toDouble();
+        
+        if (date.day == now.day) {
+          tRev += (tx['total_amount'] as num).toDouble();
+          tOrders++;
+          
+          if (hourlyRev.containsKey(date.hour)) {
+            hourlyRev[date.hour] = hourlyRev[date.hour]! + (tx['total_amount'] as num).toDouble();
+          }
+        }
+      }
+    }
+
+    final chartData = hourlyRev.entries.map((e) {
+      final hourStr = '${e.key > 12 ? e.key - 12 : e.key}:00 ${e.key >= 12 ? 'PM' : 'AM'}';
+      return {'hour': hourStr, 'amount': e.value};
+    }).toList();
+
+    if (mounted) {
+      setState(() {
+        _recentTransactions = transactions.take(5).toList();
+        _todayRevenue = tRev;
+        _todayOrders = tOrders;
+        _monthlyRevenue = mRev;
+        _hourlyData = chartData;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,28 +147,28 @@ class AdminDashboardPage extends StatelessWidget {
               children: [
                 _buildStatCard(context, 
                   'Today\'s Revenue',
-                  '₱14,500.00',
-                  '↑ 12.5% vs yesterday',
+                  '₱${_todayRevenue.toStringAsFixed(2)}',
+                  'Live data',
                   Icons.attach_money,
                   AppColors.success,
                 ),
                 _buildStatCard(context, 
                   'Today\'s Orders',
-                  '124',
-                  '↑ 8.3% vs yesterday',
+                  '$_todayOrders',
+                  'Live data',
                   Icons.receipt_long,
                   AppColors.info,
                 ),
                 _buildStatCard(context, 
                   'Monthly Revenue',
-                  '₱425,000.00',
-                  '↑ 15.2% vs last month',
+                  '₱${_monthlyRevenue.toStringAsFixed(2)}',
+                  'Live data',
                   Icons.show_chart,
                   AppColors.tertiary,
                 ),
                 _buildStatCard(context, 
                   'Active Cashiers',
-                  '2',
+                  '2', // We could fetch from UserRepository
                   'Currently on shift',
                   Icons.people,
                   AppColors.goldenYellow,
@@ -102,7 +186,7 @@ class AdminDashboardPage extends StatelessWidget {
                     children: [
                       _buildSectionCard(context, 
                         'Sales Trend',
-                        _buildChartPlaceholder(context),
+                        _isLoading ? const SizedBox(height: 250, child: Center(child: CircularProgressIndicator())) : SalesChart(data: _hourlyData),
                       ),
                       const SizedBox(height: 24),
                       _buildSectionCard(context, 
@@ -277,61 +361,14 @@ class AdminDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildChartPlaceholder(BuildContext context) {
-    return Container(
-      height: 200,
-      decoration: BoxDecoration(
-        color: AppColors.creamBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.softBorder),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: MockData.dailyRevenue.map((d) {
-              final height = (d['amount'] as double) / 60;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 24,
-                    height: height,
-                    decoration: BoxDecoration(
-                      color: AppColors.goldenYellow.withValues(alpha: 0.7),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    d['hour'],
-                    style: const TextStyle(fontSize: 10, color: AppColors.mutedText),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Sales Trend (Hourly)',
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.mutedText,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildRecentTransactionsTable(BuildContext context) {
     return ResponsiveDataTable(
       columns: const ['Receipt No', 'Time', 'Amount', 'Status'],
-      data: MockData.transactions.take(5).toList(),
+      data: _recentTransactions,
       buildRow: (tx) {
-        final status = tx['status'] as String;
-        final isSuccess = status == 'Completed';
+        final status = tx['status'] as String? ?? 'Unknown';
+        final isSuccess = status == 'Completed' || status == 'Served';
         final isVoided = status == 'Voided';
         final isRefunded = status == 'Refunded';
         
@@ -343,13 +380,16 @@ class AdminDashboardPage extends StatelessWidget {
         } else if (isRefunded) {
           badgeColor = AppColors.tertiary;
         } else {
-          badgeColor = AppColors.mutedText;
+          badgeColor = AppColors.mutedText; // Taken, Preparing, Ready
         }
 
+        final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
+        final timeStr = DateFormat('h:mm a').format(parsedDate);
+
         return DataRow(cells: [
-          DataCell(Text(tx['receiptNo'], style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-          DataCell(Text('${tx['date'].toString().split(' ')[1]} ${tx['date'].toString().split(' ')[2]}', style: const TextStyle(fontSize: 13))),
-          DataCell(Text('\u20b1${tx['total'].toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+          DataCell(Text(tx['receipt_number'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+          DataCell(Text(timeStr, style: const TextStyle(fontSize: 13))),
+          DataCell(Text('\u20b1${(tx['total_amount'] as num).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
           DataCell(StatusBadge(text: status, color: badgeColor)),
         ]);
       },

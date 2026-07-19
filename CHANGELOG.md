@@ -26,6 +26,16 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 - `skills/_templates/skill-template/SKILL.md` — Standard skill template.
 - `docs/OPEN_SOURCE_REVIEW.md` — Documentation of the open source review, import decisions, and security constraints.
 - `docs/FIGMA_INTEGRATION.md` — Documentation of Figma workspace links and design handoff process.
+- **SQLite Database Architecture**: Implemented `DatabaseHelper` singleton utilizing `sqflite` to manage 9 tables with schema specifications aligned with `docs/SQLITE_ARCHITECTURE.md`.
+- **Database Seeding**: Added initial seeding logic to auto-create 'admin' account, default 'food_categories', and baseline 'food_items' upon database creation.
+- **Data Repositories**: Created `UserRepository` handling authentication/login checks against SQLite, and `FoodRepository` for CRUD operations on food items.
+- **Backend UI Integration**: 
+  - Updated `LoginPage` to query `UserRepository` for actual database credentials instead of static checks.
+  - Rewired `FoodManagementPage` to read dynamically from `FoodRepository` and completely replaced static `MockData`.
+  - Form dialogs (Add/Edit/Delete Food) in `FoodManagementPage` now write changes directly to SQLite and trigger a UI reload upon success.
+  - Rewired `AccountManagementPage` to perform CRUD operations on actual SQLite users via `UserRepository` instead of mock arrays.
+  - Connected Cashier POS (`CashierHomePage`) to live `FoodRepository` for menu items and implemented live `TransactionRepository` checkouts that write to the `transactions` and `transaction_items` tables.
+  - Connected Kitchen Flow (`OrdersPage`) to poll live active transactions allowing true state progression (`Taken` -> `Preparing` -> `Ready` -> `Served`).
 - Cashier Module Phase 1 Static UI Prototype (Home/Order, History, Settings).
 - Admin Module Phase 1 Static UI Prototype (Dashboard, Sales Reports, Food Management, Account Management, Activity Logs, Settings).
 - Login Screen static prototype with mock role selection.
@@ -69,7 +79,7 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ### Security
 
-*No security changes yet. Security implementation begins in Phase 4.*
+- Phase 4 security implementation is tracked in `SECURITY_FEATURES.md`: local SQLite authentication, `crypto` SHA-256 password hashing, in-memory sessions, and five-attempt account lockout.
 
 ### Deprecated
 

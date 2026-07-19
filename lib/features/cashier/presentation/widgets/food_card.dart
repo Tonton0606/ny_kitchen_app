@@ -18,7 +18,7 @@ class FoodCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAvailable = food['isAvailable'] as bool;
+    final isAvailable = food['availability'] == 'available' || food['isAvailable'] == true;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -64,7 +64,7 @@ class FoodCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    food['category'],
+                    food['category_name'] ?? food['category'] ?? 'Category',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,

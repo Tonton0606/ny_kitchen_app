@@ -159,6 +159,12 @@ class AdminDrawer extends StatelessWidget {
                   4,
                   context,
                 ),
+                _buildItem(
+                  Symbols.backup_rounded,
+                  'Backup & Restore',
+                  5,
+                  context,
+                ),
               ],
             ),
           ),

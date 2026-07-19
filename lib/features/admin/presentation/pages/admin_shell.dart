@@ -8,6 +8,7 @@ import 'sales_reports_page.dart';
 import 'food_management_page.dart';
 import 'account_management_page.dart';
 import 'activity_logs_page.dart';
+import 'backup_restore_page.dart';
 import 'admin_account_settings_page.dart';
 
 class AdminShell extends StatefulWidget {
@@ -30,6 +31,7 @@ class _AdminShellState extends State<AdminShell> {
     FoodManagementPage(),
     AccountManagementPage(),
     ActivityLogsPage(),
+    BackupRestorePage(),
   ];
 
   final List<String> _titles = [
@@ -38,6 +40,7 @@ class _AdminShellState extends State<AdminShell> {
     'Food Management',
     'Account Management',
     'Activity Logs',
+    'Backup & Restore',
   ];
 
   void _onItemTapped(int index) {

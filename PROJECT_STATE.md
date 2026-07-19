@@ -12,10 +12,23 @@
 | Field | Value |
 |---|---|
 | **Project Name** | N.Y Kitchen Secure Order and Sales Management System |
-| **Current Phase** | LUMORA Phase 4 — Validate; Project Phase 1 static UI/UX prototype |
-| **Current Status** | Static UI/UX prototype implemented and validated; backend work not started |
-| **Last Updated** | 2026-07-19 |
+| **Current Phase** | Pre-Phase 5 Cloud Sync Validation — Project Phase 4 security complete; Blueprint Phase 5 menu management implemented |
+| **Current Status** | SQLite remains the local source of truth; Supabase background backup/sync is not started |
+| **Last Updated** | 2026-07-20 |
 | **Updated By** | Jr. Flutter Developer |
+
+---
+
+## Phase Completion Tracker
+
+| Track | Status | Completion |
+|---|---|---:|
+| Project Phase 3 — SQLite integration | Implemented; targeted tests pending | 100% implementation |
+| Project Phase 4 — Authentication and security | Implemented; targeted security tests pending | 100% implementation |
+| Blueprint Phase 5 — Menu management | Implemented in the current SQLite-backed UI | 100% implementation |
+| Supabase background backup/sync | Pending design and approval | 0% |
+
+The percentages describe implementation scope, not production readiness. Security and offline test coverage remain explicit gates before cloud integration.
 
 ---
 
@@ -61,6 +74,25 @@
 - [x] Navigation Drawer (Mobile)
 - [x] Logout confirmation dialog (Material 3 styled)
 - [x] Logout navigates back to Login page
+
+### Phase 4: Authentication & Security [Completed]
+- [x] Integrate SQLite `users` table for `admin` and `cashier` login credentials.
+- [x] Secure password storage using SHA-256 (Implemented `crypto` hashing and DB migration script).
+- [x] Manage offline session states (Implemented `SessionManager` singleton).
+- [x] Route users into the local Admin or Cashier shell based on the authenticated role.
+- [ ] Add declarative route guards and an Unauthorized page before production use.
+- [x] Enforce lockout policy for consecutive failed login attempts (5 attempts triggers `status = 'locked'`).
+- [x] Provide a method to securely change/reset passwords (Integrated into Account Settings and Account Management pages).
+- [x] Integrate native image picking for local food images.
+- [x] Implement Food Category CRUD/archive management in SQLite.
+
+### Phase 5: Cloud Synchronization [Pending]
+- [ ] Define Supabase background backup/sync contract and conflict resolution.
+- [ ] Keep SQLite as the primary source of truth and preserve offline operation.
+- [ ] Do not implement Supabase Auth; authentication remains local-only SQLite.
+- [ ] Define row-level security, environment, retry, and service-role-key policies before integration.
+
+> The project blueprint currently names Project Phase 5 as Menu Management. This implementation has the menu/category/image foundation in place. The Supabase work above is a separate future cloud-sync track and must not be treated as completed Project Phase 5 work.
 
 ### Admin Dashboard
 - [x] Today's Revenue stat card (with trend indicator)
@@ -132,25 +164,24 @@
 
 ## In Progress
 
-- [x] LUMORA Phase 4 validation: analyzer, widget tests, lifecycle checks, and responsive smoke coverage
-- [x] Documentation synchronization review
-- [ ] Documentation review by project owner / supervisor
-- [ ] Blueprint approval confirmation
-- [ ] Figma design mockup finalization
+- [x] Phase 4 security and SQLite integration implementation
+- [x] Pre-Phase 5 code and documentation validation
+- [ ] Supabase background backup/sync design and approval
+- [ ] Security test coverage for hashing, lockout, session, and authorization behavior
 
 ---
 
 ## Blocked
 
-*No blockers at this time. Awaiting documentation review and Phase 2 approval.*
+*No code-analysis blockers. Cloud synchronization is pending design approval, security review, and sync-conflict decisions.*
 
 ---
 
 ## Next Steps
 
-1. **Project Phase 1 sign-off**: client/supervisor review of the validated static prototype
-2. **Project Phase 2 (after approval)**: state management, routing, models, repositories, and services
-3. **Project Phase 3 (after Phase 2)**: SQLite integration; do not add backend logic before approval
+1. Complete security and offline behavior tests for the new SQLite-backed features.
+2. Approve the Supabase background backup/sync contract, RLS model, and conflict policy.
+3. Begin Supabase integration only after approval; do not replace SQLite authentication or the local source of truth.
 
 ---
 
@@ -158,6 +189,7 @@
 
 - Supabase integration scope is not yet fully defined in the blueprint (documented as optional/future).
 - Sync conflict resolution strategy is not finalized (see `docs/SYNC_CONFLICT_POLICY.md` — Pending Review).
+- Password hashing currently uses SHA-256 with the project-wide salt in `SecurityUtils`; this requires security review before production deployment.
 
 ---
 
@@ -165,9 +197,9 @@
 
 - [ ] No production credentials configured yet — correct for current phase.
 - [ ] Supabase service-role key policy must be documented before cloud integration begins.
-- [ ] Password hashing algorithm must be confirmed before Phase 4.
-- [ ] Session expiration policy must be confirmed before Phase 4.
-- [ ] Account lockout threshold must be confirmed (see `docs/AUTHENTICATION.md`).
+- [x] Current password hashing implementation is documented as `crypto` SHA-256; stronger password-KDF review remains required.
+- [x] Current account lockout policy is documented as 5 failed attempts.
+- [ ] Session expiration policy is not implemented; current sessions are in-memory only.
 
 ---
 
@@ -190,14 +222,14 @@
 | Login Screen | Complete — Production-quality static prototype |
 | Admin Dashboard | Complete — Production-quality static prototype |
 | Sales Reports | Complete — Production-quality static prototype |
-| Food Management | Complete — Production-quality static prototype |
-| Account Management | Complete — Production-quality static prototype |
-| Activity Logs | Complete — Production-quality static prototype |
-| Account Settings | Complete — Production-quality static prototype |
-| Cashier Home / New Order | Complete — Production-quality static prototype |
-| Cashier Transaction History | Complete — Production-quality static prototype |
-| Cashier Account Settings | Complete — Production-quality static prototype |
-| Backup & Restore | Not started |
+| Food Management | Complete — SQLite-backed CRUD, categories, availability, and native image picking |
+| Account Management | Complete — SQLite-backed user management and password workflows |
+| Activity Logs | Complete — Integrated with live SQLite `AuditRepository` |
+| Account Settings | Complete — SQLite-backed session and password workflows |
+| Cashier Home / New Order | Complete — SQLite-backed order and checkout workflow |
+| Cashier Transaction History | Complete — SQLite-backed transaction history and voiding |
+| Cashier Account Settings | Complete — SQLite-backed session and password workflows |
+| Backup & Restore | Complete — Implemented SQLite export functionality via `BackupRepository` |
 | Unauthorized Page | Not started |
 | Receipt Preview | Not started |
 
@@ -207,7 +239,7 @@
 
 | Metric | Status |
 |---|---|
-| Static analysis | No issues found (0 warnings, 0 errors) — validated 2026-07-19 |
+| Static analysis | No issues found (0 warnings, 0 errors) — validated 2026-07-20 |
 | Deprecation warnings | All resolved |
 | Theme consistency | Material 3 with `useMaterial3: true` |
 | Responsive support | Desktop, Tablet, Mobile breakpoints implemented; widget-tested across target sizes |
@@ -218,11 +250,11 @@
 
 | Item | Status |
 |---|---|
-| Schema design | Planned — documented in `docs/SQLITE_ARCHITECTURE.md` |
-| Table creation | Not started (Phase 3) |
-| CRUD operations | Not started (Phase 3) |
-| Backup logic | Not started (Phase 3) |
-| Parameterized queries | Not started (Phase 3) |
+| Schema design | Implemented — documented in `docs/SQLITE_ARCHITECTURE.md` |
+| Table creation | Implemented |
+| CRUD operations | Complete (Admin, Cashier, Kitchen, Dashboard, and Reports all integrated) |
+| Backup logic | Complete — Export database to Documents/Downloads folder |
+| Parameterized queries | Implemented |
 
 ---
 
@@ -235,6 +267,7 @@
 | Authentication config | Not started |
 | Cloud sync logic | Not started |
 | Environment config | Not started |
+| Scope | Background cloud backup/sync only; no Supabase Auth |
 
 ---
 
@@ -242,11 +275,11 @@
 
 | Item | Status |
 |---|---|
-| Login flow | Not started (Phase 4) |
-| Password hashing | Not started (Phase 4) |
-| Session management | Not started (Phase 4) |
-| Account lockout | Not started (Phase 4) |
-| Role-based routing | Not started (Phase 4) |
+| Login flow | Complete — Local-only SQLite authentication validates hashed passwords |
+| Password hashing | Complete — Configured `crypto` SHA-256 in `SecurityUtils` |
+| Session management | Complete — Implemented `SessionManager` |
+| Account lockout | Complete — Implemented 5-attempt limit |
+| Role-based routing | Partial — local shell selection is implemented; declarative guards are pending |
 
 ---
 
@@ -255,7 +288,7 @@
 | Item | Status |
 |---|---|
 | Unit tests | Not started |
-| Widget tests | Not started |
+| Widget tests | Baseline suite complete — 26 tests pass; new security/database coverage pending |
 | Integration tests | Not started |
 | Security tests | Not started |
 | Responsive tests | Not started |
@@ -270,7 +303,35 @@
 - Supabase is listed as a future/optional enhancement. The core app is SQLite-only.
 - All historical records (transactions, activity logs) must be preserved permanently.
 - The final defense/presentation plan is documented in `docs/DEFENSE_PLAN.md`.
-- Flutter static analysis passes with zero issues; `flutter test` passes all 26 widget tests.
+- Flutter static analysis passes with zero issues; the baseline `flutter test` suite passes all 26 widget tests.
+
+### Very Recent (Phase 3 Backend Integration)
+- **Database Architecture**: Implemented `DatabaseHelper` in `lib/core/database/database_helper.dart` with schema for 9 tables aligned with `docs/SQLITE_ARCHITECTURE.md`.
+- **Database Seeding**: Enhanced `_seedInitialData` to seed `users`, `food_categories`, and `food_items`.
+- **Repositories**: Developed `UserRepository` and `FoodRepository` for centralized SQLite CRUD access.
+- **UI Integration**: 
+  - Overhauled `LoginPage` to authenticate against SQLite `UserRepository`.
+  - Converted `FoodManagementPage` to read dynamically from `FoodRepository` and completely replaced static `MockData`.
+  - Form dialogs (Add/Edit/Delete Food) in `FoodManagementPage` now write changes directly to SQLite and trigger UI reload upon success.
+  - Converted `AccountManagementPage` to read dynamically from `UserRepository`, enabling Add/Edit/Disable/Reset Password workflows over live SQLite data.
+  - Converted `CashierHomePage` (POS) to read categories and food items from live `FoodRepository`. Checkout now generates transactions directly in the `transactions` table via `TransactionRepository`.
+  - Added Voiding functionality to `TransactionHistoryPage` (Cashier), interacting directly with `TransactionRepository` and `AuditRepository`.
+  - Converted `OrdersPage` (Kitchen Flow) to poll live `TransactionRepository`, allowing order status progression ('Taken' -> 'Preparing' -> 'Ready' -> 'Served') updated dynamically in SQLite.
+  - Converted `AdminDashboardPage` to display live transaction data and dynamically calculate real-time daily/monthly metrics using `TransactionRepository`. Added `SalesChart` visualization.
+  - Converted `SalesReportsPage` to dynamically load transaction histories, computing grouped totals per period. Implemented active `ExportService` for generating native CSV strings and PDF reports from live data.
+  - Implemented `AuditRepository` and connected it to `ActivityLogsPage`, enabling real-time viewing of system audit trails.
+  - Implemented `BackupRepository` and created `BackupRestorePage` for exporting the SQLite database directly to the device's storage. Added it to `AdminShell` navigation.
+- **Validation**: Re-ran LUMORA Validation; `flutter analyze` reports 0 issues and all 26 widget tests passed post-integration.
+
+### Phase 4 Security (Implemented; targeted security tests pending)
+- **Password Hashing**: Created `SecurityUtils` using the `crypto` package to hash passwords with a global salt via SHA-256. Updated `UserRepository.login` to compare hashed passwords.
+- **Database Migrations**: Incremented `DatabaseHelper` schema version to 2 and implemented `onUpgrade` to re-hash the existing admin password and seed the new `cashier` user (`cashier` / `cashier123`).
+- **Session Management**: Implemented `SessionManager` singleton to safely persist user sessions across app routing.
+- **Anti-Brute Force**: Added lockout logic in `UserRepository` locking out an account after 5 consecutive failed login attempts.
+- **Documentation**: Generated `SECURITY_FEATURES.md` summarizing the applied security implementations.
+
+### UI / UX Enhancements
+- **Image Uploads**: Integrated the `image_picker` package to allow administrators to upload local images via their native file explorer in `FoodManagementPage`. Updated `FoodImage` to safely handle local paths and placeholders.
 
 ---
 
@@ -280,4 +341,4 @@
 - Read `RULES.md` before any task.
 - Consult `DECISIONS.md` before making architectural choices.
 - Update this file after every approved work session.
-- Do not claim Phase 2–11 features are complete — they have not been implemented.
+- Do not claim Supabase cloud synchronization is complete; it has not been implemented.

@@ -142,6 +142,10 @@ class _AdminNavRailState extends State<AdminNavRail> {
             icon: Icon(Symbols.assignment_rounded, weight: 500),
             label: Text('Logs'),
           ),
+          NavigationRailDestination(
+            icon: Icon(Symbols.backup_rounded, weight: 500),
+            label: Text('Backup'),
+          ),
         ],
       );
     }
@@ -189,6 +193,10 @@ class _AdminNavRailState extends State<AdminNavRail> {
           NavigationRailDestination(
             icon: Icon(Symbols.assignment_rounded, weight: 500),
             label: Text('Logs'),
+          ),
+          NavigationRailDestination(
+            icon: Icon(Symbols.backup_rounded, weight: 500),
+            label: Text('Backup'),
           ),
         ],
       ),

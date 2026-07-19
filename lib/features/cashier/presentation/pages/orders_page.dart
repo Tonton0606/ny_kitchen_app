@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/mock_data.dart';
+import '../../../../core/database/repositories/transaction_repository.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -21,15 +22,70 @@ class _OrdersPageState extends State<OrdersPage> {
 
   static const _flow = ['Taken', 'Preparing', 'Ready', 'Served'];
 
+  final TransactionRepository _transactionRepo = TransactionRepository();
+  List<Map<String, dynamic>> _orders = [];
+  Timer? _timer;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrders();
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) => _loadOrders());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadOrders() async {
+    final activeTxns = await _transactionRepo.getActiveTransactions();
+
+    // For each transaction, get items
+    List<Map<String, dynamic>> loadedOrders = [];
+    for (var txn in activeTxns) {
+      final items = await _transactionRepo.getTransactionItems(
+        txn['id'] as int,
+      );
+      loadedOrders.add({
+        'id': txn['id'],
+        'orderNo': txn['receipt_number'],
+        'status': txn['status'],
+        'total': txn['total_amount'],
+        'customer': 'User ${txn['user_id']}',
+        'time': txn['created_at'],
+        'items': items
+            .map(
+              (i) => {
+                'name': i['food_name'],
+                'qty': i['quantity'],
+                'price': i['food_price'],
+              },
+            )
+            .toList(),
+        'payment': txn['payment_method'] ?? 'Cash',
+        'notes': txn['notes'],
+      });
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _orders = loadedOrders;
+      _isLoading = false;
+    });
+  }
+
   List<Map<String, dynamic>> get _filteredOrders {
-    if (_statusFilter == 'All') return MockData.orders;
-    return MockData.orders.where((o) => o['status'] == _statusFilter).toList();
+    if (_statusFilter == 'All') return _orders;
+    return _orders.where((o) => o['status'] == _statusFilter).toList();
   }
 
   int get _inProgressCount =>
-      MockData.orders.where((o) => o['status'] != 'Served').length;
+      _orders.where((o) => o['status'] != 'Served').length;
 
-  void _advanceStatus(Map<String, dynamic> order) {
+  Future<void> _advanceStatus(Map<String, dynamic> order) async {
     final currentIdx = _flow.indexOf(order['status']);
     if (currentIdx >= _flow.length - 1) return;
     final nextStatus = _flow[currentIdx + 1];
@@ -92,7 +148,7 @@ class _OrdersPageState extends State<OrdersPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '₱${(order['total'] as double).toStringAsFixed(2)} total',
+              '₱${((order['total'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)} total',
               style: const TextStyle(fontSize: 13, color: AppColors.mutedText),
             ),
           ],
@@ -103,25 +159,44 @@ class _OrdersPageState extends State<OrdersPage> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              if (!mounted) return;
-              setState(() => order['status'] = nextStatus);
-              ScaffoldMessenger.of(context)
-                ..clearSnackBars()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text('${order['orderNo']} moved to $nextStatus'),
-                    behavior: SnackBarBehavior.floating,
-                    action: SnackBarAction(
-                      label: 'Undo',
-                      onPressed: () {
-                        if (!mounted) return;
-                        setState(() => order['status'] = _flow[currentIdx]);
-                      },
+
+              // Update in database
+              try {
+                await _transactionRepo.updateTransactionStatus(
+                  order['id'],
+                  nextStatus,
+                );
+                await _loadOrders(); // Refresh
+                if (!mounted) return;
+                ScaffoldMessenger.of(context)
+                  ..clearSnackBars()
+                  ..showSnackBar(
+                    SnackBar(
+                      content: Text('${order['orderNo']} moved to $nextStatus'),
+                      behavior: SnackBarBehavior.floating,
+                      action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () async {
+                          await _transactionRepo.updateTransactionStatus(
+                            order['id'],
+                            _flow[currentIdx],
+                          );
+                          await _loadOrders();
+                        },
+                      ),
                     ),
+                  );
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: $e'),
+                    backgroundColor: Colors.red,
                   ),
                 );
+              }
             },
             style: FilledButton.styleFrom(
               backgroundColor: _statusColors[nextStatus],
@@ -189,8 +264,8 @@ class _OrdersPageState extends State<OrdersPage> {
               ) {
                 final isSelected = _statusFilter == f;
                 final count = f == 'All'
-                    ? MockData.orders.length
-                    : MockData.orders.where((o) => o['status'] == f).length;
+                    ? _orders.length
+                    : _orders.where((o) => o['status'] == f).length;
                 return Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: ChoiceChip(
@@ -223,7 +298,9 @@ class _OrdersPageState extends State<OrdersPage> {
             ),
           ),
           Expanded(
-            child: _filteredOrders.isEmpty
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredOrders.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -300,7 +377,7 @@ class _OrdersPageState extends State<OrdersPage> {
                                   ),
                                   const Spacer(),
                                   Text(
-                                    '₱${(order['total'] as double).toStringAsFixed(2)}',
+                                    '₱${((order['total'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 15,
@@ -309,13 +386,17 @@ class _OrdersPageState extends State<OrdersPage> {
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              ...items.map<Widget>(
-                                (item) => Padding(
+                              ...items.map<Widget>((item) {
+                                final itemPrice =
+                                    (item['price'] as num?)?.toDouble() ?? 0;
+                                final itemQuantity =
+                                    (item['qty'] as num?)?.toInt() ?? 0;
+                                return Padding(
                                   padding: const EdgeInsets.only(bottom: 3),
                                   child: Row(
                                     children: [
                                       Text(
-                                        '${item['qty']}x',
+                                        '${itemQuantity}x',
                                         style: const TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
@@ -330,7 +411,7 @@ class _OrdersPageState extends State<OrdersPage> {
                                         ),
                                       ),
                                       Text(
-                                        '₱${(item['price'] * item['qty']).toStringAsFixed(2)}',
+                                        '₱${(itemPrice * itemQuantity).toStringAsFixed(2)}',
                                         style: const TextStyle(
                                           fontSize: 13,
                                           color: AppColors.mutedText,
@@ -338,8 +419,8 @@ class _OrdersPageState extends State<OrdersPage> {
                                       ),
                                     ],
                                   ),
-                                ),
-                              ),
+                                );
+                              }),
                               const SizedBox(height: 8),
                               SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,

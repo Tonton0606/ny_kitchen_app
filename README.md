@@ -2,7 +2,7 @@
 
 > **Single Source of Truth:** [`PROJECT_BLUEPRINT.md`](PROJECT_BLUEPRINT.md)
 > **Immutable Rules:** [`RULES.md`](RULES.md)
-> **Current Phase:** LUMORA Phase 4 — Validate, for the Project Phase 1 static UI/UX prototype
+> **Current Phase:** Pre-Phase 5 Cloud Sync Validation; SQLite remains the offline source of truth
 
 ---
 
@@ -119,10 +119,10 @@ ny_kitchen_app/
 
 ## Current Status
 
-- **LUMORA Phase 4 — Validate.** The Project Phase 1 static UI/UX prototype is implemented.
-- Login, Admin, and Cashier screens use mock data only; backend, SQLite, Supabase, and real authentication are not implemented.
-- Validation includes responsive widget tests and a clean `flutter analyze` run.
-- Documentation synchronization and client review remain before backend implementation begins.
+- **Project Phase 4 security and SQLite integration are implemented.**
+- Login, Admin, and Cashier screens now use local SQLite repositories; Supabase cloud sync is not implemented.
+- Supabase, when approved, is restricted to background backup/synchronization. SQLite remains the primary source of truth and authentication remains local-only.
+- Pre-Phase 5 validation includes analyzer checks, baseline widget tests, lifecycle checks, and documentation synchronization.
 
 ---
 

@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/session/session_manager.dart';
+import '../../../../core/database/repositories/user_repository.dart';
 
-class AccountSettingsPage extends StatelessWidget {
+class AccountSettingsPage extends StatefulWidget {
   const AccountSettingsPage({super.key});
 
   @override
+  State<AccountSettingsPage> createState() => _AccountSettingsPageState();
+}
+
+class _AccountSettingsPageState extends State<AccountSettingsPage> {
+  @override
   Widget build(BuildContext context) {
+    final user = SessionManager().currentUser;
+    final fullName = user?['full_name'] ?? 'Unknown User';
+    final role = user?['role'] == 'admin' ? 'Admin' : 'Cashier';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -49,9 +60,9 @@ class AccountSettingsPage extends StatelessWidget {
                       child: Icon(Icons.person, size: 44, color: Colors.white),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'John Doe',
-                      style: TextStyle(
+                    Text(
+                      fullName,
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: AppColors.darkCharcoal,
@@ -59,8 +70,8 @@ class AccountSettingsPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Cashier',
-                      style: TextStyle(
+                      role,
+                      style: const TextStyle(
                         fontSize: 15,
                         color: AppColors.mutedText,
                       ),
@@ -77,7 +88,7 @@ class AccountSettingsPage extends StatelessWidget {
               _buildTile(
                 icon: Icons.lock_outline,
                 title: 'Change Password',
-                onTap: () {},
+                onTap: () => _showChangePasswordDialog(context),
               ),
               _buildTile(
                 icon: Icons.print_outlined,
@@ -134,6 +145,117 @@ class AccountSettingsPage extends StatelessWidget {
             side: const BorderSide(color: AppColors.softBorder),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.lock_reset,
+                color: AppColors.goldenYellow,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            const Text(
+              'Change Password',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: newPasswordController,
+              decoration: InputDecoration(
+                labelText: 'New Password',
+                prefixIcon: const Icon(Icons.lock_outline),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              obscureText: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: confirmPasswordController,
+              decoration: InputDecoration(
+                labelText: 'Confirm Password',
+                prefixIcon: const Icon(Icons.lock_outline),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              obscureText: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (newPasswordController.text.trim().isEmpty) return;
+              if (newPasswordController.text != confirmPasswordController.text) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Passwords do not match')),
+                );
+                return;
+              }
+
+              final userId = SessionManager().userId;
+              if (userId != null) {
+                final repo = UserRepository();
+                await repo.changePassword(userId, newPasswordController.text.trim());
+                if (!context.mounted) return;
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password changed successfully')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.goldenYellow,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Save',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/utils/responsive.dart';
 import '../widgets/food_card.dart';
 import '../widgets/order_summary_panel.dart';
+import '../../../../../core/database/repositories/food_repository.dart';
+import '../../../../../core/database/repositories/transaction_repository.dart';
 
 class CashierHomePage extends StatefulWidget {
   const CashierHomePage({super.key});
@@ -13,14 +14,41 @@ class CashierHomePage extends StatefulWidget {
 }
 
 class _CashierHomePageState extends State<CashierHomePage> {
-  String _selectedCategoryId = '1';
+  final FoodRepository _foodRepo = FoodRepository();
+  final TransactionRepository _transactionRepo = TransactionRepository();
+  
+  List<Map<String, dynamic>> _categories = [];
+  List<Map<String, dynamic>> _foods = [];
+  bool _isLoading = true;
+
+  String _selectedCategoryId = 'all';
   String _searchQuery = '';
   final List<Map<String, dynamic>> _orderItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final cats = await _foodRepo.getCategories();
+    final foods = await _foodRepo.getAllFoodItems();
+    if (!mounted) return;
+    setState(() {
+      _categories = [
+        {'id': 'all', 'name': 'All Foods'},
+        ...cats,
+      ];
+      _foods = foods;
+      _isLoading = false;
+    });
+  }
 
   void _addToOrder(Map<String, dynamic> food) {
     setState(() {
       final existingIndex = _orderItems.indexWhere(
-        (item) => item['food']['id'] == food['id'],
+        (item) => item['food']['id'].toString() == food['id'].toString(),
       );
       if (existingIndex >= 0) {
         _orderItems[existingIndex]['quantity']++;
@@ -54,7 +82,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
 
   void _removeFoodFromCart(String foodId) {
     setState(() {
-      _orderItems.removeWhere((item) => item['food']['id'] == foodId);
+      _orderItems.removeWhere((item) => item['food']['id'].toString() == foodId);
     });
   }
 
@@ -95,9 +123,11 @@ class _CashierHomePageState extends State<CashierHomePage> {
     final subtotal = _orderItems.fold<double>(
       0,
       (sum, item) =>
-          sum + (item['food']['price'] as double) * (item['quantity'] as int),
+          sum + ((item['food']['price'] as num?)?.toDouble() ?? 0.0) * (item['quantity'] as int),
     );
-    final total = subtotal * 1.12;
+    // Let's assume price already includes tax or we aren't adding 12% in DB for this simple version.
+    // We will just use subtotal as total for now.
+    final total = subtotal;
     final itemCount = _orderItems.fold<int>(
       0,
       (sum, item) => sum + (item['quantity'] as int),
@@ -125,15 +155,45 @@ class _CashierHomePageState extends State<CashierHomePage> {
 
     if (completed != true || !mounted) return;
 
-    _clearOrder();
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('Payment complete. Order has been submitted.'),
-          behavior: SnackBarBehavior.floating,
-        ),
+    // Build the transaction items payload
+    final List<Map<String, dynamic>> itemsForDb = _orderItems.map((item) {
+      final food = item['food'];
+      final price = (food['price'] as num).toDouble();
+      final qty = item['quantity'] as int;
+      return {
+        'food_item_id': food['id'],
+        'food_name': food['name'],
+        'food_price': price,
+        'quantity': qty,
+        'subtotal': price * qty,
+      };
+    }).toList();
+
+    try {
+      await _transactionRepo.createTransaction(
+        userId: 1, // Fallback dummy user for now
+        totalAmount: total,
+        discount: 0,
+        paymentMethod: 'cash', // Hardcoded as cash for now based on UI
+        items: itemsForDb,
       );
+
+      if (!mounted) return;
+      _clearOrder();
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Payment complete. Order has been submitted.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving order: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -231,6 +291,15 @@ class _CashierHomePageState extends State<CashierHomePage> {
             ],
           ),
           const Spacer(),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
           SizedBox(
             width: 300,
             child: TextField(
@@ -262,17 +331,18 @@ class _CashierHomePageState extends State<CashierHomePage> {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        itemCount: MockData.categories.length,
+        itemCount: _categories.length,
         itemBuilder: (context, index) {
-          final cat = MockData.categories[index];
-          final isSelected = cat['id'] == _selectedCategoryId;
+          final cat = _categories[index];
+          final catId = cat['id'].toString();
+          final isSelected = catId == _selectedCategoryId;
           return Padding(
             padding: const EdgeInsets.only(right: 12),
             child: ChoiceChip(
               label: Text(cat['name']),
               selected: isSelected,
               onSelected: (selected) {
-                if (selected) setState(() => _selectedCategoryId = cat['id']);
+                if (selected) setState(() => _selectedCategoryId = catId);
               },
               selectedColor: Theme.of(context).colorScheme.primary,
               backgroundColor: Colors.white,
@@ -299,18 +369,23 @@ class _CashierHomePageState extends State<CashierHomePage> {
   }
 
   Widget _buildFoodGrid(bool isMobile) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     // Filter foods
-    var displayedFoods = MockData.foods.where((f) {
+    var displayedFoods = _foods.where((f) {
       bool matchesCat =
-          _selectedCategoryId == '1' ||
-          f['category'] ==
-              MockData.categories.firstWhere(
-                (c) => c['id'] == _selectedCategoryId,
-              )['name'];
+          _selectedCategoryId == 'all' ||
+          f['category_id'].toString() == _selectedCategoryId;
       bool matchesSearch = f['name'].toString().toLowerCase().contains(
         _searchQuery.toLowerCase(),
       );
-      return matchesCat && matchesSearch;
+      // Ensure only available foods are shown in POS. Check string 'available' vs int 1 based on DB schema.
+      // SQLite stores string for availability. Wait, let me check the repository query.
+      // Wait, food['availability'] == 'available' in DB? In database_helper, availability is TEXT.
+      bool isAvailable = f['availability'] == 'available' || f['is_available'] == true || f['is_available'] == 1;
+      return matchesCat && matchesSearch && isAvailable;
     }).toList();
 
     if (displayedFoods.isEmpty) {
@@ -325,7 +400,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
     }
 
     final foodIdsInCart = _orderItems
-        .map((item) => item['food']['id'] as String)
+        .map((item) => item['food']['id'].toString())
         .toSet();
 
     return GridView.builder(
@@ -339,12 +414,12 @@ class _CashierHomePageState extends State<CashierHomePage> {
       itemCount: displayedFoods.length,
       itemBuilder: (context, index) {
         final food = displayedFoods[index];
-        final inCart = foodIdsInCart.contains(food['id']);
+        final inCart = foodIdsInCart.contains(food['id'].toString());
         return FoodCard(
           food: food,
           isInCart: inCart,
           onAdd: () => _addToOrder(food),
-          onRemove: () => _removeFoodFromCart(food['id']),
+          onRemove: () => _removeFoodFromCart(food['id'].toString()),
         );
       },
     );

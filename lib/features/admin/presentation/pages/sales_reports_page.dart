@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/database/repositories/transaction_repository.dart';
+import '../../../../../core/services/export_service.dart';
+import 'package:intl/intl.dart';
 
 class SalesReportsPage extends StatefulWidget {
   const SalesReportsPage({super.key});
@@ -12,11 +14,31 @@ class SalesReportsPage extends StatefulWidget {
 class _SalesReportsPageState extends State<SalesReportsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TransactionRepository _txRepo = TransactionRepository();
+  List<Map<String, dynamic>> _transactions = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final data = await _txRepo.getAllTransactions();
+    List<Map<String, dynamic>> enrichedData = [];
+    for (var tx in data) {
+      final items = await _txRepo.getTransactionItems(tx['id']);
+      enrichedData.add({...tx, 'itemCount': items.length});
+    }
+
+    if (mounted) {
+      setState(() {
+        _transactions = enrichedData;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -53,7 +75,11 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                 Row(
                   children: [
                     OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        if (!_isLoading && _transactions.isNotEmpty) {
+                          ExportService.printPDF(_transactions);
+                        }
+                      },
                       icon: const Icon(Icons.print, size: 18),
                       label: const Text('Print'),
                       style: OutlinedButton.styleFrom(
@@ -65,7 +91,11 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        if (!_isLoading && _transactions.isNotEmpty) {
+                          ExportService.exportToCSV(_transactions, context);
+                        }
+                      },
                       icon: const Icon(Icons.download, size: 18),
                       label: const Text('Export'),
                       style: ElevatedButton.styleFrom(
@@ -98,42 +128,103 @@ class _SalesReportsPageState extends State<SalesReportsPage>
           ),
           Expanded(
             child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildReportTab(
-                  'Today',
-                  '₱14,500.00',
-                  '₱3,250.00',
-                  '124',
-                  '98.4%',
-                ),
-                _buildReportTab(
-                  'Weekly',
-                  '₱98,200.00',
-                  '₱14,028.57',
-                  '856',
-                  '97.1%',
-                ),
-                _buildReportTab(
-                  'Monthly',
-                  '₱425,000.00',
-                  '₱14,166.67',
-                  '3,621',
-                  '96.8%',
-                ),
-                _buildReportTab(
-                  'Annual',
-                  '₱5,120,000.00',
-                  '₱426,666.67',
-                  '43,860',
-                  '97.5%',
-                ),
-              ],
-            ),
+               controller: _tabController,
+               children: [
+                 if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
+                   'Today',
+                   _calculateRevenueForDays(0),
+                   _calculateAvgForDays(0),
+                   _calculateOrdersForDays(0),
+                   '100%',
+                 ),
+                 if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
+                   'Weekly',
+                   _calculateRevenueForDays(7),
+                   _calculateAvgForDays(7),
+                   _calculateOrdersForDays(7),
+                   '100%',
+                 ),
+                 if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
+                   'Monthly',
+                   _calculateRevenueForDays(30),
+                   _calculateAvgForDays(30),
+                   _calculateOrdersForDays(30),
+                   '100%',
+                 ),
+                 if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
+                   'Annual',
+                   _calculateRevenueForDays(365),
+                   _calculateAvgForDays(365),
+                   _calculateOrdersForDays(365),
+                   '100%',
+                 ),
+               ],
+             ),
           ),
         ],
       ),
     );
+  }
+
+  String _calculateRevenueForDays(int days) {
+    final now = DateTime.now();
+    double total = 0;
+    for (var tx in _transactions) {
+      if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
+      final date = DateTime.tryParse(tx['created_at'] ?? '') ?? now;
+      if (days == 0) {
+        if (date.year == now.year && date.month == now.month && date.day == now.day) {
+          total += (tx['total_amount'] as num).toDouble();
+        }
+      } else {
+        if (now.difference(date).inDays <= days) {
+          total += (tx['total_amount'] as num).toDouble();
+        }
+      }
+    }
+    return '₱${total.toStringAsFixed(2)}';
+  }
+
+  String _calculateAvgForDays(int days) {
+    final now = DateTime.now();
+    double total = 0;
+    int count = 0;
+    for (var tx in _transactions) {
+      if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
+      final date = DateTime.tryParse(tx['created_at'] ?? '') ?? now;
+      if (days == 0) {
+        if (date.year == now.year && date.month == now.month && date.day == now.day) {
+          total += (tx['total_amount'] as num).toDouble();
+          count++;
+        }
+      } else {
+        if (now.difference(date).inDays <= days) {
+          total += (tx['total_amount'] as num).toDouble();
+          count++;
+        }
+      }
+    }
+    if (count == 0) return '₱0.00';
+    return '₱${(total / count).toStringAsFixed(2)}';
+  }
+
+  String _calculateOrdersForDays(int days) {
+    final now = DateTime.now();
+    int count = 0;
+    for (var tx in _transactions) {
+      if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
+      final date = DateTime.tryParse(tx['created_at'] ?? '') ?? now;
+      if (days == 0) {
+        if (date.year == now.year && date.month == now.month && date.day == now.day) {
+          count++;
+        }
+      } else {
+        if (now.difference(date).inDays <= days) {
+          count++;
+        }
+      }
+    }
+    return count.toString();
   }
 
   Widget _buildReportTab(
@@ -334,9 +425,9 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                         ),
                       ),
                     ],
-                    rows: MockData.transactions.map((tx) {
-                      final status = tx['status'] as String;
-                      final isSuccess = status == 'Completed';
+                    rows: _transactions.map((tx) {
+                      final status = tx['status'] as String? ?? 'Unknown';
+                      final isSuccess = status == 'Completed' || status == 'Served';
                       final isVoided = status == 'Voided';
                       final isRefunded = status == 'Refunded';
                       Color statusColor;
@@ -349,11 +440,15 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                       } else {
                         statusColor = AppColors.mutedText;
                       }
+                      
+                      final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
+                      final formattedDate = DateFormat('MMM d, yyyy h:mm a').format(parsedDate);
+                      
                       return DataRow(
                         cells: [
                           DataCell(
                             Text(
-                              tx['receiptNo'],
+                              tx['receipt_number'] ?? '',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
@@ -362,31 +457,31 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                           ),
                           DataCell(
                             Text(
-                              tx['date'],
+                              formattedDate,
                               style: const TextStyle(fontSize: 13),
                             ),
                           ),
                           DataCell(
                             Text(
-                              tx['cashier'],
+                              'Admin',
                               style: const TextStyle(fontSize: 13),
                             ),
                           ),
                           DataCell(
                             Text(
-                              '${tx['items']}',
+                              '${tx['itemCount'] ?? 0}',
                               style: const TextStyle(fontSize: 13),
                             ),
                           ),
                           DataCell(
                             Text(
-                              tx['payment'],
+                              tx['payment_method'] ?? '',
                               style: const TextStyle(fontSize: 13),
                             ),
                           ),
                           DataCell(
                             Text(
-                              '\u20b1${tx['total'].toStringAsFixed(2)}',
+                              '\u20b1${(tx['total_amount'] as num).toStringAsFixed(2)}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,

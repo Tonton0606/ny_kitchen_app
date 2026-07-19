@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../core/database/repositories/user_repository.dart';
+import '../../../../core/utils/security_utils.dart';
 
 class AccountManagementPage extends StatefulWidget {
   const AccountManagementPage({super.key});
@@ -10,125 +11,224 @@ class AccountManagementPage extends StatefulWidget {
 }
 
 class _AccountManagementPageState extends State<AccountManagementPage> {
+  final _userRepo = UserRepository();
   String _searchQuery = '';
   bool _showAddCashier = false;
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _users = [];
 
-  void _openAddCashier() => setState(() => _showAddCashier = true);
+  final _addFullNameController = TextEditingController();
+  final _addUsernameController = TextEditingController();
+  final _addPasswordController = TextEditingController();
+  String _addRole = 'cashier';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    setState(() => _isLoading = true);
+    try {
+      final users = await _userRepo.getAllUsers();
+      if (!mounted) return;
+      setState(() {
+        _users = users;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load users: $e')),
+      );
+    }
+  }
+
+  void _openAddCashier() {
+    _addFullNameController.clear();
+    _addUsernameController.clear();
+    _addPasswordController.clear();
+    _addRole = 'cashier';
+    setState(() => _showAddCashier = true);
+  }
+  
   void _closeAddCashier() => setState(() => _showAddCashier = false);
 
+  Future<void> _saveNewCashier() async {
+    if (_addFullNameController.text.trim().isEmpty ||
+        _addUsernameController.text.trim().isEmpty ||
+        _addPasswordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
+      return;
+    }
+
+    try {
+      await _userRepo.createUser({
+        'full_name': _addFullNameController.text.trim(),
+        'username': _addUsernameController.text.trim(),
+        'password_hash': SecurityUtils.hashPassword(_addPasswordController.text.trim()),
+        'role': _addRole,
+        'status': 'active',
+      });
+      if (!mounted) return;
+      _closeAddCashier();
+      _loadUsers();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Account created successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error creating account: $e')),
+      );
+    }
+  }
+
   void _showEditCashierDialog(BuildContext context, Map<String, dynamic> user) {
+    final editFullNameController = TextEditingController(text: user['full_name']);
+    final editUsernameController = TextEditingController(text: user['username']);
+    String editRole = user['role'];
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                  color: AppColors.goldenYellow.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.goldenYellow,
+                  size: 28,
                 ),
-                child: const Icon(
-                  Icons.edit_outlined,
-                  color: AppColors.goldenYellow,
-                size: 28,
+              ),
+              const SizedBox(width: 16),
+              Text(
+                'Edit ${user['full_name']}',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Full Name',
+                      prefixIcon: const Icon(Icons.person_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    controller: editFullNameController,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      prefixIcon: const Icon(Icons.account_circle_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    controller: editUsernameController,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      labelText: 'Role',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    initialValue: editRole,
+                    items: const [
+                      DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                      DropdownMenuItem(value: 'cashier', child: Text('Cashier')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setStateDialog(() => editRole = val);
+                    },
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 16),
-            Text(
-              'Edit ${user['name']}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (editFullNameController.text.trim().isEmpty || editUsernameController.text.trim().isEmpty) return;
+                try {
+                  await _userRepo.updateUser(user['id'], {
+                    'full_name': editFullNameController.text.trim(),
+                    'username': editUsernameController.text.trim(),
+                    'role': editRole,
+                  });
+                  if (!context.mounted) return;
+                  Navigator.pop(ctx);
+                  _loadUsers();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Account updated')),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error updating account: $e')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.goldenYellow,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                'Update',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
-        content: SizedBox(
-          width: 400,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Full Name',
-                    prefixIcon: const Icon(Icons.person_outline),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  controller: TextEditingController(text: user['name']),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Username',
-                    prefixIcon: const Icon(Icons.account_circle_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  controller: TextEditingController(text: user['username']),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Role',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  initialValue: user['role'],
-                  items: const [
-                    DropdownMenuItem(value: 'Admin', child: Text('Admin')),
-                    DropdownMenuItem(value: 'Cashier', child: Text('Cashier')),
-                  ],
-                  onChanged: (val) {},
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.goldenYellow,
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text(
-              'Update',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  void _showResetPasswordDialog(
-    BuildContext context,
-    Map<String, dynamic> user,
-  ) {
+  void _showResetPasswordDialog(BuildContext context, Map<String, dynamic> user) {
+    final passwordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -161,7 +261,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Reset password for ${user['name']}?',
+              'Reset password for ${user['full_name']}?',
             style: const TextStyle(
               fontSize: 15,
               color: AppColors.mutedText,
@@ -169,6 +269,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             ),
             const SizedBox(height: 16),
             TextField(
+              controller: passwordController,
               decoration: InputDecoration(
                 labelText: 'New Password',
                 prefixIcon: const Icon(Icons.lock_outline),
@@ -182,6 +283,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             ),
             const SizedBox(height: 12),
             TextField(
+              controller: confirmPasswordController,
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
                 prefixIcon: const Icon(Icons.lock_outline),
@@ -204,7 +306,30 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             ),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () async {
+              if (passwordController.text.trim().isEmpty) return;
+              if (passwordController.text != confirmPasswordController.text) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Passwords do not match')),
+                );
+                return;
+              }
+              try {
+                await _userRepo.updateUser(user['id'], {
+                  'password_hash': SecurityUtils.hashPassword(passwordController.text.trim()),
+                });
+                if (!context.mounted) return;
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password reset successfully')),
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error resetting password: $e')),
+                );
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.tertiary,
               foregroundColor: Colors.white,
@@ -224,7 +349,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
   }
 
   void _showDisableDialog(BuildContext context, Map<String, dynamic> user) {
-    final isActive = user['status'] == 'Active';
+    final isActive = user['status'] == 'active';
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -258,8 +383,8 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
           ],
         ),
         content: Text(
-          'Are you sure you want to ${isActive ? 'disable' : 'enable'} ${user['name']}\'s account?',
-          style:  TextStyle(
+          'Are you sure you want to ${isActive ? 'disable' : 'enable'} ${user['full_name']}\'s account?',
+          style:  const TextStyle(
             fontSize: 15,
             color: AppColors.mutedText,
           ),
@@ -273,7 +398,26 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             ),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () async {
+              try {
+                if (isActive) {
+                  await _userRepo.disableUser(user['id']);
+                } else {
+                  await _userRepo.updateUser(user['id'], {'status': 'active'});
+                }
+                if (!context.mounted) return;
+                Navigator.pop(ctx);
+                _loadUsers();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Account ${isActive ? 'disabled' : 'enabled'} successfully')),
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error updating status: $e')),
+                );
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: isActive
                   ? AppColors.brandRed
@@ -286,7 +430,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             ),
             child: Text(
               isActive ? 'Disable' : 'Enable',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -296,10 +440,14 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredUsers = MockData.users.where((u) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final filteredUsers = _users.where((u) {
       if (_searchQuery.isEmpty) return true;
       final query = _searchQuery.toLowerCase();
-      return (u['name'] as String).toLowerCase().contains(query) ||
+      return (u['full_name'] as String).toLowerCase().contains(query) ||
           (u['username'] as String).toLowerCase().contains(query);
     }).toList();
 
@@ -435,24 +583,28 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                     ),
                   ],
                   rows: filteredUsers.map((user) {
-                    final isActive = user['status'] == 'Active';
+                    final isActive = user['status'] == 'active';
+                    final role = user['role'] == 'admin' ? 'Admin' : 'Cashier';
                     return DataRow(
                       cells: [
                         DataCell(
                           CircleAvatar(
                             radius: 20,
-                            backgroundImage: NetworkImage(user['avatar']),
-                            onBackgroundImageError: (_, _) {},
+                            backgroundColor: AppColors.goldenYellow.withValues(alpha: 0.2),
                             child: Text(
-                              (user['name'] as String).isNotEmpty
-                                  ? (user['name'] as String)[0]
+                              (user['full_name'] as String).isNotEmpty
+                                  ? (user['full_name'] as String)[0].toUpperCase()
                                   : '?',
+                              style: const TextStyle(
+                                color: AppColors.goldenYellow,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
                         DataCell(
                           Text(
-                            user['name'],
+                            user['full_name'],
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
@@ -472,15 +624,15 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: user['role'] == 'Admin'
+                              color: role == 'Admin'
                                   ? AppColors.tertiary.withValues(alpha: 0.1)
                                   : AppColors.goldenYellow.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              user['role'],
+                              role,
                               style: TextStyle(
-                                color: user['role'] == 'Admin'
+                                color: role == 'Admin'
                                     ? AppColors.tertiary
                                     : AppColors.goldenYellow,
                                 fontSize: 12,
@@ -502,7 +654,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              user['status'],
+                              isActive ? 'Active' : 'Inactive',
                               style: TextStyle(
                                 color: isActive
                                     ? AppColors.success
@@ -599,8 +751,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const TextField(
-                        decoration: InputDecoration(
+                      TextField(
+                        controller: _addFullNameController,
+                        decoration: const InputDecoration(
                           labelText: 'Full Name',
                           hintText: 'Enter full name',
                           border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
@@ -609,8 +762,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const TextField(
-                        decoration: InputDecoration(
+                      TextField(
+                        controller: _addUsernameController,
+                        decoration: const InputDecoration(
                           labelText: 'Username',
                           hintText: 'Enter username',
                           border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
@@ -619,8 +773,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const TextField(
-                        decoration: InputDecoration(
+                      TextField(
+                        controller: _addPasswordController,
+                        decoration: const InputDecoration(
                           labelText: 'Password',
                           hintText: 'Enter temporary password',
                           border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
@@ -631,6 +786,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
+                        initialValue: _addRole,
                         decoration: const InputDecoration(
                           labelText: 'Role',
                           border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
@@ -638,16 +794,19 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                           fillColor: Colors.white,
                         ),
                         items: const [
-                          DropdownMenuItem(value: 'Cashier', child: Text('Cashier')),
+                          DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                          DropdownMenuItem(value: 'cashier', child: Text('Cashier')),
                         ],
-                        onChanged: (val) {},
+                        onChanged: (val) {
+                          if (val != null) setState(() => _addRole = val);
+                        },
                       ),
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: _closeAddCashier,
+                          onPressed: _saveNewCashier,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.goldenYellow,
                             foregroundColor: Colors.black,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/ny_watermark.dart';
+import '../../../../core/database/repositories/user_repository.dart';
+import '../../../../core/session/session_manager.dart';
 import '../../../admin/presentation/pages/admin_shell.dart';
 import '../../../cashier/presentation/pages/cashier_shell.dart';
 
@@ -52,10 +54,10 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
-  void _handleLogin() {
-    final email = _emailController.text.trim();
+  Future<void> _handleLogin() async {
+    final username = _emailController.text.trim();
     final password = _passwordController.text;
-    final emailError = email.isEmpty
+    final emailError = username.isEmpty
         ? 'Please enter your email or username'
         : null;
     final passwordError = password.isEmpty
@@ -76,19 +78,27 @@ class _LoginPageState extends State<LoginPage>
       _passwordError = null;
     });
 
-    Future<void>.delayed(const Duration(milliseconds: 800), () {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+    final repo = UserRepository();
+    final user = await repo.login(username, password);
 
-      // Phase 1 keeps authentication static while preserving both demo flows.
-      final destination = email.toLowerCase().contains('admin')
-          ? AdminShell()
-          : CashierShell();
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (user != null) {
+      SessionManager().setSession(user);
+      final role = user['role'] as String;
+      final destination = role == 'admin' ? const AdminShell() : const CashierShell();
+      
       Navigator.pushReplacement(
         context,
         MaterialPageRoute<void>(builder: (_) => destination),
       );
-    });
+    } else {
+      setState(() {
+        _emailError = 'Invalid credentials or inactive account';
+        _passwordError = 'Invalid credentials or inactive account';
+      });
+    }
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/session/session_manager.dart';
 
 class AdminAccountSettingsPage extends StatefulWidget {
   const AdminAccountSettingsPage({super.key});
@@ -13,6 +14,11 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = SessionManager().currentUser;
+    final fullName = user?['full_name'] ?? 'Admin User';
+    final username = user?['username'] ?? 'admin';
+    final initial = fullName.isNotEmpty ? fullName[0].toUpperCase() : 'A';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -54,10 +60,10 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                             color: AppColors.goldenYellow.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(44),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
-                              'A',
-                              style: TextStyle(fontSize: 44, color: AppColors.goldenYellow, fontWeight: FontWeight.bold),
+                              initial,
+                              style: const TextStyle(fontSize: 44, color: AppColors.goldenYellow, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -77,9 +83,9 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Admin User',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal),
+                    Text(
+                      fullName,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal),
                     ),
                     const SizedBox(height: 4),
                     Container(
@@ -112,7 +118,7 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                         filled: true,
                         fillColor: Colors.white,
                       ),
-                      controller: TextEditingController(text: 'Admin User'),
+                      controller: TextEditingController(text: fullName),
                     ),
                     const SizedBox(height: 16),
                     TextField(
@@ -124,7 +130,7 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                         filled: true,
                         fillColor: Colors.white,
                       ),
-                      controller: TextEditingController(text: 'admin'),
+                      controller: TextEditingController(text: username),
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
