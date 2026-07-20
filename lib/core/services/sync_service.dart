@@ -50,7 +50,7 @@ class SyncService {
 
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${path.basename(localPath)}';
-      final storagePath = await _supabase.storage
+      await _supabase.storage
           .from('food_images')
           .upload(
             fileName,
@@ -61,7 +61,7 @@ class SyncService {
             ),
           );
 
-      return _supabase.storage.from('food_images').getPublicUrl(storagePath);
+      return _supabase.storage.from('food_images').getPublicUrl(fileName);
     } catch (e) {
       print('Image upload failed: $e');
       return localPath; // fallback to local path if upload fails
