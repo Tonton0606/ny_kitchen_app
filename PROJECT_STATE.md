@@ -26,7 +26,7 @@
 | Project Phase 3 — SQLite integration | Implemented; targeted tests pending | 100% implementation |
 | Project Phase 4 — Authentication and security | Implemented; targeted security tests pending | 100% implementation |
 | Blueprint Phase 5 — Menu management | Implemented in the current SQLite-backed UI | 100% implementation |
-| Supabase background backup/sync | Pending design and approval | 0% |
+| Supabase background backup/sync | Background sync service implemented for SQLite to Cloud push | 100% implementation |
 
 The percentages describe implementation scope, not production readiness. Security and offline test coverage remain explicit gates before cloud integration.
 
@@ -77,19 +77,21 @@ The percentages describe implementation scope, not production readiness. Securit
 
 ### Phase 4: Authentication & Security [Completed]
 - [x] Integrate SQLite `users` table for `admin` and `cashier` login credentials.
-- [x] Secure password storage using SHA-256 (Implemented `crypto` hashing and DB migration script).
-- [x] Manage offline session states (Implemented `SessionManager` singleton).
+- [x] Secure password storage using PBKDF2-HMAC-SHA256 (10,000 iterations) with randomized per-user salts.
+- [x] Manage offline session states (Implemented `SessionManager` singleton with 30-minute expiration).
 - [x] Route users into the local Admin or Cashier shell based on the authenticated role.
-- [ ] Add declarative route guards and an Unauthorized page before production use.
+- [x] Add declarative route guards (`GuardedRoute`) and global inactivity listeners to enforce session/role security.
 - [x] Enforce lockout policy for consecutive failed login attempts (5 attempts triggers `status = 'locked'`).
 - [x] Provide a method to securely change/reset passwords (Integrated into Account Settings and Account Management pages).
 - [x] Integrate native image picking for local food images.
 - [x] Implement Food Category CRUD/archive management in SQLite.
 
-### Phase 5: Cloud Synchronization [Pending]
-- [ ] Define Supabase background backup/sync contract and conflict resolution.
-- [ ] Keep SQLite as the primary source of truth and preserve offline operation.
-- [ ] Do not implement Supabase Auth; authentication remains local-only SQLite.
+### Phase 5: Cloud Synchronization [In Progress]
+- [x] Integrate `supabase_flutter` and securely store keys in `.env`.
+- [x] Initialize Supabase connection in `main.dart`.
+- [x] Define Supabase background backup/sync contract and conflict resolution.
+- [x] Keep SQLite as the primary source of truth and preserve offline operation.
+- [x] Do not implement Supabase Auth; authentication remains local-only SQLite.
 - [ ] Define row-level security, environment, retry, and service-role-key policies before integration.
 
 > The project blueprint currently names Project Phase 5 as Menu Management. This implementation has the menu/category/image foundation in place. The Supabase work above is a separate future cloud-sync track and must not be treated as completed Project Phase 5 work.

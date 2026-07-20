@@ -8,7 +8,7 @@ class UserRepository {
   // Retrieve a user by username and password, handling lockouts
   Future<Map<String, dynamic>?> login(String username, String password) async {
     final db = await _dbHelper.database;
-    final hashedPassword = SecurityUtils.hashPassword(password);
+    // Hashes are now stored with their salts in the DB, so we verify against the DB record later.
 
     // First check if the user exists and their status
     final userCheck = await db.query(
@@ -31,7 +31,7 @@ class UserRepository {
       return null; // Account is locked or inactive
     }
 
-    if (userRow['password_hash'] == hashedPassword) {
+    if (SecurityUtils.verifyPassword(password, userRow['password_hash'] as String)) {
       // Success! Reset failed login count and update last_login
       await db.update(
         'users',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ny_kitchen_app/features/auth/presentation/widgets/guarded_route.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/responsive.dart';
 import 'home_page.dart';
@@ -67,23 +68,26 @@ class _CashierShellState extends State<CashierShell> {
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          Responsive(
-            mobile: _buildMobileLayout(),
-            tablet: _buildDesktopLayout(),
-            desktop: _buildDesktopLayout(),
-          ),
-          if (_showSettings && !isMobile) _buildSettingsOverlay(),
-        ],
+    return GuardedRoute(
+      allowedRoles: const ['cashier', 'admin'],
+      child: Scaffold(
+        body: Stack(
+          children: [
+            Responsive(
+              mobile: _buildMobileLayout(),
+              tablet: _buildDesktopLayout(),
+              desktop: _buildDesktopLayout(),
+            ),
+            if (_showSettings && !isMobile) _buildSettingsOverlay(),
+          ],
+        ),
+        bottomNavigationBar: isMobile
+            ? CashierBottomNav(
+                selectedIndex: _selectedIndex,
+                onItemSelected: _onItemTapped,
+              )
+            : null,
       ),
-      bottomNavigationBar: isMobile
-          ? CashierBottomNav(
-              selectedIndex: _selectedIndex,
-              onItemSelected: _onItemTapped,
-            )
-          : null,
     );
   }
 

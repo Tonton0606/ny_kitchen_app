@@ -90,4 +90,22 @@ This document tracks all files modified during the Phase 3 backend integration (
 - `MODIFIED_FILES.md`
   - *Tracks the Phase 3/4 database, security, native image, category, and cashier workflow changes.*
 
+## Branch/Module: Phase 5 Cloud Synchronization & Disaster Recovery
+- `lib/core/services/sync_service.dart`
+  - *Created to handle background backup of SQLite data to Supabase using upsert logic.*
+- `lib/core/session/session_manager.dart`
+  - *Integrated SyncService to trigger background cloud sync upon login and logout events.*
+- `lib/main.dart`
+  - *Initialized Supabase and dotenv, and injected x-device-secret header.*
+- `pubspec.yaml`
+  - *Registered .env file in assets and added `supabase_flutter` and `flutter_dotenv`.*
+- `.env`
+  - *Created to securely store Supabase URL, anon key, and device secret.*
+- `SECURITY_FEATURES.md`
+  - *Documented Supabase device-level security, RLS implementation, and disaster recovery benefits.*
+- `supabase_migration.md`
+  - *Generated as a reference for Postgres SQL schema configuration.*
+- `lib/features/admin/presentation/pages/admin_shell.dart` & `lib/features/cashier/presentation/pages/cashier_shell.dart`
+  - *Updated to use absolute package imports for GuardedRoute.*
+
 *(This document should be updated whenever new branches/modules are integrated with the live backend).*

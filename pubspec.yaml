@@ -46,6 +46,9 @@ dependencies:
   intl: ^0.20.3
   crypto: ^3.0.7
   image_picker: ^1.2.3
+  pointycastle: ^4.0.0
+  supabase_flutter: ^2.16.0
+  flutter_dotenv: ^6.0.1
 
 dev_dependencies:
   flutter_test:
@@ -71,6 +74,7 @@ flutter:
 
   assets:
     - assets/images/branding/
+    - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

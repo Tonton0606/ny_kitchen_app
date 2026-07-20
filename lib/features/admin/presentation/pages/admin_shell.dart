@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ny_kitchen_app/features/auth/presentation/widgets/guarded_route.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/responsive.dart';
 import '../widgets/navigation/admin_nav_rail.dart';
@@ -76,51 +77,54 @@ class _AdminShellState extends State<AdminShell> {
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
 
-    return Scaffold(
-      appBar: isMobile
-          ? AppBar(
-              title: Text(_titles[_selectedIndex]),
-              backgroundColor: AppColors.darkCharcoal,
-              foregroundColor: Colors.white,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.tune_outlined),
-                  color: Colors.white54,
-                  onPressed: _openSettings,
-                  tooltip: 'Settings',
+    return GuardedRoute(
+      allowedRoles: const ['admin'],
+      child: Scaffold(
+        appBar: isMobile
+            ? AppBar(
+                title: Text(_titles[_selectedIndex]),
+                backgroundColor: AppColors.darkCharcoal,
+                foregroundColor: Colors.white,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.tune_outlined),
+                    color: Colors.white54,
+                    onPressed: _openSettings,
+                    tooltip: 'Settings',
+                  ),
+                ],
+              )
+            : null,
+        drawer: isMobile
+            ? AdminDrawer(
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: _onItemTapped,
+                onSettingsTap: _openSettings,
+              )
+            : null,
+        body: Stack(
+          children: [
+            Row(
+              children: [
+                if (!isMobile)
+                  AdminNavRail(
+                    selectedIndex: _selectedIndex,
+                    onDestinationSelected: _onItemTapped,
+                    onSettingsTap: _openSettings,
+                  ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      if (!isMobile) _buildTopBar(),
+                      Expanded(child: _pages[_selectedIndex]),
+                    ],
+                  ),
                 ),
               ],
-            )
-          : null,
-      drawer: isMobile
-          ? AdminDrawer(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: _onItemTapped,
-              onSettingsTap: _openSettings,
-            )
-          : null,
-      body: Stack(
-        children: [
-          Row(
-            children: [
-              if (!isMobile)
-                AdminNavRail(
-                  selectedIndex: _selectedIndex,
-                  onDestinationSelected: _onItemTapped,
-                  onSettingsTap: _openSettings,
-                ),
-              Expanded(
-                child: Column(
-                  children: [
-                    if (!isMobile) _buildTopBar(),
-                    Expanded(child: _pages[_selectedIndex]),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (_showSettings && !isMobile) _buildSettingsOverlay(),
-        ],
+            ),
+            if (_showSettings && !isMobile) _buildSettingsOverlay(),
+          ],
+        ),
       ),
     );
   }
