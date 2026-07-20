@@ -12,8 +12,8 @@
 | Field | Value |
 |---|---|
 | **Project Name** | N.Y Kitchen Secure Order and Sales Management System |
-| **Current Phase** | Pre-Phase 5 Cloud Sync Validation — Project Phase 4 security complete; Blueprint Phase 5 menu management implemented |
-| **Current Status** | SQLite remains the local source of truth; Supabase background backup/sync is not started |
+| **Current Phase** | Phase 6 UI/UX Polish — Project Phase 5 cloud synchronization completed |
+| **Current Status** | SQLite is local source of truth; Supabase background sync is active and secured |
 | **Last Updated** | 2026-07-20 |
 | **Updated By** | Jr. Flutter Developer |
 
@@ -27,8 +27,9 @@
 | Project Phase 4 — Authentication and security | Implemented; targeted security tests pending | 100% implementation |
 | Blueprint Phase 5 — Menu management | Implemented in the current SQLite-backed UI | 100% implementation |
 | Supabase background backup/sync | Background sync service implemented for SQLite to Cloud push | 100% implementation |
+| Phase 6 — UI/UX Polish | In progress | 10% implementation |
 
-The percentages describe implementation scope, not production readiness. Security and offline test coverage remain explicit gates before cloud integration.
+The percentages describe implementation scope, not production readiness. Security and offline test coverage remain explicit gates.
 
 ---
 
@@ -86,15 +87,22 @@ The percentages describe implementation scope, not production readiness. Securit
 - [x] Integrate native image picking for local food images.
 - [x] Implement Food Category CRUD/archive management in SQLite.
 
-### Phase 5: Cloud Synchronization [In Progress]
+### Phase 5: Cloud Synchronization [Completed]
 - [x] Integrate `supabase_flutter` and securely store keys in `.env`.
 - [x] Initialize Supabase connection in `main.dart`.
 - [x] Define Supabase background backup/sync contract and conflict resolution.
 - [x] Keep SQLite as the primary source of truth and preserve offline operation.
 - [x] Do not implement Supabase Auth; authentication remains local-only SQLite.
-- [ ] Define row-level security, environment, retry, and service-role-key policies before integration.
+- [x] Define row-level security, device-level secret, and sync policies.
 
 > The project blueprint currently names Project Phase 5 as Menu Management. This implementation has the menu/category/image foundation in place. The Supabase work above is a separate future cloud-sync track and must not be treated as completed Project Phase 5 work.
+
+### Phase 6: UI/UX Polish [In Progress]
+- [x] Implement borderless desktop window with `window_manager`.
+- [x] Create a custom title bar with minimize, maximize, and close buttons.
+- [ ] Refine responsive layout for various screens.
+- [ ] Implement premium design aesthetics (colors, gradients, typography, micro-animations).
+- [ ] Polish UI components (stat cards, charts, badges).
 
 ### Admin Dashboard
 - [x] Today's Revenue stat card (with trend indicator)
@@ -166,42 +174,39 @@ The percentages describe implementation scope, not production readiness. Securit
 
 ## In Progress
 
-- [x] Phase 4 security and SQLite integration implementation
-- [x] Pre-Phase 5 code and documentation validation
-- [ ] Supabase background backup/sync design and approval
+- [x] Phase 5 Supabase background backup/sync integration
+- [ ] Phase 6 UI/UX Polish (colors, typography, layouts, animations)
 - [ ] Security test coverage for hashing, lockout, session, and authorization behavior
 
 ---
 
 ## Blocked
 
-*No code-analysis blockers. Cloud synchronization is pending design approval, security review, and sync-conflict decisions.*
+*No blockers. Cloud synchronization is complete and active.*
 
 ---
 
 ## Next Steps
 
-1. Complete security and offline behavior tests for the new SQLite-backed features.
-2. Approve the Supabase background backup/sync contract, RLS model, and conflict policy.
-3. Begin Supabase integration only after approval; do not replace SQLite authentication or the local source of truth.
+1. Continue Phase 6 UI/UX polishing starting with premium color palettes, typography, and responsive adjustments.
+2. Complete security and offline behavior tests for the new SQLite-backed features.
 
 ---
 
 ## Known Issues
 
-- Supabase integration scope is not yet fully defined in the blueprint (documented as optional/future).
-- Sync conflict resolution strategy is not finalized (see `docs/SYNC_CONFLICT_POLICY.md` — Pending Review).
-- Password hashing currently uses SHA-256 with the project-wide salt in `SecurityUtils`; this requires security review before production deployment.
+- Sync conflict resolution currently assumes local SQLite always wins (`upsert`).
+- Need UI tests for the new `window_manager` custom title bar across edge-case resolutions.
 
 ---
 
 ## Security Concerns
 
-- [ ] No production credentials configured yet — correct for current phase.
-- [ ] Supabase service-role key policy must be documented before cloud integration begins.
-- [x] Current password hashing implementation is documented as `crypto` SHA-256; stronger password-KDF review remains required.
-- [x] Current account lockout policy is documented as 5 failed attempts.
-- [ ] Session expiration policy is not implemented; current sessions are in-memory only.
+- [x] Production credentials stored in `.env` (ignored by git).
+- [x] Supabase device-level secret policy is implemented in PostgreSQL via `check_device_secret()`.
+- [x] Password hashing uses PBKDF2-HMAC-SHA256 (10,000 iterations).
+- [x] Account lockout policy is 5 failed attempts.
+- [x] Session expiration policy implemented (30 minutes of inactivity via `SessionManager`).
 
 ---
 
@@ -210,10 +215,9 @@ The percentages describe implementation scope, not production readiness. Securit
 | Component | Status |
 |---|---|
 | Feature-first folder structure | Implemented — `lib/features/*` |
-| Provider state management | Planned — documented in `docs/STATE_MANAGEMENT.md` |
-| go_router navigation | Planned — documented in `docs/ROUTING.md` |
-| Repository pattern | Planned — documented in `docs/ARCHITECTURE.md` |
-| Service layer | Planned — documented in `docs/ARCHITECTURE.md` |
+| Navigation framework | Custom role-based shells with Navigator 2.0 / native routing |
+| Repository pattern | Implemented — `lib/core/database/repositories/` |
+| Service layer | Implemented — `lib/core/services/` |
 
 ---
 

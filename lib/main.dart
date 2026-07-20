@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:window_manager/window_manager.dart';
 import 'core/theme/app_theme.dart';
 import 'core/session/session_manager.dart';
 import 'features/auth/presentation/pages/login_page.dart';
+import 'features/shared/widgets/custom_title_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +27,21 @@ void main() async {
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    
+    await windowManager.ensureInitialized();
+    WindowOptions windowOptions = const WindowOptions(
+      size: Size(1280, 720),
+      minimumSize: Size(1024, 768),
+      center: true,
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.hidden,
+    );
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.maximize();
+      await windowManager.focus();
+    });
   }
   runApp(const NYKitchenApp());
 }
@@ -41,6 +58,16 @@ class NYKitchenApp extends StatelessWidget {
         title: 'N.Y Kitchen POS',
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
+        builder: (context, child) {
+          return Material(
+            child: Column(
+              children: [
+                const CustomTitleBar(),
+                Expanded(child: child ?? const SizedBox.shrink()),
+              ],
+            ),
+          );
+        },
         home: const LoginPage(),
       ),
     );

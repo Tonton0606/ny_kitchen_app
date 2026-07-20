@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../database/database_helper.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart' as path;
 
 class SyncService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -16,6 +18,27 @@ class SyncService {
     'activity_logs',
     'login_attempts'
   ];
+
+  /// Uploads a local image file to Supabase Storage and returns the public URL
+  Future<String?> uploadImage(String localPath) async {
+    try {
+      if (localPath.startsWith('http')) return localPath; // Already a URL
+      if (localPath.isEmpty) return null;
+
+      final file = File(localPath);
+      if (!await file.exists()) return localPath; // Return as-is if it's not a local file we can find
+
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(localPath)}';
+      final String fullPath = await _supabase.storage
+          .from('food_images')
+          .upload(fileName, file, fileOptions: const FileOptions(upsert: true));
+          
+      return _supabase.storage.from('food_images').getPublicUrl(fileName);
+    } catch (e) {
+      print('Image upload failed: $e');
+      return localPath; // fallback to local path if upload fails
+    }
+  }
 
   /// Runs a full background sync from SQLite (Primary) to Supabase (Backup)
   Future<void> syncToCloud() async {

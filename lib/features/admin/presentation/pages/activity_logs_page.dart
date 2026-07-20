@@ -145,10 +145,14 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: AppColors.softBorder),
                   ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      headingRowHeight: 48,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                          child: DataTable(
+                            headingRowHeight: 48,
                   dataRowMinHeight: 44,
                   dataRowMaxHeight: 52,
                   columnSpacing: 24,
@@ -373,11 +377,15 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                       ],
                     );
                   }).toList(),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ),
-          ),
-        ],
+              ), // Expanded
+        ], // Column
+
       ),
     );
   }

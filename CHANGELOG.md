@@ -38,6 +38,14 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
   - Connected Kitchen Flow (`OrdersPage`) to poll live active transactions allowing true state progression (`Taken` -> `Preparing` -> `Ready` -> `Served`).
 - Cashier Module Phase 1 Static UI Prototype (Home/Order, History, Settings).
 - Admin Module Phase 1 Static UI Prototype (Dashboard, Sales Reports, Food Management, Account Management, Activity Logs, Settings).
+- **Phase 5 Cloud Synchronization**:
+  - Implemented `supabase_flutter` for background data backups.
+  - Implemented secure `.env` storage for Supabase keys.
+  - Built `SyncService` for SQLite-to-Supabase disaster recovery.
+  - Enforced Device-Level authentication via `x-device-secret` and custom RLS policies in PostgreSQL.
+- **Phase 6 UI/UX Polish**:
+  - Integrated `window_manager` to provide a borderless application window on desktop platforms.
+  - Created a `CustomTitleBar` with a drag area, minimize, maximize, and close controls.
 - Login Screen static prototype with mock role selection.
 - **Mock Data**: Extended with 15 food items, 8 transactions, 5 users, 10 activity logs, 5 top-selling foods, 10 hourly revenue data points.
 - **Login Page**: Enhanced with desktop side-by-side branding layout, polished Material 3 card design, role selector with icons, improved form fields with filled styling.

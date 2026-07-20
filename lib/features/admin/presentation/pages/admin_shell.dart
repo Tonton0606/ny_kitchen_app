@@ -23,7 +23,7 @@ class _AdminShellState extends State<AdminShell> {
   int _selectedIndex = 0;
   bool _showSettings = false;
 
-  static const double _navRailWidth = 76.0;
+  bool _isNavExpanded = false;
   static const double _panelWidth = 500.0;
 
   final List<Widget> _pages = const [
@@ -109,6 +109,10 @@ class _AdminShellState extends State<AdminShell> {
                 if (!isMobile)
                   AdminNavRail(
                     selectedIndex: _selectedIndex,
+                    isExpanded: _isNavExpanded,
+                    onToggleExpand: (expanded) {
+                      setState(() => _isNavExpanded = expanded);
+                    },
                     onDestinationSelected: _onItemTapped,
                     onSettingsTap: _openSettings,
                   ),
@@ -163,7 +167,7 @@ class _AdminShellState extends State<AdminShell> {
     return Positioned.fill(
       child: Row(
         children: [
-          const SizedBox(width: _navRailWidth),
+          SizedBox(width: _isNavExpanded ? 220.0 : 80.0), // match AdminNavRail width
           Container(
             width: _panelWidth,
             decoration: BoxDecoration(

@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../auth/presentation/pages/login_page.dart';
+import '../../../../../core/session/session_manager.dart';
 
 class AdminNavRail extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final VoidCallback? onSettingsTap;
 
+  final bool isExpanded;
+  final ValueChanged<bool> onToggleExpand;
+
   const AdminNavRail({
     super.key,
     required this.selectedIndex,
+    required this.isExpanded,
+    required this.onToggleExpand,
     required this.onDestinationSelected,
     this.onSettingsTap,
   });
@@ -20,12 +26,12 @@ class AdminNavRail extends StatefulWidget {
 }
 
 class _AdminNavRailState extends State<AdminNavRail> {
-  bool _isExtended = false;
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Container(
@@ -34,36 +40,24 @@ class _AdminNavRailState extends State<AdminNavRail> {
                 color: AppColors.brandRed.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Symbols.logout_rounded,
-                color: AppColors.brandRed,
-                size: 28,
-                weight: 500,
-              ),
+              child: const Icon(Symbols.logout_rounded, color: AppColors.brandRed, size: 24, weight: 500),
             ),
-            const SizedBox(width: 16),
-            const Expanded(
-              child: Text(
-                'Confirm Logout',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
+            const SizedBox(width: 12),
+            const Text('Confirm Logout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
-        content: Text(
-          'Are you sure you want to log out of your account?',
-          style: const TextStyle(fontSize: 15, color: AppColors.mutedText),
+        content: const Text(
+          'Are you sure you want to log out?',
+          style: TextStyle(fontSize: 14, color: AppColors.mutedText),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-            ),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () {
+              SessionManager().clearSession();
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -73,11 +67,9 @@ class _AdminNavRailState extends State<AdminNavRail> {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.brandRed,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text(
-              'Logout',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
+            child: const Text('Logout', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -86,304 +78,181 @@ class _AdminNavRailState extends State<AdminNavRail> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isWindows = Theme.of(context).platform == TargetPlatform.windows;
+    final items = [
+      _NavItem(icon: Symbols.dashboard_rounded,      label: 'Dashboard'),
+      _NavItem(icon: Symbols.trending_up_rounded,    label: 'Sales Reports'),
+      _NavItem(icon: Symbols.menu_book_rounded,      label: 'Food Management'),
+      _NavItem(icon: Symbols.badge_rounded,          label: 'Account Management'),
+      _NavItem(icon: Symbols.assignment_rounded,     label: 'Activity Logs'),
+      _NavItem(icon: Symbols.backup_rounded,         label: 'Backup & Restore'),
+    ];
 
-    if (isWindows) {
-      return NavigationRail(
-        extended: _isExtended,
-        minWidth: 76.0,
-        minExtendedWidth: 240.0,
-        selectedIndex: widget.selectedIndex,
-        onDestinationSelected: widget.onDestinationSelected,
-        labelType: NavigationRailLabelType.none,
-        backgroundColor: AppColors.darkCharcoal,
-        selectedIconTheme: const IconThemeData(
-          color: AppColors.goldenYellow,
-          size: 27,
-        ),
-        unselectedIconTheme: const IconThemeData(
-          color: Colors.white54,
-          size: 27,
-        ),
-        selectedLabelTextStyle: const TextStyle(
-          fontSize: 14,
-          color: AppColors.goldenYellow,
-          fontWeight: FontWeight.w500,
-        ),
-        unselectedLabelTextStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white70,
-        ),
-        indicatorColor: AppColors.goldenYellow.withValues(alpha: 0.25),
-        indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        groupAlignment: -0.25,
-        leading: _buildLeading(context, isWindows),
-        trailing: _buildTrailing(context, isWindows),
-        destinations: const [
-          NavigationRailDestination(
-            icon: Icon(Symbols.dashboard_rounded, weight: 500),
-            label: Text('Dashboard'),
-          ),
-          NavigationRailDestination(
-            icon: Icon(Symbols.trending_up_rounded, weight: 500),
-            label: Text('Sales'),
-          ),
-          NavigationRailDestination(
-            icon: Icon(Symbols.menu_book_rounded, weight: 500),
-            label: Text('Food'),
-          ),
-          NavigationRailDestination(
-            icon: Icon(Symbols.badge_rounded, weight: 500),
-            label: Text('Accounts'),
-          ),
-          NavigationRailDestination(
-            icon: Icon(Symbols.assignment_rounded, weight: 500),
-            label: Text('Logs'),
-          ),
-          NavigationRailDestination(
-            icon: Icon(Symbols.backup_rounded, weight: 500),
-            label: Text('Backup'),
-          ),
-        ],
-      );
-    }
-
-    // Android/Non-Windows implementation (100% unchanged)
-    return SizedBox(
-      width: 76,
-      child: NavigationRail(
-        selectedIndex: widget.selectedIndex,
-        onDestinationSelected: widget.onDestinationSelected,
-        labelType: NavigationRailLabelType.none,
-        backgroundColor: AppColors.darkCharcoal,
-        selectedIconTheme: const IconThemeData(
-          color: AppColors.goldenYellow,
-          size: 27,
-        ),
-        unselectedIconTheme: const IconThemeData(
-          color: Colors.white54,
-          size: 27,
-        ),
-        indicatorColor: AppColors.goldenYellow.withValues(alpha: 0.25),
-        indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        groupAlignment: -0.25,
-        leading: _buildLeading(context, isWindows),
-        trailing: _buildTrailing(context, isWindows),
-        destinations: const [
-          NavigationRailDestination(
-            icon: Icon(Symbols.dashboard_rounded, weight: 500),
-            label: Text('Dashboard'),
-          ),
-          NavigationRailDestination(
-            icon: Icon(Symbols.trending_up_rounded, weight: 500),
-            label: Text('Sales'),
-          ),
-          NavigationRailDestination(
-            icon: Icon(Symbols.menu_book_rounded, weight: 500),
-            label: Text('Food'),
-          ),
-          NavigationRailDestination(
-            icon: Icon(Symbols.badge_rounded, weight: 500),
-            label: Text('Accounts'),
-          ),
-          NavigationRailDestination(
-            icon: Icon(Symbols.assignment_rounded, weight: 500),
-            label: Text('Logs'),
-          ),
-          NavigationRailDestination(
-            icon: Icon(Symbols.backup_rounded, weight: 500),
-            label: Text('Backup'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLeading(BuildContext context, bool isWindows) {
-    if (!isWindows) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 16.0, top: 12.0),
-        child: GestureDetector(
-          onTap: widget.onSettingsTap,
-          child: const MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: AppColors.goldenYellow,
-              child: Text(
-                'NY',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: _isExtended ? 16.0 : 8.0,
-        vertical: 12.0,
-      ),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      width: widget.isExpanded ? 220 : 80,
+      color: AppColors.darkCharcoal,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: _isExtended ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: widget.onSettingsTap,
-                child: const MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppColors.goldenYellow,
-                    child: Text(
-                      'NY',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+          // Logo / avatar + Toggle button
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+            child: Row(
+              mainAxisAlignment: widget.isExpanded ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: widget.onSettingsTap,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: AppColors.goldenYellow,
+                      child: const Text(
+                        'NY',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              if (_isExtended)
-                IconButton(
-                  icon: const Icon(
-                    Symbols.menu_open,
-                    color: Colors.white70,
+                if (widget.isExpanded)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text('NY Kitchen', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          Text('Admin Portal', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                        ],
+                      ),
+                    ),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isExtended = !_isExtended;
-                    });
-                  },
-                ),
-            ],
+              ],
+            ),
           ),
-          if (!_isExtended) ...[
-            const SizedBox(height: 12),
-            IconButton(
-              icon: const Icon(
-                Symbols.menu,
-                color: Colors.white70,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isExtended = !_isExtended;
-                });
+          
+          IconButton(
+            icon: Icon(
+              widget.isExpanded ? Symbols.chevron_left_rounded : Symbols.chevron_right_rounded,
+              color: Colors.white70,
+            ),
+            onPressed: () => widget.onToggleExpand(!widget.isExpanded),
+          ),
+
+          const Divider(color: Colors.white12, height: 1, indent: 16, endIndent: 16),
+          const SizedBox(height: 8),
+
+          // Nav items
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final isSelected = widget.selectedIndex == index;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => widget.onDestinationSelected(index),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.goldenYellow.withValues(alpha: 0.2)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: widget.isExpanded
+                            ? Row(
+                                children: [
+                                  Icon(
+                                    item.icon,
+                                    weight: 500,
+                                    size: 24,
+                                    color: isSelected ? AppColors.goldenYellow : Colors.white54,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      item.label,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: isSelected ? AppColors.goldenYellow : Colors.white54,
+                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    item.icon,
+                                    weight: 500,
+                                    size: 24,
+                                    color: isSelected ? AppColors.goldenYellow : Colors.white54,
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTrailing(BuildContext context, bool isWindows) {
-    if (!isWindows) {
-      return Expanded(
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Divider(
-                height: 1,
-                color: Colors.white12,
-                indent: 16,
-                endIndent: 16,
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: IconButton(
-                  icon: const Icon(
-                    Symbols.logout_rounded,
-                    color: Colors.white54,
-                    weight: 500,
-                  ),
-                  tooltip: 'Logout',
-                  onPressed: () => _showLogoutDialog(context),
-                ),
-              ),
-            ],
           ),
-        ),
-      );
-    }
 
-    return Expanded(
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: _isExtended ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-          children: [
-            Divider(
-              height: 1,
-              color: Colors.white12,
-              indent: _isExtended ? 24 : 16,
-              endIndent: _isExtended ? 24 : 16,
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: EdgeInsets.only(
-                bottom: 20.0,
-                left: _isExtended ? 16.0 : 0.0,
-                right: _isExtended ? 16.0 : 0.0,
-              ),
-              child: _isExtended
-                  ? InkWell(
-                      onTap: () => _showLogoutDialog(context),
-                      borderRadius: BorderRadius.circular(8),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 8.0,
-                        ),
-                        child: Row(
+          // Logout
+          const Divider(color: Colors.white12, height: 1, indent: 16, endIndent: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => _showLogoutDialog(context),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                  child: widget.isExpanded
+                      ? const Row(
                           children: [
-                            Icon(
-                              Symbols.logout_rounded,
-                              color: Colors.white54,
-                              weight: 500,
-                            ),
+                            Icon(Symbols.logout_rounded, weight: 500, size: 24, color: Colors.white38),
                             SizedBox(width: 12),
                             Text(
                               'Logout',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white70,
-                              ),
+                              style: TextStyle(fontSize: 14, color: Colors.white38),
                             ),
                           ],
+                        )
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Symbols.logout_rounded, weight: 500, size: 24, color: Colors.white38),
+                          ],
                         ),
-                      ),
-                    )
-                  : IconButton(
-                      icon: const Icon(
-                        Symbols.logout_rounded,
-                        color: Colors.white54,
-                        weight: 500,
-                      ),
-                      tooltip: 'Logout',
-                      onPressed: () => _showLogoutDialog(context),
-                    ),
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _NavItem {
+  final IconData icon;
+  final String label;
+  const _NavItem({required this.icon, required this.label});
 }

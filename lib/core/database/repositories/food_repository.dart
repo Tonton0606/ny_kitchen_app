@@ -1,8 +1,10 @@
 import 'package:sqflite/sqflite.dart';
 import '../database_helper.dart';
+import '../../services/sync_service.dart';
 
 class FoodRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final SyncService _syncService = SyncService();
 
   // Retrieve all active and available food items
   Future<List<Map<String, dynamic>>> getAvailableFoodItems() async {
@@ -33,25 +35,35 @@ class FoodRepository {
   Future<int> insertFoodItem(Map<String, dynamic> foodItem) async {
     final db = await _dbHelper.database;
     foodItem['created_at'] = DateTime.now().toIso8601String();
-    return await db.insert('food_items', foodItem, conflictAlgorithm: ConflictAlgorithm.replace);
+    if (foodItem['image_path'] != null) {
+      foodItem['image_path'] = await _syncService.uploadImage(foodItem['image_path']);
+    }
+    int id = await db.insert('food_items', foodItem, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _syncService.syncToCloud();
+    return id;
   }
 
   // Update an existing food item
   Future<int> updateFoodItem(int id, Map<String, dynamic> foodItem) async {
     final db = await _dbHelper.database;
     foodItem['updated_at'] = DateTime.now().toIso8601String();
-    return await db.update(
+    if (foodItem['image_path'] != null) {
+      foodItem['image_path'] = await _syncService.uploadImage(foodItem['image_path']);
+    }
+    int count = await db.update(
       'food_items',
       foodItem,
       where: 'id = ?',
       whereArgs: [id],
     );
+    await _syncService.syncToCloud();
+    return count;
   }
 
   // Delete/Archive a food item (We prefer archiving to maintain receipt history integrity)
   Future<int> archiveFoodItem(int id) async {
     final db = await _dbHelper.database;
-    return await db.update(
+    int count = await db.update(
       'food_items',
       {
         'status': 'archived',
@@ -60,6 +72,8 @@ class FoodRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+    await _syncService.syncToCloud();
+    return count;
   }
 
   // --- Category Management --- //
@@ -69,28 +83,44 @@ class FoodRepository {
     return await db.query('food_categories', where: 'status = ?', whereArgs: ['active'], orderBy: 'name ASC');
   }
 
-  Future<int> insertCategory(String name) async {
+  Future<int> insertCategory(String name, {String? iconUrl}) async {
     final db = await _dbHelper.database;
-    return await db.insert('food_categories', {
+    
+    if (iconUrl != null) {
+      iconUrl = await _syncService.uploadImage(iconUrl);
+    }
+    
+    int id = await db.insert('food_categories', {
       'name': name,
+      'icon_url': iconUrl ?? '🍽️',
       'status': 'active',
       'created_at': DateTime.now().toIso8601String(),
     });
+    await _syncService.syncToCloud();
+    return id;
   }
 
-  Future<int> updateCategory(int id, String name) async {
+  Future<int> updateCategory(int id, String name, {String? iconUrl}) async {
     final db = await _dbHelper.database;
-    return await db.update('food_categories', {
+    final data = {
       'name': name,
       'updated_at': DateTime.now().toIso8601String(),
-    }, where: 'id = ?', whereArgs: [id]);
+    };
+    if (iconUrl != null) {
+      data['icon_url'] = await _syncService.uploadImage(iconUrl) ?? iconUrl;
+    }
+    int count = await db.update('food_categories', data, where: 'id = ?', whereArgs: [id]);
+    await _syncService.syncToCloud();
+    return count;
   }
 
   Future<int> archiveCategory(int id) async {
     final db = await _dbHelper.database;
-    return await db.update('food_categories', {
+    int count = await db.update('food_categories', {
       'status': 'archived',
       'updated_at': DateTime.now().toIso8601String(),
     }, where: 'id = ?', whereArgs: [id]);
+    await _syncService.syncToCloud();
+    return count;
   }
 }

@@ -21,7 +21,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _loadData();
   }
 
@@ -120,6 +120,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
             labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             tabs: const [
+              Tab(text: 'All'),
               Tab(text: 'Today'),
               Tab(text: 'Weekly'),
               Tab(text: 'Monthly'),
@@ -130,6 +131,14 @@ class _SalesReportsPageState extends State<SalesReportsPage>
             child: TabBarView(
                controller: _tabController,
                children: [
+                 if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
+                   'All',
+                   _calculateRevenueForDays(-1),
+                   _calculateAvgForDays(-1),
+                   _calculateOrdersForDays(-1),
+                   '100%',
+                   showDateFilter: true,
+                 ),
                  if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
                    'Today',
                    _calculateRevenueForDays(0),
@@ -143,6 +152,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                    _calculateAvgForDays(7),
                    _calculateOrdersForDays(7),
                    '100%',
+                   showDateFilter: true,
                  ),
                  if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
                    'Monthly',
@@ -150,6 +160,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                    _calculateAvgForDays(30),
                    _calculateOrdersForDays(30),
                    '100%',
+                   showDateFilter: true,
                  ),
                  if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
                    'Annual',
@@ -157,6 +168,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                    _calculateAvgForDays(365),
                    _calculateOrdersForDays(365),
                    '100%',
+                   showDateFilter: true,
                  ),
                ],
              ),
@@ -172,7 +184,9 @@ class _SalesReportsPageState extends State<SalesReportsPage>
     for (var tx in _transactions) {
       if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
       final date = DateTime.tryParse(tx['created_at'] ?? '') ?? now;
-      if (days == 0) {
+      if (days == -1) {
+        total += (tx['total_amount'] as num).toDouble();
+      } else if (days == 0) {
         if (date.year == now.year && date.month == now.month && date.day == now.day) {
           total += (tx['total_amount'] as num).toDouble();
         }
@@ -192,7 +206,10 @@ class _SalesReportsPageState extends State<SalesReportsPage>
     for (var tx in _transactions) {
       if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
       final date = DateTime.tryParse(tx['created_at'] ?? '') ?? now;
-      if (days == 0) {
+      if (days == -1) {
+        total += (tx['total_amount'] as num).toDouble();
+        count++;
+      } else if (days == 0) {
         if (date.year == now.year && date.month == now.month && date.day == now.day) {
           total += (tx['total_amount'] as num).toDouble();
           count++;
@@ -214,7 +231,9 @@ class _SalesReportsPageState extends State<SalesReportsPage>
     for (var tx in _transactions) {
       if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
       final date = DateTime.tryParse(tx['created_at'] ?? '') ?? now;
-      if (days == 0) {
+      if (days == -1) {
+        count++;
+      } else if (days == 0) {
         if (date.year == now.year && date.month == now.month && date.day == now.day) {
           count++;
         }
@@ -233,6 +252,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
     String avgOrder,
     String orders,
     String completionRate,
+    {bool showDateFilter = false}
   ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
@@ -249,24 +269,38 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.softBorder),
+                    ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                     filled: true,
                     fillColor: Colors.white,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.date_range, size: 18),
-                label: const Text('Filter Date'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
+              if (showDateFilter) ...[
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.date_range, size: 18, color: AppColors.goldenYellow),
+                  label: const Text(
+                    'Filter Date',
+                    style: TextStyle(color: AppColors.goldenYellow, fontWeight: FontWeight.bold),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.softBorder),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: Colors.white,
                   ),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 24),
@@ -276,7 +310,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
             mainAxisSpacing: 16,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 2.5,
+            childAspectRatio: 2.2,
             children: [
               _buildSummaryCard(
                 'Total Revenue',
@@ -302,7 +336,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
               _buildSummaryCard(
                 'Completion Rate',
                 completionRate,
-                Icons.check_circle,
+                Icons.check,
                 AppColors.goldenYellow,
                 'Successful rate',
               ),
@@ -534,48 +568,65 @@ class _SalesReportsPageState extends State<SalesReportsPage>
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.softBorder),
       ),
-      padding: const EdgeInsets.all(24),
-      child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Stack(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 24),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppColors.mutedText,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.darkCharcoal,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: AppColors.mutedText,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppColors.mutedText,
-                    fontSize: 11,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.darkCharcoal,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: AppColors.mutedText,
-                    fontSize: 9,
-                  ),
-                ),
-              ],
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Icon(
+              title == 'Completion Rate' ? Icons.pie_chart_outline : Icons.show_chart,
+              color: color.withValues(alpha: 0.2),
+              size: 40,
             ),
           ),
         ],

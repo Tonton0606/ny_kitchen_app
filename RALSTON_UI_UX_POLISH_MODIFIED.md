@@ -18,3 +18,28 @@ This document tracks all files modified during the UI/UX polishing phase, primar
   - *Added a right-side decorative promo card ("Delicious Food, Happy Customers!") to balance desktop whitespace.*
 
 *(This document should be updated whenever new UI/UX polishing changes are applied).*
+
+## Branch/Module: Admin Dashboard Refinement & Responsiveness
+- `lib/features/admin/presentation/widgets/navigation/admin_nav_rail.dart`
+  - *Converted into a fully collapsible component that toggles between "icon-only" (collapsed) and "icon + label" (expanded) states.*
+  - *Fixed const compilation errors and updated structure for dynamic width.*
+- `lib/features/admin/presentation/pages/admin_shell.dart`
+  - *Updated to manage the `isExpanded` state and pass it down to `AdminNavRail`.*
+- `lib/features/admin/presentation/pages/account_management_page.dart`
+  - *Redesigned the layout to match the premium admin UI standard.*
+  - *Implemented "Enable/Disable" action buttons instead of deletion to match the system security policy.*
+- `lib/features/admin/presentation/pages/activity_logs_page.dart`
+  - *Added `LayoutBuilder` and `ConstrainedBox` wrapping the `DataTable` to prevent horizontal stretching.*
+  - *Fixed syntax and structure errors causing layout parsing failures.*
+- `test/widget_test.dart`
+  - *Updated widget tests for `AdminNavRail` to include new required parameters (`isExpanded` and `onToggleExpand`), resolving type mismatch issues in the tests.*
+
+## Branch/Module: Sales Reports & Cashier Navigation Polish
+- `lib/features/admin/presentation/pages/sales_reports_page.dart`
+  - *Added "All" tab as the default report view, expanding the period options to: All, Today, Weekly, Monthly, and Annual.*
+  - *Removed the Date Filter button from all tabs except the "All" tab to prevent user confusion.*
+  - *Adjusted backend calculations to support fetching all-time historical data.*
+- `lib/features/cashier/presentation/widgets/navigation/cashier_nav_rail.dart`
+  - *Re-architected the component to support external state management for expand/collapse functionality, matching the Admin Navigation logic.*
+- `lib/features/cashier/presentation/pages/cashier_shell.dart`
+  - *Implemented local state management (`_isNavExpanded`) and integrated the new collapsible `CashierNavRail`.*

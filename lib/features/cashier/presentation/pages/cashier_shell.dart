@@ -19,6 +19,7 @@ class CashierShell extends StatefulWidget {
 class _CashierShellState extends State<CashierShell> {
   int _selectedIndex = 0;
   bool _showSettings = false;
+  bool _isNavExpanded = false;
 
   static const double _navRailWidth = 76.0;
   static const double _panelWidth = 380.0;
@@ -105,6 +106,10 @@ class _CashierShellState extends State<CashierShell> {
       children: [
         CashierNavRail(
           selectedIndex: _selectedIndex,
+          isExpanded: _isNavExpanded,
+          onToggleExpand: (expanded) {
+            setState(() => _isNavExpanded = expanded);
+          },
           onDestinationSelected: _onItemTapped,
           onSettingsTap: _openSettings,
         ),

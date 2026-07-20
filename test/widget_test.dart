@@ -331,19 +331,32 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       int selectedIndex = 0;
+      bool isNavExpanded = false;
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
           home: Scaffold(
-            body: Row(
-              children: [
-                AdminNavRail(
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (val) {
-                    selectedIndex = val;
-                  },
-                ),
-              ],
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return Row(
+                  children: [
+                    AdminNavRail(
+                      selectedIndex: selectedIndex,
+                      onDestinationSelected: (val) {
+                        setState(() {
+                          selectedIndex = val;
+                        });
+                      },
+                      isExpanded: isNavExpanded,
+                      onToggleExpand: (val) {
+                        setState(() {
+                          isNavExpanded = val;
+                        });
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -390,6 +403,8 @@ void main() {
                 AdminNavRail(
                   selectedIndex: 0,
                   onDestinationSelected: (_) {},
+                  isExpanded: false,
+                  onToggleExpand: (_) {},
                 ),
               ],
             ),
