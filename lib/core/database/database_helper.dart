@@ -6,7 +6,7 @@ import '../utils/security_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "ny_kitchen.db";
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 3;
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -35,16 +35,12 @@ class DatabaseHelper {
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       final now = DateTime.now().toIso8601String();
-      
-      // Hash the existing admin password if it's plain text
       await db.update(
         'users',
         {'password_hash': SecurityUtils.hashPassword('admin123')},
         where: 'username = ?',
         whereArgs: ['admin'],
       );
-
-      // Insert cashier
       final maps = await db.query('users', where: 'username = ?', whereArgs: ['cashier']);
       if (maps.isEmpty) {
         await db.insert('users', {
@@ -55,6 +51,29 @@ class DatabaseHelper {
           'status': 'active',
           'created_at': now,
         });
+      }
+    }
+    if (oldVersion < 3) {
+      // Add icon_url column to food_categories
+      try {
+        await db.execute('ALTER TABLE food_categories ADD COLUMN icon_url TEXT');
+      } catch (_) {}
+      // Seed default icon_urls for known categories
+      final categoryIcons = {
+        'Rice Meals': '🍚',
+        'Snacks': '🍡',
+        'Pasta': '🍝',
+        'Beverages': '🥤',
+        'Desserts': '🍨',
+        'Specials': '⭐',
+      };
+      for (final entry in categoryIcons.entries) {
+        await db.update(
+          'food_categories',
+          {'icon_url': entry.value},
+          where: 'name = ? AND (icon_url IS NULL OR icon_url = \'\')',
+          whereArgs: [entry.key],
+        );
       }
     }
   }
@@ -85,6 +104,7 @@ class DatabaseHelper {
       CREATE TABLE food_categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE NOT NULL,
+        icon_url TEXT,
         status TEXT NOT NULL,
         created_at TEXT NOT NULL
       )
@@ -215,11 +235,19 @@ class DatabaseHelper {
       'created_at': now,
     });
 
-    // Seed Food Categories
-    final categories = ['Rice Meals', 'Snacks', 'Pasta', 'Beverages', 'Desserts', 'Specials'];
-    for (var i = 0; i < categories.length; i++) {
+    // Seed Food Categories with default emoji icons
+    final categories = [
+      {'name': 'Rice Meals', 'icon_url': '🍚'},
+      {'name': 'Snacks',     'icon_url': '🍡'},
+      {'name': 'Pasta',      'icon_url': '🍝'},
+      {'name': 'Beverages',  'icon_url': '🥤'},
+      {'name': 'Desserts',   'icon_url': '🍨'},
+      {'name': 'Specials',   'icon_url': '⭐'},
+    ];
+    for (var cat in categories) {
       await db.insert('food_categories', {
-        'name': categories[i],
+        'name': cat['name'],
+        'icon_url': cat['icon_url'],
         'status': 'active',
         'created_at': now,
       });
