@@ -124,10 +124,10 @@ class _AdminNavRailState extends State<AdminNavRail> {
                       padding: const EdgeInsets.only(left: 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text('NY Kitchen', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                          Text('Admin Portal', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                        ],
+                          children: const [
+                            Text('NY Kitchen', overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            Text('Admin Portal', overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white54, fontSize: 12)),
+                          ],
                       ),
                     ),
                   ),
@@ -229,9 +229,12 @@ class _AdminNavRailState extends State<AdminNavRail> {
                           children: [
                             Icon(Symbols.logout_rounded, weight: 500, size: 24, color: Colors.white38),
                             SizedBox(width: 12),
-                            Text(
-                              'Logout',
-                              style: TextStyle(fontSize: 14, color: Colors.white38),
+                            Expanded(
+                              child: Text(
+                                'Logout',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 14, color: Colors.white38),
+                              ),
                             ),
                           ],
                         )

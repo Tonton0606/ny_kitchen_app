@@ -249,52 +249,65 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       int selectedIndex = 0;
+      bool isNavExpanded = false;
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
           home: Scaffold(
-            body: Row(
-              children: [
-                CashierNavRail(
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (val) {
-                    selectedIndex = val;
-                  },
-                ),
-              ],
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return Row(
+                  children: [
+                    CashierNavRail(
+                      selectedIndex: selectedIndex,
+                      onDestinationSelected: (val) {
+                        setState(() {
+                          selectedIndex = val;
+                        });
+                      },
+                      isExpanded: isNavExpanded,
+                      onToggleExpand: (val) {
+                        setState(() {
+                          isNavExpanded = val;
+                        });
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
       );
 
-      // Verify the menu button is present and layout starts collapsed (76px)
-      final toggleFinder = find.byIcon(Symbols.menu);
+      // Verify the toggle button is present and layout starts collapsed (80px)
+      final toggleFinder = find.byIcon(Symbols.chevron_right_rounded);
       expect(toggleFinder, findsOneWidget);
-      expect(tester.getSize(find.byType(CashierNavRail)).width, 76.0);
+      expect(tester.getSize(find.byType(CashierNavRail)).width, 80.0);
 
       // Tap to expand
       await tester.tap(toggleFinder);
       await tester.pumpAndSettle();
 
-      // Verify menu_open is present and layout is expanded (240px)
-      expect(find.byIcon(Symbols.menu_open), findsOneWidget);
-      expect(tester.getSize(find.byType(CashierNavRail)).width, 240.0);
+      // Verify chevron_left is present and layout is expanded (220px)
+      expect(find.byIcon(Symbols.chevron_left_rounded), findsOneWidget);
+      expect(tester.getSize(find.byType(CashierNavRail)).width, 220.0);
 
       // Verify text label is visible
       expect(find.text('Orders'), findsOneWidget);
 
-      // Tap menu_open to collapse
-      await tester.tap(find.byIcon(Symbols.menu_open));
+      // Tap chevron_left to collapse
+      await tester.tap(find.byIcon(Symbols.chevron_left_rounded));
       await tester.pumpAndSettle();
 
       // Verify collapsed state again
-      expect(find.byIcon(Symbols.menu), findsOneWidget);
-      expect(tester.getSize(find.byType(CashierNavRail)).width, 76.0);
+      expect(find.byIcon(Symbols.chevron_right_rounded), findsOneWidget);
+      expect(tester.getSize(find.byType(CashierNavRail)).width, 80.0);
 
       debugDefaultTargetPlatformOverride = null;
     });
 
-    testWidgets('CashierNavRail on Android has no toggle and is fixed width (76px)', (
+    testWidgets('CashierNavRail on Android has no toggle and is fixed width (80px)', (
       WidgetTester tester,
     ) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -308,6 +321,8 @@ void main() {
                 CashierNavRail(
                   selectedIndex: 0,
                   onDestinationSelected: (_) {},
+                  isExpanded: false,
+                  onToggleExpand: (_) {},
                 ),
               ],
             ),
@@ -315,12 +330,8 @@ void main() {
         ),
       );
 
-      // Verify toggle button is not present
-      expect(find.byIcon(Symbols.menu), findsNothing);
-      expect(find.byIcon(Symbols.menu_open), findsNothing);
-
-      // Verify width remains exactly 76px
-      expect(tester.getSize(find.byType(CashierNavRail)).width, 76.0);
+      // Verify width remains exactly 80px
+      expect(tester.getSize(find.byType(CashierNavRail)).width, 80.0);
 
       debugDefaultTargetPlatformOverride = null;
     });
@@ -362,34 +373,34 @@ void main() {
         ),
       );
 
-      // Verify the menu button is present and layout starts collapsed (76px)
-      final toggleFinder = find.byIcon(Symbols.menu);
+      // Verify the toggle button is present and layout starts collapsed (80px)
+      final toggleFinder = find.byIcon(Symbols.chevron_right_rounded);
       expect(toggleFinder, findsOneWidget);
-      expect(tester.getSize(find.byType(AdminNavRail)).width, 76.0);
+      expect(tester.getSize(find.byType(AdminNavRail)).width, 80.0);
 
       // Tap to expand
       await tester.tap(toggleFinder);
       await tester.pumpAndSettle();
 
-      // Verify menu_open is present and layout is expanded (240px)
-      expect(find.byIcon(Symbols.menu_open), findsOneWidget);
-      expect(tester.getSize(find.byType(AdminNavRail)).width, 240.0);
+      // Verify chevron_left is present and layout is expanded (220px)
+      expect(find.byIcon(Symbols.chevron_left_rounded), findsOneWidget);
+      expect(tester.getSize(find.byType(AdminNavRail)).width, 220.0);
 
       // Verify text label is visible
-      expect(find.text('Sales'), findsOneWidget);
+      expect(find.text('Sales Reports'), findsOneWidget);
 
-      // Tap menu_open to collapse
-      await tester.tap(find.byIcon(Symbols.menu_open));
+      // Tap chevron_left to collapse
+      await tester.tap(find.byIcon(Symbols.chevron_left_rounded));
       await tester.pumpAndSettle();
 
       // Verify collapsed state again
-      expect(find.byIcon(Symbols.menu), findsOneWidget);
-      expect(tester.getSize(find.byType(AdminNavRail)).width, 76.0);
+      expect(find.byIcon(Symbols.chevron_right_rounded), findsOneWidget);
+      expect(tester.getSize(find.byType(AdminNavRail)).width, 80.0);
 
       debugDefaultTargetPlatformOverride = null;
     });
 
-    testWidgets('AdminNavRail on Android has no toggle and is fixed width (76px)', (
+    testWidgets('AdminNavRail on Android has no toggle and is fixed width (80px)', (
       WidgetTester tester,
     ) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -412,12 +423,8 @@ void main() {
         ),
       );
 
-      // Verify toggle button is not present
-      expect(find.byIcon(Symbols.menu), findsNothing);
-      expect(find.byIcon(Symbols.menu_open), findsNothing);
-
-      // Verify width remains exactly 76px
-      expect(tester.getSize(find.byType(AdminNavRail)).width, 76.0);
+      // Verify width remains exactly 80px
+      expect(tester.getSize(find.byType(AdminNavRail)).width, 80.0);
 
       debugDefaultTargetPlatformOverride = null;
     });

@@ -17,7 +17,7 @@ class SyncService {
     'transactions',
     'transaction_items',
     'activity_logs',
-    'login_attempts'
+    'login_attempts',
   ];
 
   Timer? _syncTimer;
@@ -44,17 +44,42 @@ class SyncService {
       if (localPath.isEmpty) return null;
 
       final file = File(localPath);
-      if (!await file.exists()) return localPath; // Return as-is if it's not a local file we can find
+      if (!await file.exists())
+        return localPath; // Return as-is if it's not a local file we can find
 
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(localPath)}';
-      final String fullPath = await _supabase.storage
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${path.basename(localPath)}';
+      final storagePath = await _supabase.storage
           .from('food_images')
-          .upload(fileName, file, fileOptions: const FileOptions(upsert: true));
-          
-      return _supabase.storage.from('food_images').getPublicUrl(fileName);
+          .upload(
+            fileName,
+            file,
+            fileOptions: FileOptions(
+              upsert: true,
+              contentType: _contentTypeFor(localPath),
+            ),
+          );
+
+      return _supabase.storage.from('food_images').getPublicUrl(storagePath);
     } catch (e) {
       print('Image upload failed: $e');
       return localPath; // fallback to local path if upload fails
+    }
+  }
+
+  String _contentTypeFor(String localPath) {
+    switch (path.extension(localPath).toLowerCase()) {
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.png':
+        return 'image/png';
+      case '.webp':
+        return 'image/webp';
+      case '.gif':
+        return 'image/gif';
+      default:
+        return 'application/octet-stream';
     }
   }
 
@@ -62,7 +87,7 @@ class SyncService {
   Future<void> syncToCloud() async {
     try {
       final db = await _dbHelper.database;
-      
+
       for (String table in _tables) {
         // 1. Fetch all local records
         final List<Map<String, dynamic>> localData = await db.query(table);
@@ -71,15 +96,12 @@ class SyncService {
           // 2. Upsert to Supabase
           // Upsert matches by primary key (id) and updates existing records,
           // or inserts new ones.
-          await _supabase
-              .from(table)
-              .upsert(localData)
-              .select();
-              
+          await _supabase.from(table).upsert(localData).select();
+
           print('Synced ${localData.length} records to $table.');
         }
       }
-      
+
       print('Cloud Backup Sync Complete!');
     } catch (e) {
       print('Sync failed: $e');
@@ -99,12 +121,14 @@ class SyncService {
           for (var record in cloudData) {
             // Using REPLACE in SQLite handles upserts
             await db.insert(
-              table, 
-              record, 
+              table,
+              record,
               conflictAlgorithm: ConflictAlgorithm.replace,
             );
           }
-          print('Synced ${cloudData.length} records from cloud to local $table.');
+          print(
+            'Synced ${cloudData.length} records from cloud to local $table.',
+          );
         }
       }
     } catch (e) {

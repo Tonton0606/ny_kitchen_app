@@ -122,8 +122,8 @@ class _CashierNavRailState extends State<CashierNavRail> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
-                          Text('NY Kitchen', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                          Text('Cashier Portal', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                          Text('NY Kitchen', overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          Text('Cashier Portal', overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white54, fontSize: 12)),
                         ],
                       ),
                     ),
@@ -232,9 +232,12 @@ class _CashierNavRailState extends State<CashierNavRail> {
                               child: Icon(Symbols.logout_rounded, weight: 500, size: 24, color: Colors.white38),
                             ),
                             SizedBox(width: 12),
-                            Text(
-                              'Logout',
-                              style: TextStyle(fontSize: 14, color: Colors.white38),
+                            Expanded(
+                              child: Text(
+                                'Logout',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 14, color: Colors.white38),
+                              ),
                             ),
                           ],
                         )
