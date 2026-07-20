@@ -8,7 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'core/session/session_manager.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/shared/widgets/custom_title_bar.dart';
-
+import 'core/services/sync_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -23,6 +23,12 @@ void main() async {
       'x-device-secret': dotenv.env['SUPABASE_DEVICE_SECRET'] ?? '',
     },
   );
+
+  // Initial fetch from cloud
+  final syncService = SyncService();
+  syncService.syncFromCloud().then((_) {
+    print("Initial sync from cloud complete");
+  });
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
