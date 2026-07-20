@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../database/database_helper.dart';
@@ -18,6 +19,23 @@ class SyncService {
     'activity_logs',
     'login_attempts'
   ];
+
+  Timer? _syncTimer;
+
+  /// Starts an automatic periodic sync from the cloud to keep local data fresh
+  void startAutomaticSync({int intervalSeconds = 10}) {
+    // Run immediately first
+    syncFromCloud();
+    // Then repeat periodically
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(Duration(seconds: intervalSeconds), (timer) {
+      syncFromCloud();
+    });
+  }
+
+  void stopAutomaticSync() {
+    _syncTimer?.cancel();
+  }
 
   /// Uploads a local image file to Supabase Storage and returns the public URL
   Future<String?> uploadImage(String localPath) async {

@@ -24,11 +24,10 @@ void main() async {
     },
   );
 
-  // Initial fetch from cloud
+  // Initial fetch and periodic auto-sync from cloud
   final syncService = SyncService();
-  syncService.syncFromCloud().then((_) {
-    print("Initial sync from cloud complete");
-  });
+  syncService.startAutomaticSync(intervalSeconds: 10);
+  print("Started automatic cloud synchronization (every 10 seconds)");
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
