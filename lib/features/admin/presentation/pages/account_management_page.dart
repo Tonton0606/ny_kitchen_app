@@ -890,9 +890,10 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
+      );
+    }),
+  );
+}
 
   Widget _buildPanelHeader() {
     return Container(

@@ -786,9 +786,10 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
+      );
+    }),
+  );
+}
 
   Widget _buildPanelHeader() {
     return Container(
