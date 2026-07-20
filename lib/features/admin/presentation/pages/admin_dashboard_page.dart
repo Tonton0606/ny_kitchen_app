@@ -143,7 +143,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               mainAxisSpacing: 16,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: isMobile ? 3.5 : 2.2,
+              childAspectRatio: isMobile ? 3.5 : (isTablet ? 2.5 : 2.2),
               children: [
                 _buildStatCard(context, 
                   'Today\'s Revenue',

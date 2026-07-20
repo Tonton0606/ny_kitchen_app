@@ -789,7 +789,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     final height = isThumbnail ? 48.0 : 120.0;
     final double width = isThumbnail ? 48 : double.infinity;
 
-    if (path == null || path.isEmpty) {
+    Widget buildPlaceholder() {
       if (isThumbnail) {
         return Container(
           width: width,
@@ -798,7 +798,16 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
           child: const Icon(Icons.image, color: Colors.grey),
         );
       }
-      return const Icon(Icons.image, size: 48);
+      return Container(
+        height: height,
+        width: width,
+        color: Colors.grey.withValues(alpha: 0.2),
+        child: const Icon(Icons.image, size: 48, color: Colors.grey),
+      );
+    }
+
+    if (path == null || path.isEmpty) {
+      return buildPlaceholder();
     }
 
     if (path.startsWith('http')) {
@@ -807,19 +816,19 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
         height: height,
         width: width,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => isThumbnail
-            ? const Icon(Icons.image)
-            : const Icon(Icons.image, size: 48),
+        errorBuilder: (context, error, stackTrace) => buildPlaceholder(),
       );
     } else {
+      final file = File(path);
+      if (!file.existsSync()) {
+        return buildPlaceholder();
+      }
       return Image.file(
-        File(path),
+        file,
         height: height,
         width: width,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => isThumbnail
-            ? const Icon(Icons.image)
-            : const Icon(Icons.image, size: 48),
+        errorBuilder: (context, error, stackTrace) => buildPlaceholder(),
       );
     }
   }
