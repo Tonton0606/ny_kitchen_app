@@ -460,250 +460,308 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Column(
+                LayoutBuilder(builder: (context, topConstraints) {
+                  final isMobileOrNarrow = topConstraints.maxWidth < 650;
+                  if (isMobileOrNarrow) {
+                    return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Account Management',
-                          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Account Management',
+                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Manage cashier accounts and permissions',
+                              style: TextStyle(color: AppColors.mutedText, fontSize: 13),
+                            ),
+                          ],
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Manage cashier accounts and permissions',
-                          style: TextStyle(color: AppColors.mutedText, fontSize: 14),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _openAddCashier,
+                            icon: const Icon(Icons.person_add, size: 18),
+                            label: const Text('Add Cashier', style: TextStyle(fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.goldenYellow,
+                              foregroundColor: Colors.black,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
                         ),
                       ],
-                    ),
-                    const Spacer(),
-                    ElevatedButton.icon(
-                      onPressed: _openAddCashier,
-                      icon: const Icon(Icons.person_add, size: 18),
-                      label: const Text('Add Cashier', style: TextStyle(fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.goldenYellow,
-                        foregroundColor: Colors.black,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    );
+                  }
+                  return Row(
+                    children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Account Management',
+                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Manage cashier accounts and permissions',
+                            style: TextStyle(color: AppColors.mutedText, fontSize: 14),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
+                      const Spacer(),
+                      ElevatedButton.icon(
+                        onPressed: _openAddCashier,
+                        icon: const Icon(Icons.person_add, size: 18),
+                        label: const Text('Add Cashier', style: TextStyle(fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.goldenYellow,
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
                 const SizedBox(height: 20),
                 SizedBox(
-                  width: 340,
-                  child: TextField(
-                    onChanged: (val) => setState(() => _searchQuery = val),
-                    decoration: InputDecoration(
-                      hintText: 'Search by name or username...',
-                      hintStyle: const TextStyle(color: AppColors.mutedText, fontSize: 14),
-                      prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.mutedText),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.softBorder)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.softBorder)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      filled: true,
-                      fillColor: Colors.white,
+                  width: double.infinity,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: SizedBox(
+                      width: 340,
+                      child: TextField(
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        decoration: InputDecoration(
+                          hintText: 'Search by name or username...',
+                          hintStyle: const TextStyle(color: AppColors.mutedText, fontSize: 14),
+                          prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.mutedText),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.softBorder)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.softBorder)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.softBorder)),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFFAF8F5),
-                                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                                  border: Border(bottom: BorderSide(color: AppColors.softBorder)),
-                                ),
-                                child: const Row(
+                  child: LayoutBuilder(builder: (context, bodyConstraints) {
+                    final showSideCard = bodyConstraints.maxWidth >= 950;
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.softBorder)),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SizedBox(
+                                width: bodyConstraints.maxWidth < 650 ? 650 : (showSideCard ? bodyConstraints.maxWidth - 210 : bodyConstraints.maxWidth),
+                                height: bodyConstraints.maxHeight,
+                                child: Column(
                                   children: [
-                                    SizedBox(width: 48, child: Text('Avatar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                    SizedBox(width: 16),
-                                    Expanded(flex: 3, child: Text('Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                    Expanded(flex: 2, child: Text('Username', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                    SizedBox(width: 90, child: Text('Role', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                    SizedBox(width: 90, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                    SizedBox(width: 130, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                child: filteredUsers.isEmpty
-                                    ? const Center(child: Text('No users found.', style: TextStyle(color: AppColors.mutedText)))
-                                    : ListView.separated(
-                                        padding: EdgeInsets.zero,
-                                        itemCount: filteredUsers.length,
-                                        separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.softBorder),
-                                        itemBuilder: (context, index) {
-                                          final user = filteredUsers[index];
-                                          final isActive = user['status'] == 'active';
-                                          final role = user['role'] == 'admin' ? 'Admin' : 'Cashier';
-                                          return Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                            child: Row(
-                                              children: [
-                                                SizedBox(
-                                                  width: 48,
-                                                  height: 48,
-                                                  child: CircleAvatar(
-                                                    radius: 24,
-                                                    backgroundColor: AppColors.goldenYellow.withValues(alpha: 0.2),
-                                                    child: Text(
-                                                      (user['full_name'] as String).isNotEmpty
-                                                          ? (user['full_name'] as String)[0].toUpperCase()
-                                                          : '?',
-                                                      style: const TextStyle(
-                                                        color: AppColors.goldenYellow,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 16),
-                                                Expanded(
-                                                  flex: 3,
-                                                  child: Text(
-                                                    user['full_name'],
-                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.darkCharcoal),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  flex: 2,
-                                                  child: Text(
-                                                    user['username'],
-                                                    style: const TextStyle(fontSize: 14),
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  width: 90,
-                                                  child: Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                                    decoration: BoxDecoration(
-                                                      color: role == 'Admin'
-                                                          ? AppColors.tertiary.withValues(alpha: 0.1)
-                                                          : AppColors.goldenYellow.withValues(alpha: 0.1),
-                                                      borderRadius: BorderRadius.circular(6),
-                                                    ),
-                                                    child: Text(
-                                                      role,
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: role == 'Admin' ? AppColors.tertiary : AppColors.goldenYellow,
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  width: 90,
-                                                  child: Row(
-                                                    children: [
-                                                      Container(
-                                                        width: 7,
-                                                        height: 7,
-                                                        decoration: BoxDecoration(
-                                                          color: isActive ? AppColors.success : AppColors.brandRed,
-                                                          shape: BoxShape.circle,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      Text(
-                                                        isActive ? 'Active' : 'Inactive',
-                                                        style: TextStyle(
-                                                          color: isActive ? AppColors.success : AppColors.brandRed,
-                                                          fontWeight: FontWeight.w600,
-                                                          fontSize: 12,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  width: 130,
-                                                  child: Row(
-                                                    children: [
-                                                      _buildActionButton(
-                                                        icon: Icons.edit_outlined,
-                                                        color: AppColors.goldenYellow,
-                                                        tooltip: 'Edit',
-                                                        onPressed: () => _showEditCashierDialog(context, user),
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      _buildActionButton(
-                                                        icon: Icons.lock_reset,
-                                                        color: AppColors.tertiary,
-                                                        tooltip: 'Reset Password',
-                                                        onPressed: () => _showResetPasswordDialog(context, user),
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      _buildActionButton(
-                                                        icon: isActive ? Icons.block : Icons.check_circle,
-                                                        color: isActive ? AppColors.brandRed : AppColors.success,
-                                                        tooltip: isActive ? 'Disable' : 'Enable',
-                                                        onPressed: () => _showDisableDialog(context, user),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        },
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFFAF8F5),
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                                        border: Border(bottom: BorderSide(color: AppColors.softBorder)),
                                       ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.softBorder))),
-                                child: Row(
-                                  children: [
-                                    Text('Showing ${filteredUsers.length} of ${_users.length} accounts',
-                                        style: const TextStyle(color: AppColors.mutedText, fontSize: 13)),
+                                      child: const Row(
+                                        children: [
+                                          SizedBox(width: 48, child: Text('Avatar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          SizedBox(width: 16),
+                                          Expanded(flex: 3, child: Text('Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          Expanded(flex: 2, child: Text('Username', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          SizedBox(width: 90, child: Text('Role', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          SizedBox(width: 90, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          SizedBox(width: 130, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: filteredUsers.isEmpty
+                                          ? const Center(child: Text('No users found.', style: TextStyle(color: AppColors.mutedText)))
+                                          : ListView.separated(
+                                              padding: EdgeInsets.zero,
+                                              itemCount: filteredUsers.length,
+                                              separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.softBorder),
+                                              itemBuilder: (context, index) {
+                                                final user = filteredUsers[index];
+                                                final isActive = user['status'] == 'active';
+                                                final role = user['role'] == 'admin' ? 'Admin' : 'Cashier';
+                                                return Padding(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                                  child: Row(
+                                                    children: [
+                                                      SizedBox(
+                                                        width: 48,
+                                                        height: 48,
+                                                        child: CircleAvatar(
+                                                          radius: 24,
+                                                          backgroundColor: AppColors.goldenYellow.withValues(alpha: 0.2),
+                                                          child: Text(
+                                                            (user['full_name'] as String).isNotEmpty
+                                                                ? (user['full_name'] as String)[0].toUpperCase()
+                                                                : '?',
+                                                            style: const TextStyle(
+                                                              color: AppColors.goldenYellow,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 16),
+                                                      Expanded(
+                                                        flex: 3,
+                                                        child: Text(
+                                                          user['full_name'],
+                                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.darkCharcoal),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        flex: 2,
+                                                        child: Text(
+                                                          user['username'],
+                                                          style: const TextStyle(fontSize: 14),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 90,
+                                                        child: Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                          decoration: BoxDecoration(
+                                                            color: role == 'Admin'
+                                                                ? AppColors.tertiary.withValues(alpha: 0.1)
+                                                                : AppColors.goldenYellow.withValues(alpha: 0.1),
+                                                            borderRadius: BorderRadius.circular(6),
+                                                          ),
+                                                          child: Text(
+                                                            role,
+                                                            textAlign: TextAlign.center,
+                                                            style: TextStyle(
+                                                              color: role == 'Admin' ? AppColors.tertiary : AppColors.goldenYellow,
+                                                              fontSize: 12,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 90,
+                                                        child: Row(
+                                                          children: [
+                                                            Container(
+                                                              width: 7,
+                                                              height: 7,
+                                                              decoration: BoxDecoration(
+                                                                color: isActive ? AppColors.success : AppColors.brandRed,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(width: 6),
+                                                            Text(
+                                                              isActive ? 'Active' : 'Inactive',
+                                                              style: TextStyle(
+                                                                color: isActive ? AppColors.success : AppColors.brandRed,
+                                                                fontWeight: FontWeight.w600,
+                                                                fontSize: 12,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 130,
+                                                        child: Row(
+                                                          children: [
+                                                            _buildActionButton(
+                                                              icon: Icons.edit_outlined,
+                                                              color: AppColors.goldenYellow,
+                                                              tooltip: 'Edit',
+                                                              onPressed: () => _showEditCashierDialog(context, user),
+                                                            ),
+                                                            const SizedBox(width: 6),
+                                                            _buildActionButton(
+                                                              icon: Icons.lock_reset,
+                                                              color: AppColors.tertiary,
+                                                              tooltip: 'Reset Password',
+                                                              onPressed: () => _showResetPasswordDialog(context, user),
+                                                            ),
+                                                            const SizedBox(width: 6),
+                                                            _buildActionButton(
+                                                              icon: isActive ? Icons.block : Icons.check_circle,
+                                                              color: isActive ? AppColors.brandRed : AppColors.success,
+                                                              tooltip: isActive ? 'Disable' : 'Enable',
+                                                              onPressed: () => _showDisableDialog(context, user),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                      decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.softBorder))),
+                                      child: Row(
+                                        children: [
+                                          Text('Showing ${filteredUsers.length} of ${_users.length} accounts',
+                                              style: const TextStyle(color: AppColors.mutedText, fontSize: 13)),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 20),
-                      SizedBox(
-                        width: 190,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF8E7),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFFFE8A3)),
+                        if (showSideCard) ...[
+                          const SizedBox(width: 20),
+                          SizedBox(
+                            width: 190,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF8E7),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFFFE8A3)),
+                              ),
+                              padding: const EdgeInsets.all(20),
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('👨‍💼', style: TextStyle(fontSize: 52)),
+                                  SizedBox(height: 16),
+                                  Text('Team Security,', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal)),
+                                  Text('Organized & Safe!', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.goldenYellow, fontStyle: FontStyle.italic)),
+                                  SizedBox(height: 10),
+                                  Text('Manage permissions and keep your operations running smoothly.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.mutedText, height: 1.5)),
+                                ],
+                              ),
+                            ),
                           ),
-                          padding: const EdgeInsets.all(20),
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text('👨‍💼', style: TextStyle(fontSize: 52)),
-                              SizedBox(height: 16),
-                              Text('Team Security,', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal)),
-                              Text('Organized & Safe!', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.goldenYellow, fontStyle: FontStyle.italic)),
-                              SizedBox(height: 10),
-                              Text('Manage permissions and keep your operations running smoothly.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.mutedText, height: 1.5)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                        ],
+                      ],
+                    );
+                  }),
                 ),
               ],
             ),
@@ -716,10 +774,12 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
 
   Widget _buildAddCashierPanel() {
     return Positioned.fill(
-      child: Row(
-        children: [
-          Container(
-            width: 500,
+      child: LayoutBuilder(builder: (context, constraints) {
+        final panelWidth = constraints.maxWidth > 550 ? 500.0 : constraints.maxWidth;
+        return Row(
+          children: [
+            Container(
+              width: panelWidth,
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(right: BorderSide(color: AppColors.softBorder)),
