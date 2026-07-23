@@ -60,7 +60,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                 final isCompact = headerConstraints.maxWidth < 500;
                 return Flex(
                   direction: isCompact ? Axis.vertical : Axis.horizontal,
-                  crossAlignment: isCompact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+                  crossAxisAlignment: isCompact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Column(
