@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,8 +27,11 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   bool _addIsAvailable = true;
   String? _addImageUrl;
 
+  Timer? _refreshTimer;
+
   @override
   void dispose() {
+    _refreshTimer?.cancel();
     _addNameController.dispose();
     _addPriceController.dispose();
     super.dispose();
@@ -37,6 +41,21 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   void initState() {
     super.initState();
     _loadData();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      _loadDataSilent();
+    });
+  }
+
+  Future<void> _loadDataSilent() async {
+    if (!mounted) return;
+    final repo = FoodRepository();
+    final foods = await repo.getAllFoodItems();
+    final categories = await repo.getCategories();
+    if (!mounted) return;
+    setState(() {
+      _foods = foods;
+      _categories = categories;
+    });
   }
 
   Future<void> _loadData() async {

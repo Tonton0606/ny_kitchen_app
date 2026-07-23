@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../core/database/repositories/user_repository.dart';
@@ -22,10 +23,34 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
   final _addPasswordController = TextEditingController();
   String _addRole = 'cashier';
 
+  Timer? _refreshTimer;
+
   @override
   void initState() {
     super.initState();
     _loadUsers();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      _loadUsersSilent();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _addFullNameController.dispose();
+    _addUsernameController.dispose();
+    _addPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUsersSilent() async {
+    try {
+      final users = await _userRepo.getAllUsers();
+      if (!mounted) return;
+      setState(() {
+        _users = users;
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadUsers() async {
