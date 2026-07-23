@@ -160,11 +160,6 @@ class FoodRepository {
     }
     int count = await db.update('food_categories', data, where: 'id = ?', whereArgs: [id]);
     try {
-      final cloudPayload = <String, dynamic>{
-        'id': id,
-        'name': name,
-        if (data.containsKey('icon_url')) 'icon_url': data['icon_url'],
-      };
       await _syncService.syncToCloud();
     } catch (e) {
       print('Cloud sync deferred: $e');
