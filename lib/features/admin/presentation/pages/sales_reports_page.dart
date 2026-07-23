@@ -65,13 +65,13 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
+                      children: [
+                        const Text(
                           'Sales Reports',
                           style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
                         ),
-                        SizedBox(height: 4),
-                        Text(
+                        const SizedBox(height: 4),
+                        const Text(
                           'View, filter, and export sales data',
                           style: TextStyle(color: AppColors.mutedText, fontSize: 14),
                         ),
