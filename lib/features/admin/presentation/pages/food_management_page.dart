@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../core/database/repositories/food_repository.dart';
+import '../widgets/food_emoji_picker_dialog.dart';
 
 class FoodManagementPage extends StatefulWidget {
   const FoodManagementPage({super.key});
@@ -382,414 +383,857 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     }).toList();
     final Map<String, String> catIcons = {
       for (final c in _categories)
-        c['name'] as String: (c['icon_url'] as String?) ?? '🍽️'
+        c['name'] as String: (c['icon_url'] as String?) ?? '🍽️',
     };
     return Scaffold(
       backgroundColor: const Color(0xFFF8F5F0),
-      body: Stack(children: [
-        Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            LayoutBuilder(builder: (context, topConstraints) {
-              final isMobileOrNarrow = topConstraints.maxWidth < 650;
-              if (isMobileOrNarrow) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Food Management', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal)),
-                      SizedBox(height: 4),
-                      Text('Add, edit, and manage menu items', style: TextStyle(color: AppColors.mutedText, fontSize: 13)),
-                    ]),
-                    const SizedBox(height: 12),
-                    Row(children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LayoutBuilder(
+                  builder: (context, topConstraints) {
+                    final isMobileOrNarrow = topConstraints.maxWidth < 650;
+                    if (isMobileOrNarrow) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Food Management',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                  color: AppColors.darkCharcoal,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Add, edit, and manage menu items',
+                                style: TextStyle(
+                                  color: AppColors.mutedText,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _showManageCategoriesDialog,
+                                  icon: const Icon(
+                                    Icons.category_outlined,
+                                    size: 17,
+                                  ),
+                                  label: const Text('Categories'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.darkCharcoal,
+                                    side: const BorderSide(
+                                      color: AppColors.softBorder,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: _openAddFood,
+                                  icon: const Icon(Icons.add, size: 18),
+                                  label: const Text(
+                                    'Add Food',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.goldenYellow,
+                                    foregroundColor: Colors.black,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    }
+                    return Row(
+                      children: [
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Food Management',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                                color: AppColors.darkCharcoal,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Add, edit, and manage menu items',
+                              style: TextStyle(
+                                color: AppColors.mutedText,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        OutlinedButton.icon(
                           onPressed: _showManageCategoriesDialog,
                           icon: const Icon(Icons.category_outlined, size: 17),
                           label: const Text('Categories'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.darkCharcoal,
                             side: const BorderSide(color: AppColors.softBorder),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton.icon(
+                        const SizedBox(width: 12),
+                        ElevatedButton.icon(
                           onPressed: _openAddFood,
                           icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Add Food', style: TextStyle(fontWeight: FontWeight.bold)),
+                          label: const Text(
+                            'Add Food',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.goldenYellow,
                             foregroundColor: Colors.black,
                             elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
-                      ),
-                    ]),
-                  ],
-                );
-              }
-              return Row(children: [
-                const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Food Management', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal)),
-                  SizedBox(height: 4),
-                  Text('Add, edit, and manage menu items', style: TextStyle(color: AppColors.mutedText, fontSize: 14)),
-                ]),
-                const Spacer(),
-                OutlinedButton.icon(
-                  onPressed: _showManageCategoriesDialog,
-                  icon: const Icon(Icons.category_outlined, size: 17),
-                  label: const Text('Categories'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.darkCharcoal,
-                    side: const BorderSide(color: AppColors.softBorder),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
+                      ],
+                    );
+                  },
                 ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: _openAddFood,
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add Food', style: TextStyle(fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.goldenYellow,
-                    foregroundColor: Colors.black,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ]);
-            }),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: SizedBox(
-                  width: 340,
-                  child: TextField(
-                    onChanged: (val) => setState(() => _searchQuery = val),
-                    decoration: InputDecoration(
-                      hintText: 'Search foods...',
-                      hintStyle: const TextStyle(color: AppColors.mutedText, fontSize: 14),
-                      prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.mutedText),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.softBorder)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.softBorder)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      filled: true, fillColor: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(child: LayoutBuilder(builder: (context, bodyConstraints) {
-              final showSideCard = bodyConstraints.maxWidth >= 950;
-              return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.softBorder)),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: SizedBox(
-                        width: bodyConstraints.maxWidth < 650 ? 650 : (showSideCard ? bodyConstraints.maxWidth - 210 : bodyConstraints.maxWidth),
-                        height: bodyConstraints.maxHeight,
-                        child: Column(children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFFAF8F5),
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                              border: Border(bottom: BorderSide(color: AppColors.softBorder)),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: SizedBox(
+                      width: 340,
+                      child: TextField(
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        decoration: InputDecoration(
+                          hintText: 'Search foods...',
+                          hintStyle: const TextStyle(
+                            color: AppColors.mutedText,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            size: 20,
+                            color: AppColors.mutedText,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.softBorder,
                             ),
-                            child: const Row(children: [
-                              SizedBox(width: 56, child: Text('Image', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                              SizedBox(width: 16),
-                              Expanded(flex: 3, child: Text('Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                              Expanded(flex: 2, child: Text('Category', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                              SizedBox(width: 90, child: Text('Price', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                              SizedBox(width: 110, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                              SizedBox(width: 80, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                            ]),
                           ),
-                          Expanded(
-                            child: filteredFoods.isEmpty
-                                ? const Center(child: Text('No food items found.', style: TextStyle(color: AppColors.mutedText)))
-                                : ListView.separated(
-                                    padding: EdgeInsets.zero,
-                                    itemCount: filteredFoods.length,
-                                    separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.softBorder),
-                                    itemBuilder: (context, index) {
-                                      final food = filteredFoods[index];
-                                      final isAvailable = food['availability'] == 'available';
-                                      final catName = (food['category_name'] as String?) ?? 'Uncategorized';
-                                      final catIcon = catIcons[catName] ?? '🍽️';
-                                      final catIdx = _categories.indexWhere((c) => c['name'] == catName);
-                                      final chipColor = _chipColors[(catIdx < 0 ? 0 : catIdx) % _chipColors.length];
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                        child: Row(children: [
-                                          ClipRRect(borderRadius: BorderRadius.circular(10),
-                                            child: SizedBox(width: 56, height: 48, child: _buildImagePreview(food['image_path'], isThumbnail: true))),
-                                          const SizedBox(width: 16),
-                                          Expanded(flex: 3, child: Text(food['name'] ?? 'Unknown',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.darkCharcoal))),
-                                          Expanded(flex: 2, child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                            decoration: BoxDecoration(color: chipColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
-                                            child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                              Text(catIcon, style: const TextStyle(fontSize: 13)),
-                                              const SizedBox(width: 5),
-                                              Flexible(child: Text(catName, style: TextStyle(color: chipColor, fontSize: 12, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
-                                            ]),
-                                          )),
-                                          SizedBox(width: 90, child: Text('₱${(food["price"] as num).toDouble().toStringAsFixed(2)}',
-                                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
-                                          SizedBox(width: 110, child: Row(children: [
-                                            Container(width: 7, height: 7, decoration: BoxDecoration(color: isAvailable ? AppColors.success : AppColors.brandRed, shape: BoxShape.circle)),
-                                            const SizedBox(width: 6),
-                                            Text(isAvailable ? 'Available' : 'Unavailable',
-                                                style: TextStyle(color: isAvailable ? AppColors.success : AppColors.brandRed, fontWeight: FontWeight.w600, fontSize: 12)),
-                                          ])),
-                                          SizedBox(width: 80, child: Row(children: [
-                                            _buildActionButton(icon: Icons.edit_outlined, color: AppColors.goldenYellow, tooltip: 'Edit', onPressed: () => _showEditFoodDialog(context, food)),
-                                            const SizedBox(width: 6),
-                                            _buildActionButton(icon: Icons.delete_outline, color: AppColors.brandRed, tooltip: 'Delete', onPressed: () => _showDeleteDialog(context, food)),
-                                          ])),
-                                        ]),
-                                      );
-                                    },
-                                  ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.softBorder,
+                            ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.softBorder))),
-                            child: Row(children: [
-                              Text('Showing ${filteredFoods.length} of ${_foods.length} items',
-                                  style: const TextStyle(color: AppColors.mutedText, fontSize: 13)),
-                            ]),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
-                        ]),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
                       ),
                     ),
                   ),
                 ),
-                if (showSideCard) ...[
-                  const SizedBox(width: 20),
-                  SizedBox(width: 190, child: Container(
-                    decoration: BoxDecoration(color: const Color(0xFFFFF8E7), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFFFE8A3))),
-                    padding: const EdgeInsets.all(20),
-                    child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Text('👨‍🍳', style: TextStyle(fontSize: 52)),
-                      SizedBox(height: 16),
-                      Text('Delicious Food,', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal)),
-                      Text('Happy Customers!', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.goldenYellow, fontStyle: FontStyle.italic)),
-                      SizedBox(height: 10),
-                      Text('Keep your menu updated to serve the best every day.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.mutedText, height: 1.5)),
-                    ]),
-                  )),
-                ],
-              ]);
-            })),
-          ]),
-        ),
-        if (_showAddFood) _buildAddFoodPanel(),
-      ]),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, bodyConstraints) {
+                      final showSideCard = bodyConstraints.maxWidth >= 950;
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: AppColors.softBorder),
+                              ),
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: SizedBox(
+                                  width: bodyConstraints.maxWidth < 650
+                                      ? 650
+                                      : (showSideCard
+                                            ? bodyConstraints.maxWidth - 210
+                                            : bodyConstraints.maxWidth),
+                                  height: bodyConstraints.maxHeight,
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 14,
+                                        ),
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFFAF8F5),
+                                          borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(16),
+                                          ),
+                                          border: Border(
+                                            bottom: BorderSide(
+                                              color: AppColors.softBorder,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 56,
+                                              child: Text(
+                                                'Image',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                  color: AppColors.mutedText,
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(width: 16),
+                                            Expanded(
+                                              flex: 3,
+                                              child: Text(
+                                                'Name',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                  color: AppColors.mutedText,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
+                                                'Category',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                  color: AppColors.mutedText,
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              width: 90,
+                                              child: Text(
+                                                'Price',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                  color: AppColors.mutedText,
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              width: 110,
+                                              child: Text(
+                                                'Status',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                  color: AppColors.mutedText,
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              width: 80,
+                                              child: Text(
+                                                'Actions',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                  color: AppColors.mutedText,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: filteredFoods.isEmpty
+                                            ? const Center(
+                                                child: Text(
+                                                  'No food items found.',
+                                                  style: TextStyle(
+                                                    color: AppColors.mutedText,
+                                                  ),
+                                                ),
+                                              )
+                                            : ListView.separated(
+                                                padding: EdgeInsets.zero,
+                                                itemCount: filteredFoods.length,
+                                                separatorBuilder: (_, _) =>
+                                                    const Divider(
+                                                      height: 1,
+                                                      color:
+                                                          AppColors.softBorder,
+                                                    ),
+                                                itemBuilder: (context, index) {
+                                                  final food =
+                                                      filteredFoods[index];
+                                                  final isAvailable =
+                                                      food['availability'] ==
+                                                      'available';
+                                                  final catName =
+                                                      (food['category_name']
+                                                          as String?) ??
+                                                      'Uncategorized';
+                                                  final catIcon =
+                                                      catIcons[catName] ??
+                                                      '🍽️';
+                                                  final catIdx = _categories
+                                                      .indexWhere(
+                                                        (c) =>
+                                                            c['name'] ==
+                                                            catName,
+                                                      );
+                                                  final chipColor =
+                                                      _chipColors[(catIdx < 0
+                                                              ? 0
+                                                              : catIdx) %
+                                                          _chipColors.length];
+                                                  return Padding(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 20,
+                                                          vertical: 10,
+                                                        ),
+                                                    child: Row(
+                                                      children: [
+                                                        ClipRRect(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                10,
+                                                              ),
+                                                          child: SizedBox(
+                                                            width: 56,
+                                                            height: 48,
+                                                            child: _buildImagePreview(
+                                                              food['image_path'],
+                                                              isThumbnail: true,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 16,
+                                                        ),
+                                                        Expanded(
+                                                          flex: 3,
+                                                          child: Text(
+                                                            food['name'] ??
+                                                                'Unknown',
+                                                            style: const TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              fontSize: 14,
+                                                              color: AppColors
+                                                                  .darkCharcoal,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 2,
+                                                          child: Container(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  horizontal:
+                                                                      10,
+                                                                  vertical: 5,
+                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              color: chipColor
+                                                                  .withValues(
+                                                                    alpha: 0.12,
+                                                                  ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    20,
+                                                                  ),
+                                                            ),
+                                                            child: Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              children: [
+                                                                Text(
+                                                                  catIcon,
+                                                                  style:
+                                                                      const TextStyle(
+                                                                        fontSize:
+                                                                            13,
+                                                                      ),
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 5,
+                                                                ),
+                                                                Flexible(
+                                                                  child: Text(
+                                                                    catName,
+                                                                    style: TextStyle(
+                                                                      color:
+                                                                          chipColor,
+                                                                      fontSize:
+                                                                          12,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600,
+                                                                    ),
+                                                                    overflow:
+                                                                        TextOverflow
+                                                                            .ellipsis,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        SizedBox(
+                                                          width: 90,
+                                                          child: Text(
+                                                            '₱${(food["price"] as num).toDouble().toStringAsFixed(2)}',
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  fontSize: 14,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                        SizedBox(
+                                                          width: 110,
+                                                          child: Row(
+                                                            children: [
+                                                              Container(
+                                                                width: 7,
+                                                                height: 7,
+                                                                decoration: BoxDecoration(
+                                                                  color:
+                                                                      isAvailable
+                                                                      ? AppColors
+                                                                            .success
+                                                                      : AppColors
+                                                                            .brandRed,
+                                                                  shape: BoxShape
+                                                                      .circle,
+                                                                ),
+                                                              ),
+                                                              const SizedBox(
+                                                                width: 6,
+                                                              ),
+                                                              Text(
+                                                                isAvailable
+                                                                    ? 'Available'
+                                                                    : 'Unavailable',
+                                                                style: TextStyle(
+                                                                  color:
+                                                                      isAvailable
+                                                                      ? AppColors
+                                                                            .success
+                                                                      : AppColors
+                                                                            .brandRed,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  fontSize: 12,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        SizedBox(
+                                                          width: 80,
+                                                          child: Row(
+                                                            children: [
+                                                              _buildActionButton(
+                                                                icon: Icons
+                                                                    .edit_outlined,
+                                                                color: AppColors
+                                                                    .goldenYellow,
+                                                                tooltip: 'Edit',
+                                                                onPressed: () =>
+                                                                    _showEditFoodDialog(
+                                                                      context,
+                                                                      food,
+                                                                    ),
+                                                              ),
+                                                              const SizedBox(
+                                                                width: 6,
+                                                              ),
+                                                              _buildActionButton(
+                                                                icon: Icons
+                                                                    .delete_outline,
+                                                                color: AppColors
+                                                                    .brandRed,
+                                                                tooltip:
+                                                                    'Delete',
+                                                                onPressed: () =>
+                                                                    _showDeleteDialog(
+                                                                      context,
+                                                                      food,
+                                                                    ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 12,
+                                        ),
+                                        decoration: const BoxDecoration(
+                                          border: Border(
+                                            top: BorderSide(
+                                              color: AppColors.softBorder,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              'Showing ${filteredFoods.length} of ${_foods.length} items',
+                                              style: const TextStyle(
+                                                color: AppColors.mutedText,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (showSideCard) ...[
+                            const SizedBox(width: 20),
+                            SizedBox(
+                              width: 190,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF8E7),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFE8A3),
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(20),
+                                child: const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      '👨‍🍳',
+                                      style: TextStyle(fontSize: 52),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      'Delicious Food,',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.darkCharcoal,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Happy Customers!',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.goldenYellow,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                    SizedBox(height: 10),
+                                    Text(
+                                      'Keep your menu updated to serve the best every day.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.mutedText,
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_showAddFood) _buildAddFoodPanel(),
+        ],
+      ),
     );
   }
 
   Widget _buildAddFoodPanel() {
     return Positioned.fill(
-      child: LayoutBuilder(builder: (context, constraints) {
-        final panelWidth = constraints.maxWidth > 550 ? 500.0 : constraints.maxWidth;
-        return Row(
-          children: [
-            Container(
-              width: panelWidth,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(right: BorderSide(color: AppColors.softBorder)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 12,
-                  offset: Offset(4, 0),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                _buildPanelHeader(),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(24),
-                    children: [
-                      InkWell(
-                        onTap: () async {
-                          final picker = ImagePicker();
-                          final XFile? image = await picker.pickImage(
-                            source: ImageSource.gallery,
-                          );
-                          if (image != null) {
-                            setState(() => _addImageUrl = image.path);
-                          }
-                        },
-                        child: Container(
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: AppColors.softBorder.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.softBorder),
-                          ),
-                          child: Center(
-                            child: _addImageUrl != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: _buildImagePreview(_addImageUrl),
-                                  )
-                                : const Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.image_outlined,
-                                        size: 36,
-                                        color: AppColors.mutedText,
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        'Tap to add image URL',
-                                        style: TextStyle(
-                                          color: AppColors.mutedText,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _addNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Food Name',
-                          hintText: 'Enter food name',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<int>(
-                        initialValue: _addCategoryId,
-                        decoration: const InputDecoration(
-                          labelText: 'Category',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        items: _categories
-                            .map(
-                              (c) => DropdownMenuItem<int>(
-                                value: c['id'] as int,
-                                child: Text(c['name'] as String),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (val) {
-                          setState(() => _addCategoryId = val);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _addPriceController,
-                        decoration: const InputDecoration(
-                          labelText: 'Price',
-                          hintText: '0.00',
-                          prefixText: '\u20b1 ',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 16),
-                      SwitchListTile(
-                        title: const Text(
-                          'Available',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.darkCharcoal,
-                          ),
-                        ),
-                        subtitle: const Text(
-                          'Show this item on the menu',
-                          style: TextStyle(color: AppColors.mutedText),
-                        ),
-                        value: _addIsAvailable,
-                        onChanged: (val) {
-                          setState(() => _addIsAvailable = val);
-                        },
-                        activeTrackColor: AppColors.goldenYellow.withValues(
-                          alpha: 0.5,
-                        ),
-                        activeThumbColor: AppColors.goldenYellow,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: _saveNewFood,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.goldenYellow,
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'Save Item',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final panelWidth = constraints.maxWidth > 550
+              ? 500.0
+              : constraints.maxWidth;
+          return Row(
+            children: [
+              Container(
+                width: panelWidth,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    right: BorderSide(color: AppColors.softBorder),
                   ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 12,
+                      offset: Offset(4, 0),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: _closeAddFood,
-              child: Container(color: Colors.black38),
-            ),
-          ),
-        ],
-      );
-    }),
-  );
-}
+                child: Column(
+                  children: [
+                    _buildPanelHeader(),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.all(24),
+                        children: [
+                          InkWell(
+                            onTap: () async {
+                              final picker = ImagePicker();
+                              final XFile? image = await picker.pickImage(
+                                source: ImageSource.gallery,
+                              );
+                              if (image != null) {
+                                setState(() => _addImageUrl = image.path);
+                              }
+                            },
+                            child: Container(
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: AppColors.softBorder.withValues(
+                                  alpha: 0.5,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.softBorder),
+                              ),
+                              child: Center(
+                                child: _addImageUrl != null
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: _buildImagePreview(_addImageUrl),
+                                      )
+                                    : const Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.image_outlined,
+                                            size: 36,
+                                            color: AppColors.mutedText,
+                                          ),
+                                          SizedBox(height: 8),
+                                          Text(
+                                            'Tap to add image URL',
+                                            style: TextStyle(
+                                              color: AppColors.mutedText,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _addNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Food Name',
+                              hintText: 'Enter food name',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(12),
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          DropdownButtonFormField<int>(
+                            initialValue: _addCategoryId,
+                            decoration: const InputDecoration(
+                              labelText: 'Category',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(12),
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                            ),
+                            items: _categories
+                                .map(
+                                  (c) => DropdownMenuItem<int>(
+                                    value: c['id'] as int,
+                                    child: Text(c['name'] as String),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) {
+                              setState(() => _addCategoryId = val);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _addPriceController,
+                            decoration: const InputDecoration(
+                              labelText: 'Price',
+                              hintText: '0.00',
+                              prefixText: '\u20b1 ',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(12),
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 16),
+                          SwitchListTile(
+                            title: const Text(
+                              'Available',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.darkCharcoal,
+                              ),
+                            ),
+                            subtitle: const Text(
+                              'Show this item on the menu',
+                              style: TextStyle(color: AppColors.mutedText),
+                            ),
+                            value: _addIsAvailable,
+                            onChanged: (val) {
+                              setState(() => _addIsAvailable = val);
+                            },
+                            activeTrackColor: AppColors.goldenYellow.withValues(
+                              alpha: 0.5,
+                            ),
+                            activeThumbColor: AppColors.goldenYellow,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              onPressed: _saveNewFood,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.goldenYellow,
+                                foregroundColor: Colors.black,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Save Item',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: _closeAddFood,
+                  child: Container(color: Colors.black38),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   Widget _buildPanelHeader() {
     return Container(
@@ -904,25 +1348,64 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
 
   Future<void> _showManageCategoriesDialog() async {
     final repo = FoodRepository();
+    String newCategoryIcon = '🍽️';
+    final TextEditingController categoryController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final TextEditingController categoryController =
-                TextEditingController();
             return AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: const Text('Manage Categories'),
+              title: const Row(
+                children: [
+                  Icon(Icons.category, color: AppColors.brandRed),
+                  SizedBox(width: 8),
+                  Text('Manage Categories'),
+                ],
+              ),
               content: SizedBox(
-                width: 400,
+                width: 440,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
+                        InkWell(
+                          onTap: () async {
+                            final selected = await showDialog<String>(
+                              context: context,
+                              builder: (_) => FoodEmojiPickerDialog(
+                                currentEmoji: newCategoryIcon,
+                              ),
+                            );
+                            if (selected != null) {
+                              setDialogState(() => newCategoryIcon = selected);
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppColors.goldenYellow.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.goldenYellow,
+                                width: 1.5,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              newCategoryIcon,
+                              style: const TextStyle(fontSize: 22),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: TextField(
                             controller: categoryController,
@@ -945,18 +1428,16 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                              horizontal: 16,
-                            ),
                           ),
                           onPressed: () async {
-                            if (categoryController.text.isNotEmpty) {
+                            if (categoryController.text.trim().isNotEmpty) {
                               await repo.insertCategory(
-                                categoryController.text,
+                                categoryController.text.trim(),
+                                iconUrl: newCategoryIcon,
                               );
-                              if (!mounted) return;
                               categoryController.clear();
+                              newCategoryIcon = '🍽️';
+                              if (!mounted) return;
                               _loadData();
                               setDialogState(() {});
                             }
@@ -989,16 +1470,28 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                             itemCount: cats.length,
                             itemBuilder: (context, index) {
                               final cat = cats[index];
+                              final String iconStr = (cat['icon_url'] as String?) ?? '🍽️';
                               return Card(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: ListTile(
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      iconStr,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  ),
                                   title: Text(
                                     cat['name'],
                                     style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   trailing: Row(
@@ -1015,44 +1508,85 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                               TextEditingController(
                                                 text: cat['name'],
                                               );
+                                          String editIcon = iconStr;
+
                                           await showDialog(
                                             context: context,
-                                            builder: (editCtx) => AlertDialog(
-                                              title: const Text(
-                                                'Edit Category',
-                                              ),
-                                              content: TextField(
-                                                controller: editController,
-                                                decoration:
-                                                    const InputDecoration(
-                                                      hintText: 'Category Name',
+                                            builder: (editCtx) => StatefulBuilder(
+                                              builder: (ctx2, setEditState) => AlertDialog(
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(18),
+                                                ),
+                                                title: const Text('Edit Category'),
+                                                content: Row(
+                                                  children: [
+                                                    InkWell(
+                                                      onTap: () async {
+                                                        final picked = await showDialog<String>(
+                                                          context: editCtx,
+                                                          builder: (_) => FoodEmojiPickerDialog(
+                                                            currentEmoji: editIcon,
+                                                          ),
+                                                        );
+                                                        if (picked != null) {
+                                                          setEditState(() => editIcon = picked);
+                                                        }
+                                                      },
+                                                      borderRadius: BorderRadius.circular(12),
+                                                      child: Container(
+                                                        width: 48,
+                                                        height: 48,
+                                                        decoration: BoxDecoration(
+                                                          color: AppColors.goldenYellow.withValues(alpha: 0.2),
+                                                          borderRadius: BorderRadius.circular(12),
+                                                          border: Border.all(
+                                                            color: AppColors.goldenYellow,
+                                                          ),
+                                                        ),
+                                                        alignment: Alignment.center,
+                                                        child: Text(
+                                                          editIcon,
+                                                          style: const TextStyle(fontSize: 22),
+                                                        ),
+                                                      ),
                                                     ),
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(editCtx),
-                                                  child: const Text('Cancel'),
+                                                    const SizedBox(width: 10),
+                                                    Expanded(
+                                                      child: TextField(
+                                                        controller: editController,
+                                                        decoration: const InputDecoration(
+                                                          hintText: 'Category Name',
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                                TextButton(
-                                                  onPressed: () async {
-                                                    if (editController
-                                                        .text
-                                                        .isNotEmpty) {
-                                                      await repo.updateCategory(
-                                                        cat['id'],
-                                                        editController.text,
-                                                      );
-                                                      if (!editCtx.mounted) {
-                                                        return;
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(editCtx),
+                                                    child: const Text('Cancel'),
+                                                  ),
+                                                  ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: AppColors.goldenYellow,
+                                                      foregroundColor: Colors.black,
+                                                    ),
+                                                    onPressed: () async {
+                                                      if (editController.text.trim().isNotEmpty) {
+                                                        await repo.updateCategory(
+                                                          cat['id'],
+                                                          editController.text.trim(),
+                                                          iconUrl: editIcon,
+                                                        );
+                                                        if (!editCtx.mounted) return;
+                                                        _loadData();
+                                                        Navigator.pop(editCtx);
                                                       }
-                                                      _loadData();
-                                                      Navigator.pop(editCtx);
-                                                    }
-                                                  },
-                                                  child: const Text('Save'),
-                                                ),
-                                              ],
+                                                    },
+                                                    child: const Text('Save'),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           );
                                           setDialogState(() {});

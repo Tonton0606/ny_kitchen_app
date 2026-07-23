@@ -45,8 +45,9 @@ class SyncService {
       if (localPath.isEmpty) return null;
 
       final file = File(localPath);
-      if (!await file.exists())
+      if (!await file.exists()) {
         return localPath; // Return as-is if it's not a local file we can find
+      }
 
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${path.basename(localPath)}';

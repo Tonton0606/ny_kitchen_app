@@ -6,7 +6,7 @@ import '../utils/security_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "ny_kitchen.db";
-  static const _databaseVersion = 3;
+  static const _databaseVersion = 4;
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -76,6 +76,11 @@ class DatabaseHelper {
         );
       }
     }
+    if (oldVersion < 4) {
+      try {
+        await db.execute('ALTER TABLE food_categories ADD COLUMN updated_at TEXT');
+      } catch (_) {}
+    }
   }
 
   Future _onConfigure(Database db) async {
@@ -106,7 +111,8 @@ class DatabaseHelper {
         name TEXT UNIQUE NOT NULL,
         icon_url TEXT,
         status TEXT NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        updated_at TEXT
       )
     ''');
 

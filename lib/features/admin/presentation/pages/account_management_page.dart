@@ -599,7 +599,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                           : ListView.separated(
                                               padding: EdgeInsets.zero,
                                               itemCount: filteredUsers.length,
-                                              separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.softBorder),
+                                              separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
                                               itemBuilder: (context, index) {
                                                 final user = filteredUsers[index];
                                                 final isActive = user['status'] == 'active';

@@ -22,8 +22,8 @@ class SecurityUtils {
   /// If not, it generates a new salt and returns 'salt:hash'.
   static String hashPassword(String password, [String? salt]) {
     final actualSalt = salt ?? generateSalt();
-    final saltBytes = utf8.encode(actualSalt) as Uint8List;
-    final passwordBytes = utf8.encode(password) as Uint8List;
+    final saltBytes = utf8.encode(actualSalt);
+    final passwordBytes = utf8.encode(password);
 
     final derivator = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))
       ..init(Pbkdf2Parameters(saltBytes, _iterations, _keyLength));
