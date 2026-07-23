@@ -36,9 +36,15 @@ class FoodRepository {
     final db = await _dbHelper.database;
     foodItem['created_at'] = DateTime.now().toIso8601String();
     if (foodItem['image_path'] != null) {
-      foodItem['image_path'] = await _syncService.uploadImage(foodItem['image_path']);
+      foodItem['image_path'] = await _syncService.uploadImage(
+        foodItem['image_path'],
+      );
     }
-    int id = await db.insert('food_items', foodItem, conflictAlgorithm: ConflictAlgorithm.replace);
+    int id = await db.insert(
+      'food_items',
+      foodItem,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
     await _syncService.syncToCloud();
     return id;
   }
@@ -48,7 +54,9 @@ class FoodRepository {
     final db = await _dbHelper.database;
     foodItem['updated_at'] = DateTime.now().toIso8601String();
     if (foodItem['image_path'] != null) {
-      foodItem['image_path'] = await _syncService.uploadImage(foodItem['image_path']);
+      foodItem['image_path'] = await _syncService.uploadImage(
+        foodItem['image_path'],
+      );
     }
     int count = await db.update(
       'food_items',
@@ -65,10 +73,7 @@ class FoodRepository {
     final db = await _dbHelper.database;
     int count = await db.update(
       'food_items',
-      {
-        'status': 'archived',
-        'updated_at': DateTime.now().toIso8601String(),
-      },
+      {'status': 'archived', 'updated_at': DateTime.now().toIso8601String()},
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -81,13 +86,23 @@ class FoodRepository {
   Future<List<Map<String, dynamic>>> getCategories() async {
     await repairOrphanFoodCategories();
     final db = await _dbHelper.database;
-    return await db.query('food_categories', where: 'status = ?', whereArgs: ['active'], orderBy: 'id ASC');
+    return await db.query(
+      'food_categories',
+      where: 'status = ?',
+      whereArgs: ['active'],
+      orderBy: 'id ASC',
+    );
   }
 
   Future<void> repairOrphanFoodCategories() async {
     final db = await _dbHelper.database;
     // Check if there's any active category
-    final cats = await db.query('food_categories', where: 'status = ?', whereArgs: ['active'], orderBy: 'id ASC');
+    final cats = await db.query(
+      'food_categories',
+      where: 'status = ?',
+      whereArgs: ['active'],
+      orderBy: 'id ASC',
+    );
     int defaultCatId = 1;
     if (cats.isEmpty) {
       defaultCatId = await db.insert('food_categories', {
@@ -102,7 +117,8 @@ class FoodRepository {
 
     // Reassign food items with NULL category_id or invalid category_id
     final validIds = cats.map((c) => c['id'] as int).toList();
-    final sql = "SELECT id, category_id FROM food_items WHERE status != 'archived'";
+    final sql =
+        "SELECT id, category_id FROM food_items WHERE status != 'archived'";
     final foods = await db.rawQuery(sql);
 
     for (var f in foods) {
@@ -110,7 +126,10 @@ class FoodRepository {
       if (catId == null || !validIds.contains(catId)) {
         await db.update(
           'food_items',
-          {'category_id': defaultCatId, 'updated_at': DateTime.now().toIso8601String()},
+          {
+            'category_id': defaultCatId,
+            'updated_at': DateTime.now().toIso8601String(),
+          },
           where: 'id = ?',
           whereArgs: [f['id']],
         );
@@ -120,15 +139,17 @@ class FoodRepository {
 
   Future<int> insertCategory(String name, {String? iconUrl}) async {
     final db = await _dbHelper.database;
-    
+
     String finalIcon = iconUrl ?? '🍽️';
-    if (finalIcon.startsWith('http') || finalIcon.startsWith('/') || finalIcon.startsWith('C:')) {
+    if (finalIcon.startsWith('http') ||
+        finalIcon.startsWith('/') ||
+        finalIcon.startsWith('C:')) {
       try {
         final uploaded = await _syncService.uploadImage(finalIcon);
         if (uploaded != null) finalIcon = uploaded;
       } catch (_) {}
     }
-    
+
     int id = await db.insert('food_categories', {
       'name': name,
       'icon_url': finalIcon,
@@ -145,12 +166,12 @@ class FoodRepository {
 
   Future<int> updateCategory(int id, String name, {String? iconUrl}) async {
     final db = await _dbHelper.database;
-    final data = <String, dynamic>{
-      'name': name,
-    };
+    final data = <String, dynamic>{'name': name};
     if (iconUrl != null) {
       String finalIcon = iconUrl;
-      if (finalIcon.startsWith('http') || finalIcon.startsWith('/') || finalIcon.startsWith('C:')) {
+      if (finalIcon.startsWith('http') ||
+          finalIcon.startsWith('/') ||
+          finalIcon.startsWith('C:')) {
         try {
           final uploaded = await _syncService.uploadImage(finalIcon);
           if (uploaded != null) finalIcon = uploaded;
@@ -158,7 +179,12 @@ class FoodRepository {
       }
       data['icon_url'] = finalIcon;
     }
-    int count = await db.update('food_categories', data, where: 'id = ?', whereArgs: [id]);
+    int count = await db.update(
+      'food_categories',
+      data,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     try {
       await _syncService.syncToCloud();
     } catch (e) {
@@ -170,16 +196,28 @@ class FoodRepository {
   Future<int> archiveCategory(int id) async {
     final db = await _dbHelper.database;
     // Before archiving category, reassign items to another category
-    final activeCats = await db.query('food_categories', where: 'status = ? AND id != ?', whereArgs: ['active', id], orderBy: 'id ASC');
+    final activeCats = await db.query(
+      'food_categories',
+      where: 'status = ? AND id != ?',
+      whereArgs: ['active', id],
+      orderBy: 'id ASC',
+    );
     if (activeCats.isNotEmpty) {
       final fallbackId = activeCats.first['id'] as int;
-      await db.update('food_items', {'category_id': fallbackId}, where: 'category_id = ?', whereArgs: [id]);
+      await db.update(
+        'food_items',
+        {'category_id': fallbackId},
+        where: 'category_id = ?',
+        whereArgs: [id],
+      );
     }
 
-    int count = await db.update('food_categories', {
-      'status': 'archived',
-      'updated_at': DateTime.now().toIso8601String(),
-    }, where: 'id = ?', whereArgs: [id]);
+    int count = await db.update(
+      'food_categories',
+      {'status': 'archived', 'updated_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     await _syncService.syncToCloud();
     return count;
   }
