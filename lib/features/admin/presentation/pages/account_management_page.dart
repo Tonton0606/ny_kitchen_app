@@ -595,7 +595,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: SizedBox(
-                                width: bodyConstraints.maxWidth < 650 ? 650 : bodyConstraints.maxWidth,
+                                width: showSideCard
+                                    ? (bodyConstraints.maxWidth - 240).clamp(650.0, 1100.0)
+                                    : bodyConstraints.maxWidth.clamp(650.0, 1200.0),
                                 height: bodyConstraints.maxHeight,
                                 child: Column(
                                   children: [
