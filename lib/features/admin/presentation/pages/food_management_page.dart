@@ -608,9 +608,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                 child: SizedBox(
                                   width: bodyConstraints.maxWidth < 650
                                       ? 650
-                                      : (showSideCard
-                                            ? bodyConstraints.maxWidth - 210
-                                            : bodyConstraints.maxWidth),
+                                      : bodyConstraints.maxWidth,
                                   height: bodyConstraints.maxHeight,
                                   child: Column(
                                     children: [
