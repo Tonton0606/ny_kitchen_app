@@ -626,8 +626,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                 scrollDirection: Axis.horizontal,
                                 child: SizedBox(
                                   width: showSideCard
-                                      ? (bodyConstraints.maxWidth - 240).clamp(650.0, 1100.0)
-                                      : bodyConstraints.maxWidth.clamp(650.0, 1200.0),
+                                      ? (bodyConstraints.maxWidth - 240).clamp(750.0, 1100.0)
+                                      : bodyConstraints.maxWidth.clamp(750.0, 1200.0),
                                   height: bodyConstraints.maxHeight,
                                   child: Column(
                                     children: [
