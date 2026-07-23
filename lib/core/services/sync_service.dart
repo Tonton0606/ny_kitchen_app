@@ -115,6 +115,9 @@ class SyncService {
                 }
               }
             }
+            if (table == 'food_categories') {
+              mutableRecord.remove('updated_at');
+            }
             dataToSync.add(mutableRecord);
           }
 
