@@ -24,6 +24,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
   String _selectedCategoryId = 'all';
   String _searchQuery = '';
   final List<Map<String, dynamic>> _orderItems = [];
+  bool _isOrderPanelExpanded = true;
 
   @override
   void initState() {
@@ -96,9 +97,10 @@ class _CashierHomePageState extends State<CashierHomePage> {
     final shouldClear = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear current order?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Void current order?'),
         content: const Text(
-          'All items in this order will be removed. This cannot be undone.',
+          'All items in this order will be voided and removed. ',
         ),
         actions: [
           TextButton(
@@ -108,15 +110,33 @@ class _CashierHomePageState extends State<CashierHomePage> {
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: AppColors.brandRed,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: const Text('Clear order'),
+            child: const Text('Void order'),
           ),
         ],
       ),
     );
 
     if (shouldClear == true) _clearOrder();
+  }
+
+  Future<bool?> _showOrderReviewDialog({
+    required double total,
+    required int itemCount,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => _OrderReviewDialog(
+        orderItems: _orderItems,
+        total: total,
+        itemCount: itemCount,
+      ),
+    );
   }
 
   Future<void> _checkout() async {
@@ -133,7 +153,14 @@ class _CashierHomePageState extends State<CashierHomePage> {
       (sum, item) => sum + (item['quantity'] as int),
     );
 
-    final completed = await showGeneralDialog<bool>(
+    final reviewed = await _showOrderReviewDialog(
+      total: total,
+      itemCount: itemCount,
+    );
+
+    if (reviewed != true || !mounted) return;
+
+    final paymentResult = await showGeneralDialog<Map<String, double>?>(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.35),
@@ -153,7 +180,9 @@ class _CashierHomePageState extends State<CashierHomePage> {
       },
     );
 
-    if (completed != true || !mounted) return;
+    if (paymentResult == null || !mounted) return;
+    final amountReceived = paymentResult['amountReceived']!;
+    final change = paymentResult['change']!;
 
     // Build the transaction items payload
     final List<Map<String, dynamic>> itemsForDb = _orderItems.map((item) {
@@ -171,10 +200,12 @@ class _CashierHomePageState extends State<CashierHomePage> {
 
     try {
       await _transactionRepo.createTransaction(
-        userId: 1, // Fallback dummy user for now
+        userId: 1,
         totalAmount: total,
         discount: 0,
-        paymentMethod: 'cash', // Hardcoded as cash for now based on UI
+        paymentMethod: 'cash',
+        amountReceived: amountReceived,
+        change: change,
         items: itemsForDb,
       );
 
@@ -213,18 +244,78 @@ class _CashierHomePageState extends State<CashierHomePage> {
             ),
           ),
           if (!isMobile)
-            VerticalDivider(
-              width: 1,
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-          if (!isMobile)
-            OrderSummaryPanel(
-              orderItems: _orderItems,
-              onIncrease: _increaseQuantity,
-              onDecrease: _decreaseQuantity,
-              onRemove: _removeItem,
-              onClear: _confirmClearOrder,
-              onCheckout: _checkout,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOutCubic,
+              width: _isOrderPanelExpanded ? 350 : 40,
+              decoration: _isOrderPanelExpanded
+                  ? BoxDecoration(
+                      color: const Color(0xFFF8F6F0),
+                      border: Border(
+                        left: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                      ),
+                    )
+                  : BoxDecoration(
+                      color: const Color(0xFFF8F6F0),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        bottomLeft: Radius.circular(12),
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x14000000),
+                          blurRadius: 6,
+                          offset: Offset(-3, 0),
+                        ),
+                      ],
+                    ),
+              child: _isOrderPanelExpanded
+                  ? OrderSummaryPanel(
+                      orderItems: _orderItems,
+                      onIncrease: _increaseQuantity,
+                      onDecrease: _decreaseQuantity,
+                      onRemove: _removeItem,
+                      onClear: _confirmClearOrder,
+                      onCheckout: _checkout,
+                      onCollapse: () => setState(() => _isOrderPanelExpanded = false),
+                    )
+                  : Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => setState(() => _isOrderPanelExpanded = true),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          bottomLeft: Radius.circular(12),
+                        ),
+                        child: SizedBox(
+                          width: 40,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.receipt_long, size: 20, color: AppColors.darkCharcoal),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.goldenYellow,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${_orderItems.length}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 11,
+                                    color: AppColors.darkCharcoal,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              const Icon(Icons.chevron_left, size: 14, color: AppColors.mutedText),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
             ),
         ],
       ),
@@ -326,44 +417,41 @@ class _CashierHomePageState extends State<CashierHomePage> {
   }
 
   Widget _buildCategories() {
-    return SizedBox(
-      height: 60,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final cat = _categories[index];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 8,
+        children: _categories.map((cat) {
           final catId = cat['id'].toString();
           final isSelected = catId == _selectedCategoryId;
-          return Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: ChoiceChip(
-              label: Text(cat['name']),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) setState(() => _selectedCategoryId = catId);
-              },
-              selectedColor: Theme.of(context).colorScheme.primary,
-              backgroundColor: Colors.white,
-              side: BorderSide(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.outlineVariant,
-              ),
-              labelStyle: TextStyle(
-                color: isSelected
-                    ? Colors.black
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.bold,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          return ChoiceChip(
+            label: Text(cat['name']),
+            selected: isSelected,
+            onSelected: (selected) {
+              if (selected) setState(() => _selectedCategoryId = catId);
+            },
+            selectedColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: Colors.white,
+            side: BorderSide(
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.outlineVariant,
             ),
+            labelStyle: TextStyle(
+              color: isSelected
+                  ? Colors.black
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            visualDensity: VisualDensity.compact,
           );
-        },
+        }).toList(),
       ),
     );
   }
@@ -403,13 +491,15 @@ class _CashierHomePageState extends State<CashierHomePage> {
         .map((item) => item['food']['id'].toString())
         .toSet();
 
+    final isWide = !isMobile && !_isOrderPanelExpanded;
+
     return GridView.builder(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isWide ? 20 : 24),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isMobile ? 2 : 3,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        crossAxisCount: isMobile ? 2 : (isWide ? 4 : 3),
+        childAspectRatio: isWide ? 1.1 : 0.8,
+        crossAxisSpacing: isWide ? 12 : 16,
+        mainAxisSpacing: isWide ? 14 : 16,
       ),
       itemCount: displayedFoods.length,
       itemBuilder: (context, index) {
@@ -422,6 +512,176 @@ class _CashierHomePageState extends State<CashierHomePage> {
           onRemove: () => _removeFoodFromCart(food['id'].toString()),
         );
       },
+    );
+  }
+}
+
+class _OrderReviewDialog extends StatelessWidget {
+  final List<Map<String, dynamic>> orderItems;
+  final double total;
+  final int itemCount;
+
+  const _OrderReviewDialog({
+    required this.orderItems,
+    required this.total,
+    required this.itemCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Row(
+        children: [
+          Icon(Icons.checklist, color: AppColors.brandRed),
+          SizedBox(width: 10),
+          Text(
+            'Confirm Order',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: MediaQuery.sizeOf(context).width.clamp(0.0, 440.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.brandRed.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: AppColors.brandRed, size: 20),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Is this order correct? Please confirm with the customer before proceeding.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.brandRed,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.softBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+                    child: Text(
+                      'Items',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.mutedText,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 260),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+                      child: Column(
+                        children: orderItems.map((item) {
+                          final food = item['food'];
+                          final qty = item['quantity'] as int;
+                          final price = (food['price'] as num).toDouble();
+                          final subtotal = price * qty;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              children: [
+                                Text(
+                                  '$qty × ',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.darkCharcoal,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    food['name'] ?? '',
+                                    style: const TextStyle(color: AppColors.darkCharcoal),
+                                  ),
+                                ),
+                                Text(
+                                  '₱${subtotal.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.darkCharcoal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.darkCharcoal,
+                          ),
+                        ),
+                        Text(
+                          '₱${total.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.darkCharcoal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Go Back'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.brandRed,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text('Confirm & Proceed'),
+        ),
+      ],
     );
   }
 }
@@ -453,7 +713,10 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
       setState(() => _cashError = 'Enter an amount that covers the total');
       return;
     }
-    Navigator.pop(context, true);
+    Navigator.pop(context, {
+      'amountReceived': _cashReceived!,
+      'change': _cashReceived! - widget.total,
+    });
   }
 
   @override
@@ -496,7 +759,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                       ),
                     ),
                     IconButton(
-                      onPressed: () => Navigator.pop(context, false),
+                      onPressed: () => Navigator.pop(context, null),
                       tooltip: 'Close checkout',
                       icon: const Icon(Icons.close),
                     ),
@@ -581,26 +844,42 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
-                          vertical: 14,
+                          vertical: 16,
                         ),
                         decoration: BoxDecoration(
                           color: change > 0
-                              ? AppColors.successSurface
+                              ? AppColors.brandRed.withValues(alpha: 0.08)
                               : Colors.grey.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: change > 0
+                                ? AppColors.brandRed.withValues(alpha: 0.2)
+                                : Colors.transparent,
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Change due',
-                              style: TextStyle(color: AppColors.mutedText),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.swap_horiz_rounded,
+                                  size: 18,
+                                  color: change > 0 ? AppColors.brandRed : AppColors.mutedText,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Change due',
+                                  style: TextStyle(color: AppColors.mutedText),
+                                ),
+                              ],
                             ),
                             Text(
                               '₱${change > 0 ? change.toStringAsFixed(2) : '0.00'}',
-                              style: const TextStyle(
-                                fontSize: 18,
+                              style: TextStyle(
+                                fontSize: 20,
                                 fontWeight: FontWeight.w800,
+                                color: change > 0 ? AppColors.brandRed : AppColors.darkCharcoal,
                               ),
                             ),
                           ],
@@ -620,8 +899,16 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
+                        onPressed: () => Navigator.pop(context, null),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.mutedText,
+                          side: BorderSide(color: AppColors.softBorder),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -633,8 +920,12 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                           backgroundColor: AppColors.goldenYellow,
                           foregroundColor: AppColors.darkCharcoal,
                           padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 0,
                         ),
-                        child: const Text('Accept payment'),
+                        child: const Text('Accept payment', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ],

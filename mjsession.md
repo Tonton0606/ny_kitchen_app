@@ -173,3 +173,49 @@ All changes since the previous `main` commit (`66c774e` — login screen redesig
 - `flutter analyze`: no issues found.
 - `flutter test`: all 22 tests passed.
 
+---
+
+## Session Summary - 2026-07-23
+
+### Order Panel
+- Collapsible panel animation smoothed with crossfade (opacity + width transitions).
+- Redesigned collapsed strip as a rounded pull-tab (40px, shadow, gold badge count).
+- Panel collapse button/behavior refined.
+
+### Category Layout
+- Converted horizontal scroll `ListView` to `Wrap` layout (flows into 1-2 rows instead of sideways scroll).
+- Applied `VisualDensity.compact` and tighter spacing.
+
+### Navigation Rail
+- Avatar no longer clickable (settings accessible only via gear icon in top bar).
+- Replaced text "NY" with actual logo image (`ny_kitchen_logo.png`).
+
+### Settings Overlay
+- Fixed positioning bug: overlay now nests inside the content area `Stack` (not a separate `SizedBox`-offset layer), eliminating overlap with expanded nav rail.
+- Overlay fades in/out with `AnimatedOpacity` + `IgnorePointer` (no more instant pop-in).
+
+### Order Review Dialog
+- Confirmation banner uses `AppColors.brandRed` with warning icon and "Is this order correct?" text.
+- Confirm button styled with `AppColors.brandRed`.
+- Dialog shape and layout cleaned up.
+
+### Payment & Change Tracking
+- Added `amount_received` and `change` columns to `transactions` table (DB v5 migration).
+- `createTransaction` now stores both values.
+- Change displayed prominently in the payment dialog (red accent, swap icon) and in the receipt panel.
+- Cancel button in payment dialog cleaned up with consistent `borderRadius: 10`.
+
+### "Clear" → "Void"
+- Order clear button relabeled to "Void" for formality.
+- Confirmation dialog updated with "Void order" language.
+
+### Simplified Status Flow
+- Reduced kitchen workflow from 4 statuses (`Taken → Preparing → Ready → Served`) to 2 (`Preparing → Served`).
+- Orders now start at `Preparing`. Advance moves directly to `Served`.
+- Filter chips: `All`, `Preparing` (with count badge), `Served` (with count badge).
+- Advance button always shows "Serve" with `done_all` icon.
+- Fixed SQL parameter bug in `getActiveTransactions` (`(?, ?, ?, ?)` → `(?, ?)`).
+
+### Verification
+- `flutter analyze`: no issues found.
+

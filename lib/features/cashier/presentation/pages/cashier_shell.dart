@@ -21,7 +21,6 @@ class _CashierShellState extends State<CashierShell> {
   bool _showSettings = false;
   bool _isNavExpanded = false;
 
-  static const double _navRailWidth = 76.0;
   static const double _panelWidth = 380.0;
 
   final List<Widget> _pages = const [
@@ -79,7 +78,6 @@ class _CashierShellState extends State<CashierShell> {
               tablet: _buildDesktopLayout(),
               desktop: _buildDesktopLayout(),
             ),
-            if (_showSettings && !isMobile) _buildSettingsOverlay(),
           ],
         ),
         bottomNavigationBar: isMobile
@@ -114,10 +112,24 @@ class _CashierShellState extends State<CashierShell> {
           onSettingsTap: _openSettings,
         ),
         Expanded(
-          child: Column(
+          child: Stack(
             children: [
-              _buildTopBar(isMobile: false),
-              Expanded(child: _pages[_selectedIndex]),
+              Column(
+                children: [
+                  _buildTopBar(isMobile: false),
+                  Expanded(child: _pages[_selectedIndex]),
+                ],
+              ),
+              Positioned.fill(
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: _showSettings ? 1.0 : 0.0,
+                  child: IgnorePointer(
+                    ignoring: !_showSettings,
+                    child: _buildSettingsOverlay(),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -162,38 +174,35 @@ class _CashierShellState extends State<CashierShell> {
   }
 
   Widget _buildSettingsOverlay() {
-    return Positioned.fill(
-      child: Row(
-        children: [
-          const SizedBox(width: _navRailWidth),
-          Container(
-            width: _panelWidth,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(left: BorderSide(color: AppColors.softBorder)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 12,
-                  offset: Offset(4, 0),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                _buildPanelHeader(),
-                const Expanded(child: AccountSettingsPage()),
-              ],
-            ),
+    return Row(
+      children: [
+        Container(
+          width: _panelWidth,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(left: BorderSide(color: AppColors.softBorder)),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 12,
+                offset: Offset(4, 0),
+              ),
+            ],
           ),
-          Expanded(
-            child: GestureDetector(
-              onTap: _closeSettings,
-              child: Container(color: Colors.black38),
-            ),
+          child: Column(
+            children: [
+              _buildPanelHeader(),
+              const Expanded(child: AccountSettingsPage()),
+            ],
           ),
-        ],
-      ),
+        ),
+        Expanded(
+          child: GestureDetector(
+            onTap: _closeSettings,
+            child: Container(color: Colors.black38),
+          ),
+        ),
+      ],
     );
   }
 

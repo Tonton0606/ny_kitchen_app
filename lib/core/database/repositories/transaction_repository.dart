@@ -8,19 +8,17 @@ class TransactionRepository {
     required double totalAmount,
     required double discount,
     required String paymentMethod,
+    required double amountReceived,
+    required double change,
     required List<Map<String, dynamic>> items,
   }) async {
     final db = await _dbHelper.database;
     int transactionId = 0;
 
     await db.transaction((txn) async {
-      // Generate a receipt number: YYMMDD-HHMMSS-RANDOM (could just be simple format)
       final now = DateTime.now();
       final dateStr = '${now.year.toString().substring(2)}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
       final timeStr = '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
-      
-      // In a real app we'd want this to be unique. For now we use the timestamp.
-      // E.g., 260719-143000
       final receiptNumber = '$dateStr-$timeStr';
 
       transactionId = await txn.insert('transactions', {
@@ -29,7 +27,9 @@ class TransactionRepository {
         'total_amount': totalAmount,
         'discount': discount,
         'payment_method': paymentMethod,
-        'status': 'Taken', // Initial status for the kitchen workflow
+        'amount_received': amountReceived,
+        'change': change,
+        'status': 'Preparing',
         'created_at': now.toIso8601String(),
       });
 
@@ -85,6 +85,16 @@ class TransactionRepository {
     );
   }
 
+  Future<int> cancelOrder(int id, {String? reason}) async {
+    final db = await _dbHelper.database;
+    return await db.update(
+      'transactions',
+      {'status': 'Voided', 'void_reason': reason ?? 'Cancelled by cashier'},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<List<Map<String, dynamic>>> getActiveTransactions() async {
     final db = await _dbHelper.database;
     // Get transactions that are not fully served/completed or voided/refunded.
@@ -93,8 +103,8 @@ class TransactionRepository {
     // And if it's 'Served', maybe we still show it in a history or just keep it around.
     return await db.query(
       'transactions',
-      where: 'status IN (?, ?, ?, ?)',
-      whereArgs: ['Taken', 'Preparing', 'Ready', 'Served'],
+      where: 'status IN (?, ?)',
+      whereArgs: ['Preparing', 'Served'],
       orderBy: 'created_at ASC',
     );
   }

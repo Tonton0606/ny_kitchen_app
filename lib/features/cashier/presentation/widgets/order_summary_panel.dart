@@ -9,6 +9,7 @@ class OrderSummaryPanel extends StatelessWidget {
   final Function(int) onRemove;
   final VoidCallback onClear;
   final VoidCallback onCheckout;
+  final VoidCallback? onCollapse;
 
   const OrderSummaryPanel({
     super.key,
@@ -18,6 +19,7 @@ class OrderSummaryPanel extends StatelessWidget {
     required this.onRemove,
     required this.onClear,
     required this.onCheckout,
+    this.onCollapse,
   });
 
   @override
@@ -61,6 +63,21 @@ class OrderSummaryPanel extends StatelessWidget {
                   '#${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}',
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.mutedText, letterSpacing: 0.5),
                 ),
+                if (onCollapse != null) ...[
+                  const SizedBox(width: 2),
+                  InkWell(
+                    onTap: onCollapse,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.softBorder.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(Icons.chevron_right, size: 16, color: AppColors.mutedText),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -151,24 +168,24 @@ class OrderSummaryPanel extends StatelessWidget {
                         onPressed: orderItems.isEmpty ? null : onClear,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.brandRed,
-                          side: BorderSide(color: AppColors.brandRed.withValues(alpha: 0.4)),
+                          side: BorderSide(color: AppColors.brandRed.withValues(alpha: 0.3)),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                        child: const Text('Clear', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                        child: const Text('Void', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
-                      child: ElevatedButton(
+                      child: FilledButton(
                         onPressed: orderItems.isEmpty ? null : onCheckout,
-                        style: ElevatedButton.styleFrom(
+                        style: FilledButton.styleFrom(
                           backgroundColor: AppColors.goldenYellow,
                           foregroundColor: AppColors.darkCharcoal,
-                          elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          elevation: 0,
                         ),
                         child: const Text('Checkout', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                       ),

@@ -380,7 +380,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         } else if (isRefunded) {
           badgeColor = AppColors.tertiary;
         } else {
-          badgeColor = AppColors.mutedText; // Taken, Preparing, Ready
+          badgeColor = AppColors.mutedText; // Preparing
         }
 
         final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();

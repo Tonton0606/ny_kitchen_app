@@ -216,21 +216,223 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                 ],
                               ),
                               trailing: isVoided
-                                  ? const SizedBox(width: 48)
-                                  : IconButton(
-                                      icon: const Icon(Icons.block, color: AppColors.brandRed),
-                                      tooltip: 'Void Transaction',
-                                      onPressed: () => _confirmVoid(tx),
+                                  ? IconButton(
+                                      icon: const Icon(Icons.chevron_right, color: AppColors.mutedText),
+                                      tooltip: 'View Receipt',
+                                      onPressed: () => _showReceipt(tx),
+                                    )
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.block, color: AppColors.brandRed),
+                                          tooltip: 'Void Transaction',
+                                          onPressed: () => _confirmVoid(tx),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.chevron_right, color: AppColors.mutedText),
+                                          tooltip: 'View Receipt',
+                                          onPressed: () => _showReceipt(tx),
+                                        ),
+                                      ],
                                     ),
-                              onTap: () {
-                                // Action to view details
-                              },
+                              onTap: () => _showReceipt(tx),
                             ),
                           );
                         },
                       ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _showReceipt(Map<String, dynamic> tx) async {
+    List<Map<String, dynamic>> items;
+    try {
+      items = await _repository.getTransactionItems(tx['id']);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading receipt: $e'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    if (!mounted) return;
+
+    final dateStr = tx['created_at'];
+    final parsedDate = DateTime.tryParse(dateStr) ?? DateTime.now();
+    final formattedDate = DateFormat('MMM d, yyyy  h:mm a').format(parsedDate);
+
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black.withValues(alpha: 0.35),
+        transitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (ctx, animation, secondaryAnimation) => Align(
+          alignment: Alignment.centerRight,
+          child: Material(
+            color: Colors.white,
+            child: SafeArea(
+              child: SizedBox(
+                width: MediaQuery.sizeOf(ctx).width.clamp(0.0, 420.0),
+                height: double.infinity,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 20, 12, 16),
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            'assets/images/branding/ny_kitchen_emblem.png',
+                            height: 28,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, _, _) => const Icon(Icons.receipt_long, size: 28, color: AppColors.goldenYellow),
+                          ),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Order Receipt', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.darkCharcoal)),
+                                Text('N.Y Kitchen', style: TextStyle(fontSize: 11, color: AppColors.mutedText)),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1, color: AppColors.softBorder),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(tx['receipt_number'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.darkCharcoal)),
+                                Text(formattedDate, style: const TextStyle(fontSize: 12, color: AppColors.mutedText)),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            const Divider(height: 1, color: AppColors.softBorder),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                const SizedBox(width: 28),
+                                const Text('Item', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.mutedText, letterSpacing: 0.5)),
+                                const Spacer(),
+                                const Text('Amount', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.mutedText, letterSpacing: 0.5)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            ...items.map((item) {
+                              final qty = item['quantity'] as int;
+                              final subtotal = (item['subtotal'] as num).toDouble();
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 28,
+                                      child: Text('$qty', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.darkCharcoal), textAlign: TextAlign.right),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text('x', style: TextStyle(fontSize: 13, color: AppColors.mutedText)),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(item['food_name'], style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.darkCharcoal)),
+                                    ),
+                                    Text('₱${subtotal.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.darkCharcoal)),
+                                  ],
+                                ),
+                              );
+                            }),
+                            const SizedBox(height: 8),
+                            const Divider(height: 1, color: AppColors.softBorder),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Total', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.darkCharcoal)),
+                                Text('₱${(tx['total_amount'] as num).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.darkCharcoal)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            if (tx['amount_received'] != null) ...[
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Cash Received', style: TextStyle(fontSize: 13, color: AppColors.mutedText)),
+                                  Text('₱${(tx['amount_received'] as num).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.darkCharcoal)),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Change', style: TextStyle(fontSize: 13, color: AppColors.mutedText)),
+                                  Text('₱${(tx['change'] as num).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.brandRed)),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildStatusBadge(tx['status'] as String? ?? ''),
+                                const SizedBox(width: 8),
+                                Icon(Icons.payments_outlined, size: 14, color: AppColors.mutedText),
+                                const SizedBox(width: 4),
+                                Text(tx['payment_method'] ?? 'Cash', style: const TextStyle(fontSize: 12, color: AppColors.mutedText)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    final isVoided = status == 'Voided';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isVoided ? Colors.grey.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: isVoided ? Theme.of(context).colorScheme.onSurfaceVariant : Colors.green,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
