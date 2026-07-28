@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -56,15 +57,59 @@ void main() async {
   runApp(const NYKitchenApp());
 }
 
-class NYKitchenApp extends StatelessWidget {
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+class NYKitchenApp extends StatefulWidget {
   const NYKitchenApp({super.key});
+
+  @override
+  State<NYKitchenApp> createState() => _NYKitchenAppState();
+}
+
+class _NYKitchenAppState extends State<NYKitchenApp> {
+  Timer? _sessionTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check for session expiration every 1 minute
+    _sessionTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (SessionManager().currentUser != null && SessionManager().isSessionExpired()) {
+        SessionManager().clearSession();
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+            (route) => false,
+          );
+          if (navigatorKey.currentContext != null) {
+            ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+              const SnackBar(
+                content: Text('Session expired due to inactivity. Please log in again.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _sessionTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Listener(
       onPointerDown: (_) => SessionManager().updateActivity(),
       onPointerMove: (_) => SessionManager().updateActivity(),
+      onPointerUp: (_) => SessionManager().updateActivity(),
+      onPointerHover: (_) => SessionManager().updateActivity(),
+      onPointerCancel: (_) => SessionManager().updateActivity(),
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'N.Y Kitchen POS',
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,

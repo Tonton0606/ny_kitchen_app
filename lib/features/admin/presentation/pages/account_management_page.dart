@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/utils/security_utils.dart';
+import '../../../../core/session/session_manager.dart';
 
 class AccountManagementPage extends StatefulWidget {
   const AccountManagementPage({super.key});
@@ -463,6 +464,86 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     );
   }
 
+  void _showUnlockDialog(BuildContext context, Map<String, dynamic> user) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.lock_open,
+                color: Colors.orange,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            const Text(
+              'Unlock Account',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to unlock ${user['full_name']}\'s account?',
+          style: const TextStyle(
+            fontSize: 15,
+            color: AppColors.mutedText,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                final adminName = SessionManager().fullName ?? 'Admin';
+                await _userRepo.unlockUser(user['id'], adminName);
+                if (!context.mounted) return;
+                Navigator.pop(ctx);
+                _loadUsers();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Account unlocked successfully')),
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error unlocking account: $e')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Unlock',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -630,6 +711,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                               itemBuilder: (context, index) {
                                                 final user = filteredUsers[index];
                                                 final isActive = user['status'] == 'active';
+                                                final isLocked = user['status'] == 'locked';
                                                 final role = user['role'] == 'admin' ? 'Admin' : 'Cashier';
                                                 return Padding(
                                                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -696,15 +778,15 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                                               width: 7,
                                                               height: 7,
                                                               decoration: BoxDecoration(
-                                                                color: isActive ? AppColors.success : AppColors.brandRed,
+                                                                color: isLocked ? Colors.orange : (isActive ? AppColors.success : AppColors.brandRed),
                                                                 shape: BoxShape.circle,
                                                               ),
                                                             ),
                                                             const SizedBox(width: 6),
                                                             Text(
-                                                              isActive ? 'Active' : 'Inactive',
+                                                              isLocked ? 'Locked' : (isActive ? 'Active' : 'Inactive'),
                                                               style: TextStyle(
-                                                                color: isActive ? AppColors.success : AppColors.brandRed,
+                                                                color: isLocked ? Colors.orange : (isActive ? AppColors.success : AppColors.brandRed),
                                                                 fontWeight: FontWeight.w600,
                                                                 fontSize: 12,
                                                               ),
@@ -730,12 +812,20 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                                               onPressed: () => _showResetPasswordDialog(context, user),
                                                             ),
                                                             const SizedBox(width: 6),
-                                                            _buildActionButton(
-                                                              icon: isActive ? Icons.block : Icons.check_circle,
-                                                              color: isActive ? AppColors.brandRed : AppColors.success,
-                                                              tooltip: isActive ? 'Disable' : 'Enable',
-                                                              onPressed: () => _showDisableDialog(context, user),
-                                                            ),
+                                                            if (isLocked)
+                                                              _buildActionButton(
+                                                                icon: Icons.lock_open,
+                                                                color: Colors.orange,
+                                                                tooltip: 'Unlock Account',
+                                                                onPressed: () => _showUnlockDialog(context, user),
+                                                              )
+                                                            else
+                                                              _buildActionButton(
+                                                                icon: isActive ? Icons.block : Icons.check_circle,
+                                                                color: isActive ? AppColors.brandRed : AppColors.success,
+                                                                tooltip: isActive ? 'Disable' : 'Enable',
+                                                                onPressed: () => _showDisableDialog(context, user),
+                                                              ),
                                                           ],
                                                         ),
                                                       ),

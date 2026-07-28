@@ -4,6 +4,7 @@ import 'order_item_widget.dart';
 
 class OrderSummaryPanel extends StatelessWidget {
   final List<Map<String, dynamic>> orderItems;
+  final String orderId;
   final Function(int) onIncrease;
   final Function(int) onDecrease;
   final Function(int) onRemove;
@@ -13,6 +14,7 @@ class OrderSummaryPanel extends StatelessWidget {
 
   const OrderSummaryPanel({
     super.key,
+    required this.orderId,
     required this.orderItems,
     required this.onIncrease,
     required this.onDecrease,
@@ -29,8 +31,7 @@ class OrderSummaryPanel extends StatelessWidget {
       subtotal += (item['food']['price'] as double) * (item['quantity'] as int);
     }
     double discount = 0;
-    double tax = subtotal * 0.12;
-    double total = subtotal - discount + tax;
+    double total = subtotal - discount;
 
     return Container(
       width: 350,
@@ -60,7 +61,7 @@ class OrderSummaryPanel extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '#${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}',
+                  '#$orderId',
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.mutedText, letterSpacing: 0.5),
                 ),
                 if (onCollapse != null) ...[
@@ -150,7 +151,7 @@ class OrderSummaryPanel extends StatelessWidget {
                 const SizedBox(height: 6),
                 _buildSummaryRow('Discount', -discount, color: AppColors.success),
                 const SizedBox(height: 6),
-                _buildSummaryRow('Tax (12%)', tax, bold: false),
+
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: CustomPaint(

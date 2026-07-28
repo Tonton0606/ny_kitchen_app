@@ -6,7 +6,7 @@ import '../utils/security_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "ny_kitchen.db";
-  static const _databaseVersion = 5;
+  static const _databaseVersion = 6;
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -89,6 +89,11 @@ class DatabaseHelper {
         await db.execute('ALTER TABLE transactions ADD COLUMN change REAL');
       } catch (_) {}
     }
+    if (oldVersion < 6) {
+      try {
+        await db.execute('ALTER TABLE transactions ADD COLUMN order_number INTEGER');
+      } catch (_) {}
+    }
   }
 
   Future _onConfigure(Database db) async {
@@ -146,6 +151,7 @@ class DatabaseHelper {
       CREATE TABLE transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         receipt_number TEXT UNIQUE NOT NULL,
+        order_number INTEGER,
         user_id INTEGER,
         total_amount REAL NOT NULL,
         discount REAL DEFAULT 0,

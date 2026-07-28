@@ -49,7 +49,7 @@ class _OrdersPageState extends State<OrdersPage> {
       );
       loadedOrders.add({
         'id': txn['id'],
-        'orderNo': txn['receipt_number'],
+        'orderNo': txn['order_number'] != null ? '#${txn['order_number']}' : txn['receipt_number'],
         'status': txn['status'],
         'total': txn['total_amount'],
         'customer': 'User ${txn['user_id']}',
@@ -240,10 +240,10 @@ class _OrdersPageState extends State<OrdersPage> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: _statusColors[nextStatus],
-              foregroundColor: Colors.black,
+              backgroundColor: AppColors.success,
+              foregroundColor: Colors.white,
             ),
-            child: Text('Mark as $nextStatus'),
+            child: Text('Confirm & $nextStatus'),
           ),
         ],
       ),
@@ -754,19 +754,6 @@ class _OrdersPageState extends State<OrdersPage> {
                                 const SizedBox(height: 10),
                                 Row(
                                   children: [
-                                    OutlinedButton.icon(
-                                      onPressed: () => _cancelOrder(order),
-                                      icon: const Icon(Icons.cancel_outlined, size: 18),
-                                      label: const Text('Cancel'),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: AppColors.brandRed,
-                                        side: const BorderSide(color: AppColors.brandRed),
-                                        visualDensity: VisualDensity.compact,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                        ),
-                                      ),
-                                    ),
                                     const Spacer(),
                                     TextButton.icon(
                                       onPressed: () => _advanceStatus(order),

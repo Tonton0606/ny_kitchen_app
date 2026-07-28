@@ -118,6 +118,13 @@ class SyncService {
             if (table == 'food_categories') {
               mutableRecord.remove('updated_at');
             }
+            if (table == 'transactions') {
+              mutableRecord.remove('order_number');
+              mutableRecord.remove('amount_received');
+              mutableRecord.remove('change');
+              mutableRecord.remove('void_reason');
+              mutableRecord.remove('refund_reason');
+            }
             dataToSync.add(mutableRecord);
           }
 
@@ -153,6 +160,17 @@ class SyncService {
             }
 
             // Using REPLACE in SQLite handles upserts while keeping URL in local DB
+            if (table == 'transactions') {
+              final existing = await db.query('transactions', where: 'id = ?', whereArgs: [record['id']]);
+              if (existing.isNotEmpty) {
+                record['order_number'] = existing.first['order_number'];
+                record['amount_received'] = existing.first['amount_received'];
+                record['change'] = existing.first['change'];
+                record['void_reason'] = existing.first['void_reason'];
+                record['refund_reason'] = existing.first['refund_reason'];
+              }
+            }
+
             await db.insert(
               table,
               record,

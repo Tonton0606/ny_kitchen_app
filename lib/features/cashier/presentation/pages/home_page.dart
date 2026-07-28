@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/responsive.dart';
 import '../widgets/food_card.dart';
@@ -25,6 +26,10 @@ class _CashierHomePageState extends State<CashierHomePage> {
   String _searchQuery = '';
   final List<Map<String, dynamic>> _orderItems = [];
   bool _isOrderPanelExpanded = true;
+  String _currentOrderId = _generateOrderId();
+
+  static String _generateOrderId() =>
+      DateTime.now().millisecondsSinceEpoch.toString().substring(6);
 
   @override
   void initState() {
@@ -49,7 +54,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
   void _addToOrder(Map<String, dynamic> food) {
     setState(() {
       final existingIndex = _orderItems.indexWhere(
-        (item) => item['food']['id'].toString() == food['id'].toString(),
+        (item) => item['food']['id'].toString() == food['id'].toString() && item['quantity'] < 50,
       );
       if (existingIndex >= 0) {
         _orderItems[existingIndex]['quantity']++;
@@ -61,7 +66,11 @@ class _CashierHomePageState extends State<CashierHomePage> {
 
   void _increaseQuantity(int index) {
     setState(() {
-      _orderItems[index]['quantity']++;
+      if (_orderItems[index]['quantity'] < 50) {
+        _orderItems[index]['quantity']++;
+      } else {
+        _orderItems.add({'food': _orderItems[index]['food'], 'quantity': 1});
+      }
     });
   }
 
@@ -90,6 +99,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
   void _clearOrder() {
     setState(() {
       _orderItems.clear();
+      _currentOrderId = _generateOrderId();
     });
   }
 
@@ -160,7 +170,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
 
     if (reviewed != true || !mounted) return;
 
-    final paymentResult = await showGeneralDialog<Map<String, double>?>(
+    final paymentResult = await showGeneralDialog<Map<String, dynamic>?>(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.35),
@@ -181,8 +191,9 @@ class _CashierHomePageState extends State<CashierHomePage> {
     );
 
     if (paymentResult == null || !mounted) return;
-    final amountReceived = paymentResult['amountReceived']!;
-    final change = paymentResult['change']!;
+    final double amountReceived = paymentResult['amountReceived'] as double;
+    final double change = paymentResult['change'] as double;
+    final int? customOrderNumber = paymentResult['customOrderNumber'] as int?;
 
     // Build the transaction items payload
     final List<Map<String, dynamic>> itemsForDb = _orderItems.map((item) {
@@ -199,7 +210,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
     }).toList();
 
     try {
-      await _transactionRepo.createTransaction(
+      final result = await _transactionRepo.createTransaction(
         userId: 1,
         totalAmount: total,
         discount: 0,
@@ -207,18 +218,80 @@ class _CashierHomePageState extends State<CashierHomePage> {
         amountReceived: amountReceived,
         change: change,
         items: itemsForDb,
+        customOrderNumber: customOrderNumber,
       );
 
       if (!mounted) return;
       _clearOrder();
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Payment complete. Order has been submitted.'),
-            behavior: SnackBarBehavior.floating,
+      
+      final orderNumber = result['order_number'];
+      
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          contentPadding: const EdgeInsets.all(32),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 64),
+              const SizedBox(height: 16),
+              const Text(
+                'Payment Complete!',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Order has been submitted.',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'ORDER #',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    Text(
+                      '$orderNumber',
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Start Next Order', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
           ),
-        );
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -271,6 +344,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
                     ),
               child: _isOrderPanelExpanded
                   ? OrderSummaryPanel(
+                      orderId: _currentOrderId,
                       orderItems: _orderItems,
                       onIncrease: _increaseQuantity,
                       onDecrease: _decreaseQuantity,
@@ -331,6 +405,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
                     minChildSize: 0.5,
                     maxChildSize: 0.95,
                     builder: (_, controller) => OrderSummaryPanel(
+                      orderId: _currentOrderId,
                       orderItems: _orderItems,
                       onIncrease: _increaseQuantity,
                       onDecrease: _decreaseQuantity,
@@ -360,28 +435,31 @@ class _CashierHomePageState extends State<CashierHomePage> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'New Order',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  fontFamily: 'serif',
-                  letterSpacing: -0.4,
-                  color: Theme.of(context).colorScheme.onSurface,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'New Order',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'serif',
+                    letterSpacing: -0.4,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
-              ),
-              Text(
-                'Select items for the customer',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                Text(
+                  'Select items for the customer',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 16),
           if (_isLoading)
             const Padding(
               padding: EdgeInsets.only(right: 16),
@@ -391,9 +469,10 @@ class _CashierHomePageState extends State<CashierHomePage> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
-          SizedBox(
-            width: 300,
-            child: TextField(
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 300),
+              child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search food...',
                 prefixIcon: Icon(
@@ -409,6 +488,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
+            ),
             ),
           ),
         ],
@@ -469,11 +549,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
       bool matchesSearch = f['name'].toString().toLowerCase().contains(
         _searchQuery.toLowerCase(),
       );
-      // Ensure only available foods are shown in POS. Check string 'available' vs int 1 based on DB schema.
-      // SQLite stores string for availability. Wait, let me check the repository query.
-      // Wait, food['availability'] == 'available' in DB? In database_helper, availability is TEXT.
-      bool isAvailable = f['availability'] == 'available' || f['is_available'] == true || f['is_available'] == 1;
-      return matchesCat && matchesSearch && isAvailable;
+      return matchesCat && matchesSearch;
     }).toList();
 
     if (displayedFoods.isEmpty) {
@@ -698,6 +774,7 @@ class _CheckoutDialog extends StatefulWidget {
 
 class _CheckoutDialogState extends State<_CheckoutDialog> {
   final _cashController = TextEditingController();
+  final _orderNumberController = TextEditingController();
   String? _cashError;
 
   double? get _cashReceived => double.tryParse(_cashController.text.trim());
@@ -705,6 +782,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
   @override
   void dispose() {
     _cashController.dispose();
+    _orderNumberController.dispose();
     super.dispose();
   }
 
@@ -713,9 +791,19 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
       setState(() => _cashError = 'Enter an amount that covers the total');
       return;
     }
+    if (_cashReceived! > 100000000) {
+      setState(() => _cashError = 'Amount exceeds maximum limit (100,000,000)');
+      return;
+    }
+    int? customOrder;
+    if (_orderNumberController.text.trim().isNotEmpty) {
+      customOrder = int.tryParse(_orderNumberController.text.trim());
+    }
+
     Navigator.pop(context, {
       'amountReceived': _cashReceived!,
       'change': _cashReceived! - widget.total,
+      'customOrderNumber': customOrder,
     });
   }
 
@@ -817,7 +905,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                           Icon(Icons.payments_outlined, size: 20),
                           SizedBox(width: 8),
                           Text(
-                            'Cash payment',
+                            'Order Number & Payment',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -827,11 +915,27 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                       ),
                       const SizedBox(height: 14),
                       TextField(
+                        controller: _orderNumberController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Custom Order Number (Optional)',
+                          hintText: 'Leave empty to auto-generate',
+                          prefixIcon: Icon(Icons.tag),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
                         controller: _cashController,
                         autofocus: true,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        ],
                         decoration: InputDecoration(
                           labelText: 'Cash received',
                           prefixText: '₱ ',

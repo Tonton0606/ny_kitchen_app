@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -29,6 +30,11 @@ class _LoginPageState extends State<LoginPage>
   bool _isLoading = false;
   String? _emailError;
   String? _passwordError;
+  
+  int _failedAttempts = 0;
+  bool _isLockedOut = false;
+  Timer? _lockoutTimer;
+  int _lockoutSeconds = 0;
 
   @override
   void initState() {
@@ -46,12 +52,37 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   void dispose() {
+    _lockoutTimer?.cancel();
     _fadeController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _emailFocus.dispose();
     _passwordFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _showForgotPasswordDialog() async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.lock_reset, color: AppColors.brandRed),
+            SizedBox(width: 8),
+            Text('Password Reset Required'),
+          ],
+        ),
+        content: const Text(
+          'Please contact your Store Administrator to reset your password and unlock your account.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleLogin() async {
@@ -85,6 +116,7 @@ class _LoginPageState extends State<LoginPage>
     setState(() => _isLoading = false);
 
     if (user != null) {
+      _failedAttempts = 0;
       SessionManager().setSession(user);
       final role = user['role'] as String;
       final destination = role == 'admin' ? const AdminShell() : const CashierShell();
@@ -94,10 +126,34 @@ class _LoginPageState extends State<LoginPage>
         MaterialPageRoute<void>(builder: (_) => destination),
       );
     } else {
-      setState(() {
-        _emailError = 'Invalid credentials or inactive account';
-        _passwordError = 'Invalid credentials or inactive account';
-      });
+      _failedAttempts++;
+      if (_failedAttempts >= 5) {
+        setState(() {
+          _isLockedOut = true;
+          _lockoutSeconds = 30;
+          _emailError = null;
+          _passwordError = null;
+        });
+        _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (!mounted) {
+            timer.cancel();
+            return;
+          }
+          setState(() {
+            _lockoutSeconds--;
+            if (_lockoutSeconds <= 0) {
+              _isLockedOut = false;
+              _failedAttempts = 0;
+              timer.cancel();
+            }
+          });
+        });
+      } else {
+        setState(() {
+          _emailError = 'Invalid credentials or inactive account';
+          _passwordError = 'Invalid credentials or inactive account';
+        });
+      }
     }
   }
 
@@ -184,13 +240,13 @@ class _LoginPageState extends State<LoginPage>
           TextField(
             controller: _emailController,
             focusNode: _emailFocus,
-            enabled: !_isLoading,
+            enabled: !_isLoading && !_isLockedOut,
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email, AutofillHints.username],
             textInputAction: TextInputAction.next,
             onSubmitted: (_) => _passwordFocus.requestFocus(),
             onChanged: (_) {
-              if (_emailError != null) setState(() => _emailError = null);
+              if (_emailError != null && !_isLockedOut) setState(() => _emailError = null);
             },
             decoration: _inputDecoration(
               colors: colors,
@@ -204,15 +260,15 @@ class _LoginPageState extends State<LoginPage>
           TextField(
             controller: _passwordController,
             focusNode: _passwordFocus,
-            enabled: !_isLoading,
+            enabled: !_isLoading && !_isLockedOut,
             obscureText: _obscurePassword,
             autofillHints: const [AutofillHints.password],
             textInputAction: TextInputAction.done,
             onSubmitted: (_) {
-              if (!_isLoading) _handleLogin();
+              if (!_isLoading && !_isLockedOut) _handleLogin();
             },
             onChanged: (_) {
-              if (_passwordError != null) setState(() => _passwordError = null);
+              if (_passwordError != null && !_isLockedOut) setState(() => _passwordError = null);
             },
             decoration: _inputDecoration(
               colors: colors,
@@ -237,6 +293,18 @@ class _LoginPageState extends State<LoginPage>
               ),
             ),
           ),
+          if (_isLockedOut) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Too many failed attempts. Try again in ${_lockoutSeconds}s.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colors.error,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
           Wrap(
             alignment: WrapAlignment.spaceBetween,
@@ -266,7 +334,7 @@ class _LoginPageState extends State<LoginPage>
                 ),
               ),
               TextButton(
-                onPressed: _isLoading ? null : () {},
+                onPressed: _isLoading ? null : _showForgotPasswordDialog,
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.brandRed,
                   minimumSize: const Size(48, 48),
@@ -283,7 +351,7 @@ class _LoginPageState extends State<LoginPage>
           SizedBox(
             height: 56,
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _handleLogin,
+              onPressed: (_isLoading || _isLockedOut) ? null : _handleLogin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.goldenYellow,
                 foregroundColor: AppColors.darkCharcoal,

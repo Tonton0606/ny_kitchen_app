@@ -768,8 +768,10 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                                           horizontal: 20,
                                                           vertical: 10,
                                                         ),
-                                                    child: Row(
-                                                      children: [
+                                                    child: Opacity(
+                                                      opacity: isAvailable ? 1.0 : 0.4,
+                                                      child: Row(
+                                                        children: [
                                                         ClipRRect(
                                                           borderRadius:
                                                               BorderRadius.circular(
@@ -949,6 +951,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                                         ),
                                                       ],
                                                     ),
+                                                  ),
                                                   );
                                                 },
                                               ),

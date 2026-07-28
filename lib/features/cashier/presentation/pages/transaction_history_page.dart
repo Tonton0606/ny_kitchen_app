@@ -147,7 +147,9 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    tx['receipt_number'] ?? 'Unknown',
+                                    tx['order_number'] != null 
+                                        ? 'Order #${tx['order_number']}   (${tx['receipt_number']})' 
+                                        : (tx['receipt_number'] ?? 'Unknown'),
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14,

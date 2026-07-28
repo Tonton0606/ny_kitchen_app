@@ -1,9 +1,11 @@
 import '../database_helper.dart';
+import '../../services/sync_service.dart';
 
 class TransactionRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final SyncService _syncService = SyncService();
 
-  Future<int> createTransaction({
+  Future<Map<String, dynamic>> createTransaction({
     required int userId,
     required double totalAmount,
     required double discount,
@@ -11,9 +13,11 @@ class TransactionRepository {
     required double amountReceived,
     required double change,
     required List<Map<String, dynamic>> items,
+    int? customOrderNumber,
   }) async {
     final db = await _dbHelper.database;
     int transactionId = 0;
+    int orderNumber = 0;
 
     await db.transaction((txn) async {
       final now = DateTime.now();
@@ -21,8 +25,21 @@ class TransactionRepository {
       final timeStr = '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
       final receiptNumber = '$dateStr-$timeStr';
 
+      // Calculate daily order number
+      if (customOrderNumber != null) {
+        orderNumber = customOrderNumber;
+      } else {
+        final todayPrefix = now.toIso8601String().substring(0, 10);
+        final countResult = await txn.rawQuery(
+          "SELECT COUNT(*) as count FROM transactions WHERE created_at LIKE ?",
+          ['$todayPrefix%'],
+        );
+        orderNumber = (countResult.first['count'] as int? ?? 0) + 1;
+      }
+
       transactionId = await txn.insert('transactions', {
         'receipt_number': receiptNumber,
+        'order_number': orderNumber,
         'user_id': userId,
         'total_amount': totalAmount,
         'discount': discount,
@@ -45,7 +62,8 @@ class TransactionRepository {
       }
     });
 
-    return transactionId;
+    await _syncService.syncToCloud();
+    return {'transaction_id': transactionId, 'order_number': orderNumber};
   }
 
   Future<List<Map<String, dynamic>>> getTransactions({String status = 'completed'}) async {
@@ -77,22 +95,26 @@ class TransactionRepository {
 
   Future<int> updateTransactionStatus(int id, String newStatus) async {
     final db = await _dbHelper.database;
-    return await db.update(
+    int count = await db.update(
       'transactions',
       {'status': newStatus},
       where: 'id = ?',
       whereArgs: [id],
     );
+    await _syncService.syncToCloud();
+    return count;
   }
 
   Future<int> cancelOrder(int id, {String? reason}) async {
     final db = await _dbHelper.database;
-    return await db.update(
+    int count = await db.update(
       'transactions',
       {'status': 'Voided', 'void_reason': reason ?? 'Cancelled by cashier'},
       where: 'id = ?',
       whereArgs: [id],
     );
+    await _syncService.syncToCloud();
+    return count;
   }
 
   Future<List<Map<String, dynamic>>> getActiveTransactions() async {

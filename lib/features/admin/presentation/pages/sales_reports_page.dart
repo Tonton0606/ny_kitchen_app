@@ -17,6 +17,8 @@ class _SalesReportsPageState extends State<SalesReportsPage>
   final TransactionRepository _txRepo = TransactionRepository();
   List<Map<String, dynamic>> _transactions = [];
   bool _isLoading = true;
+  DateTimeRange? _selectedDateRange;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -26,18 +28,27 @@ class _SalesReportsPageState extends State<SalesReportsPage>
   }
 
   Future<void> _loadData() async {
-    final data = await _txRepo.getAllTransactions();
-    List<Map<String, dynamic>> enrichedData = [];
-    for (var tx in data) {
-      final items = await _txRepo.getTransactionItems(tx['id']);
-      enrichedData.add({...tx, 'itemCount': items.length});
-    }
+    try {
+      final data = await _txRepo.getAllTransactions();
+      List<Map<String, dynamic>> enrichedData = [];
+      for (var tx in data) {
+        final items = await _txRepo.getTransactionItems(tx['id']);
+        enrichedData.add({...tx, 'itemCount': items.length});
+      }
 
-    if (mounted) {
-      setState(() {
-        _transactions = enrichedData;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _transactions = enrichedData;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Sales reports load error: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -100,25 +111,39 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          onPressed: () {
+                        PopupMenuButton<String>(
+                          offset: const Offset(0, 40),
+                          onSelected: (value) {
                             if (!_isLoading && _transactions.isNotEmpty) {
-                              ExportService.exportToCSV(_transactions, context);
+                              if (value == 'excel') {
+                                ExportService.exportToExcel(_transactions, context);
+                              } else if (value == 'pdf') {
+                                ExportService.exportToPDF(_transactions, context);
+                              }
                             }
                           },
-                          icon: const Icon(Icons.download, size: 18),
-                          label: const Text('Export'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.goldenYellow,
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'excel',
+                              child: Text('Export as Excel (.xlsx)'),
                             ),
-                            shape: RoundedRectangleBorder(
+                            const PopupMenuItem(
+                              value: 'pdf',
+                              child: Text('Export as PDF (.pdf)'),
+                            ),
+                          ],
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: AppColors.goldenYellow,
                               borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: const [
+                                Icon(Icons.download, size: 18, color: Colors.black),
+                                SizedBox(width: 8),
+                                Text('Export', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500)),
+                              ],
                             ),
                           ),
                         ),
@@ -152,41 +177,26 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                children: [
                  if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
                    'All',
-                   _calculateRevenueForDays(-1),
-                   _calculateAvgForDays(-1),
-                   _calculateOrdersForDays(-1),
-                   '100%',
+                   -1,
                    showDateFilter: true,
                  ),
                  if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
                    'Today',
-                   _calculateRevenueForDays(0),
-                   _calculateAvgForDays(0),
-                   _calculateOrdersForDays(0),
-                   '100%',
+                   0,
                  ),
                  if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
                    'Weekly',
-                   _calculateRevenueForDays(7),
-                   _calculateAvgForDays(7),
-                   _calculateOrdersForDays(7),
-                   '100%',
+                   7,
                    showDateFilter: true,
                  ),
                  if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
                    'Monthly',
-                   _calculateRevenueForDays(30),
-                   _calculateAvgForDays(30),
-                   _calculateOrdersForDays(30),
-                   '100%',
+                   30,
                    showDateFilter: true,
                  ),
                  if (_isLoading) const Center(child: CircularProgressIndicator()) else _buildReportTab(
                    'Annual',
-                   _calculateRevenueForDays(365),
-                   _calculateAvgForDays(365),
-                   _calculateOrdersForDays(365),
-                   '100%',
+                   365,
                    showDateFilter: true,
                  ),
                ],
@@ -196,83 +206,60 @@ class _SalesReportsPageState extends State<SalesReportsPage>
       ),
     );
   }
-
-  String _calculateRevenueForDays(int days) {
+  List<Map<String, dynamic>> _getFilteredTransactions(int days) {
     final now = DateTime.now();
-    double total = 0;
-    for (var tx in _transactions) {
-      if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
+    return _transactions.where((tx) {
       final date = DateTime.tryParse(tx['created_at'] ?? '') ?? now;
-      if (days == -1) {
-        total += (tx['total_amount'] as num).toDouble();
-      } else if (days == 0) {
-        if (date.year == now.year && date.month == now.month && date.day == now.day) {
-          total += (tx['total_amount'] as num).toDouble();
-        }
+
+      if (_selectedDateRange != null) {
+        final end = _selectedDateRange!.end.add(const Duration(days: 1));
+        if (date.isBefore(_selectedDateRange!.start) || date.isAfter(end)) return false;
       } else {
-        if (now.difference(date).inDays <= days) {
-          total += (tx['total_amount'] as num).toDouble();
+        if (days == 0) {
+          if (date.year != now.year || date.month != now.month || date.day != now.day) return false;
+        } else if (days > 0) {
+          if (now.difference(date).inDays > days) return false;
         }
       }
-    }
-    return '₱${total.toStringAsFixed(2)}';
-  }
 
-  String _calculateAvgForDays(int days) {
-    final now = DateTime.now();
-    double total = 0;
-    int count = 0;
-    for (var tx in _transactions) {
-      if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
-      final date = DateTime.tryParse(tx['created_at'] ?? '') ?? now;
-      if (days == -1) {
-        total += (tx['total_amount'] as num).toDouble();
-        count++;
-      } else if (days == 0) {
-        if (date.year == now.year && date.month == now.month && date.day == now.day) {
-          total += (tx['total_amount'] as num).toDouble();
-          count++;
-        }
-      } else {
-        if (now.difference(date).inDays <= days) {
-          total += (tx['total_amount'] as num).toDouble();
-          count++;
-        }
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        final receiptNo = (tx['receipt_number'] as String? ?? '').toLowerCase();
+        final orderNo = (tx['order_number']?.toString() ?? '').toLowerCase();
+        if (!receiptNo.contains(q) && !orderNo.contains(q)) return false;
       }
-    }
-    if (count == 0) return '₱0.00';
-    return '₱${(total / count).toStringAsFixed(2)}';
-  }
 
-  String _calculateOrdersForDays(int days) {
-    final now = DateTime.now();
-    int count = 0;
-    for (var tx in _transactions) {
-      if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
-      final date = DateTime.tryParse(tx['created_at'] ?? '') ?? now;
-      if (days == -1) {
-        count++;
-      } else if (days == 0) {
-        if (date.year == now.year && date.month == now.month && date.day == now.day) {
-          count++;
-        }
-      } else {
-        if (now.difference(date).inDays <= days) {
-          count++;
-        }
-      }
-    }
-    return count.toString();
+      return true;
+    }).toList();
   }
 
   Widget _buildReportTab(
     String period,
-    String revenue,
-    String avgOrder,
-    String orders,
-    String completionRate,
+    int days,
     {bool showDateFilter = false}
   ) {
+    final filteredTransactions = _getFilteredTransactions(days);
+    
+    double revenueVal = 0;
+    int ordersVal = 0;
+    
+    double parseAmount(dynamic val) {
+      if (val == null) return 0.0;
+      if (val is num) return val.toDouble();
+      return double.tryParse(val.toString()) ?? 0.0;
+    }
+
+    for (var tx in filteredTransactions) {
+      if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
+      revenueVal += parseAmount(tx['total_amount']);
+      ordersVal++;
+    }
+    final avgOrderVal = ordersVal == 0 ? 0.0 : revenueVal / ordersVal;
+
+    final revenue = '₱${revenueVal.toStringAsFixed(2)}';
+    final avgOrder = '₱${avgOrderVal.toStringAsFixed(2)}';
+    final orders = ordersVal.toString();
+    final completionRate = '100%';
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 600;
@@ -289,6 +276,11 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                 children: [
                   Expanded(
                     child: TextField(
+                      onChanged: (val) {
+                        setState(() {
+                          _searchQuery = val;
+                        });
+                      },
                       decoration: InputDecoration(
                         hintText: 'Search by receipt number...',
                         prefixIcon: const Icon(Icons.search, size: 20),
@@ -308,10 +300,37 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                   if (showDateFilter) ...[
                     const SizedBox(width: 12),
                     OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () async {
+                        final picked = await showDateRangePicker(
+                          context: context,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                          initialDateRange: _selectedDateRange,
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.light(
+                                  primary: AppColors.goldenYellow,
+                                  onPrimary: AppColors.darkCharcoal,
+                                  surface: Colors.white,
+                                  onSurface: AppColors.darkCharcoal,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _selectedDateRange = picked;
+                          });
+                        }
+                      },
                       icon: const Icon(Icons.date_range, size: 18, color: AppColors.goldenYellow),
                       label: Text(
-                        isMobile ? 'Filter' : 'Filter Date',
+                        _selectedDateRange != null 
+                            ? '${DateFormat('MM/dd').format(_selectedDateRange!.start)} - ${DateFormat('MM/dd').format(_selectedDateRange!.end)}'
+                            : (isMobile ? 'Filter' : 'Filter Date'),
                         style: const TextStyle(color: AppColors.goldenYellow, fontWeight: FontWeight.bold),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -408,13 +427,29 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                               color: AppColors.goldenYellow.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text(
-                              '$period Report',
-                              style: const TextStyle(
-                                color: AppColors.goldenYellow,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  '$period Report',
+                                  style: const TextStyle(
+                                    color: AppColors.goldenYellow,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (_selectedDateRange != null || _searchQuery.isNotEmpty) ...[
+                                  const SizedBox(width: 8),
+                                  InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedDateRange = null;
+                                        _searchQuery = '';
+                                      });
+                                    },
+                                    child: const Icon(Icons.close, size: 14, color: AppColors.brandRed),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ],
@@ -505,7 +540,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                               ),
                             ),
                           ],
-                          rows: _transactions.map((tx) {
+                          rows: filteredTransactions.map((tx) {
                             final status = tx['status'] as String? ?? 'Unknown';
                             final isSuccess = status == 'Completed' || status == 'Served';
                             final isVoided = status == 'Voided';
@@ -561,7 +596,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                                 ),
                                 DataCell(
                                   Text(
-                                    '\u20b1${(tx['total_amount'] as num).toStringAsFixed(2)}',
+                                    '\u20b1${parseAmount(tx['total_amount']).toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 13,

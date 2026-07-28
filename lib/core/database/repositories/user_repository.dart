@@ -1,9 +1,11 @@
 import 'package:sqflite/sqflite.dart';
 import '../database_helper.dart';
 import '../../utils/security_utils.dart';
+import 'audit_repository.dart';
 
 class UserRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final AuditRepository _auditRepo = AuditRepository();
 
   // Retrieve a user by username and password, handling lockouts
   Future<Map<String, dynamic>?> login(String username, String password) async {
@@ -60,6 +62,25 @@ class UserRepository {
 
       if (newFailedCount >= 5) {
         updates['status'] = 'locked'; // Lock account after 5 failed attempts
+        await _auditRepo.logAction(
+          userId: userId,
+          username: username,
+          role: userRow['role'] as String?,
+          module: 'Auth',
+          action: 'Account Locked',
+          status: 'Critical',
+          description: 'Account locked due to 5 consecutive failed logins',
+        );
+      } else {
+        await _auditRepo.logAction(
+          userId: userId,
+          username: username,
+          role: userRow['role'] as String?,
+          module: 'Auth',
+          action: 'Failed Login',
+          status: 'Warning',
+          description: 'Failed login attempt ($newFailedCount/5)',
+        );
       }
 
       await db.update(
@@ -84,6 +105,16 @@ class UserRepository {
       where: 'id = ?',
       whereArgs: [userId],
     );
+    
+    if (changes > 0) {
+      await _auditRepo.logAction(
+        userId: userId,
+        module: 'Account',
+        action: 'Password Changed',
+        status: 'Success',
+      );
+    }
+    
     return changes > 0;
   }
 
@@ -120,5 +151,30 @@ class UserRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  // Unlock user
+  Future<void> unlockUser(int id, String adminName) async {
+    final db = await _dbHelper.database;
+    await db.update(
+      'users',
+      {'status': 'active', 'failed_login_count': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    
+    final userMaps = await db.query('users', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (userMaps.isNotEmpty) {
+      final user = userMaps.first;
+      await _auditRepo.logAction(
+        userId: id,
+        username: user['username'] as String,
+        role: user['role'] as String,
+        module: 'Security',
+        action: 'Account Unlocked',
+        status: 'Success',
+        description: 'Account unlocked by $adminName',
+      );
+    }
   }
 }

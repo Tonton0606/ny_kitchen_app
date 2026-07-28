@@ -103,17 +103,12 @@ class FoodRepository {
       whereArgs: ['active'],
       orderBy: 'id ASC',
     );
-    int defaultCatId = 1;
     if (cats.isEmpty) {
-      defaultCatId = await db.insert('food_categories', {
-        'name': 'Rice Meals',
-        'icon_url': '🍚',
-        'status': 'active',
-        'created_at': DateTime.now().toIso8601String(),
-      });
-    } else {
-      defaultCatId = cats.first['id'] as int;
+      // If no active categories, do not auto-create one. Just skip orphan repair.
+      return;
     }
+    
+    int defaultCatId = cats.first['id'] as int;
 
     // Reassign food items with NULL category_id or invalid category_id
     final validIds = cats.map((c) => c['id'] as int).toList();
@@ -214,7 +209,7 @@ class FoodRepository {
 
     int count = await db.update(
       'food_categories',
-      {'status': 'archived', 'updated_at': DateTime.now().toIso8601String()},
+      {'status': 'archived'},
       where: 'id = ?',
       whereArgs: [id],
     );

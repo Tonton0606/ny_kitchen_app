@@ -39,50 +39,71 @@ class FoodCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  FoodImage(food: food),
+                  Opacity(
+                    opacity: isAvailable ? 1.0 : 0.4,
+                    child: FoodImage(food: food),
+                  ),
                   if (isInCart)
                     Container(
                       color: AppColors.goldenYellow.withValues(alpha: 0.15),
                     ),
+                  if (!isAvailable)
+                    Container(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      child: const Center(
+                        child: Text(
+                          'Not Available',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14,
+                            backgroundColor: Colors.white70,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    food['name'],
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface,
+            Opacity(
+              opacity: isAvailable ? 1.0 : 0.5,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      food['name'],
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    food['category_name'] ?? food['category'] ?? 'Category',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 11,
+                    const SizedBox(height: 2),
+                    Text(
+                      food['category_name'] ?? food['category'] ?? 'Category',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '₱${food['price'].toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.brandRed,
-                      fontSize: 14,
+                    const SizedBox(height: 4),
+                    Text(
+                      '₱${food['price'].toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.brandRed,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

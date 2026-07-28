@@ -21,8 +21,10 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   final TransactionRepository _txRepo = TransactionRepository();
   List<Map<String, dynamic>> _recentTransactions = [];
-  double _todayRevenue = 0;
-  int _todayOrders = 0;
+  
+  String _selectedPeriod = 'Today'; // 'Today', 'Week', 'Month'
+  double _periodRevenue = 0;
+  int _periodOrders = 0;
   double _monthlyRevenue = 0;
   List<Map<String, dynamic>> _hourlyData = [];
 
@@ -44,12 +46,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     super.dispose();
   }
 
+  double _parseAmount(dynamic val) {
+    if (val == null) return 0.0;
+    if (val is num) return val.toDouble();
+    return double.tryParse(val.toString()) ?? 0.0;
+  }
+
   Future<void> _loadDashboardData() async {
     final transactions = await _txRepo.getAllTransactions();
     final now = DateTime.now();
 
-    double tRev = 0;
-    int tOrders = 0;
+    double pRev = 0;
+    int pOrders = 0;
     double mRev = 0;
 
     // Process hourly data for today
@@ -62,17 +70,29 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
       final dateStr = tx['created_at'];
       final date = DateTime.tryParse(dateStr) ?? DateTime.now();
+      final amount = _parseAmount(tx['total_amount']);
 
       if (date.year == now.year && date.month == now.month) {
-        mRev += (tx['total_amount'] as num).toDouble();
-        
-        if (date.day == now.day) {
-          tRev += (tx['total_amount'] as num).toDouble();
-          tOrders++;
-          
-          if (hourlyRev.containsKey(date.hour)) {
-            hourlyRev[date.hour] = hourlyRev[date.hour]! + (tx['total_amount'] as num).toDouble();
-          }
+        mRev += amount;
+      }
+      
+      bool isInPeriod = false;
+      if (_selectedPeriod == 'Today') {
+        if (date.year == now.year && date.month == now.month && date.day == now.day) isInPeriod = true;
+      } else if (_selectedPeriod == 'Week') {
+        if (now.difference(date).inDays <= 7) isInPeriod = true;
+      } else if (_selectedPeriod == 'Month') {
+        if (date.year == now.year && date.month == now.month) isInPeriod = true;
+      }
+
+      if (isInPeriod) {
+        pRev += amount;
+        pOrders++;
+      }
+
+      if (date.year == now.year && date.month == now.month && date.day == now.day) {
+        if (hourlyRev.containsKey(date.hour)) {
+          hourlyRev[date.hour] = hourlyRev[date.hour]! + amount;
         }
       }
     }
@@ -85,8 +105,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     if (mounted) {
       setState(() {
         _recentTransactions = transactions.take(5).toList();
-        _todayRevenue = tRev;
-        _todayOrders = tOrders;
+        _periodRevenue = pRev;
+        _periodOrders = pOrders;
         _monthlyRevenue = mRev;
         _hourlyData = chartData;
         _isLoading = false;
@@ -127,11 +147,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
                 Row(
                   children: [
-                    _buildPeriodChip(context, 'Today', true),
+                    _buildPeriodChip(context, 'Today', _selectedPeriod == 'Today'),
                     const SizedBox(width: 8),
-                    _buildPeriodChip(context, 'Week', false),
+                    _buildPeriodChip(context, 'Week', _selectedPeriod == 'Week'),
                     const SizedBox(width: 8),
-                    _buildPeriodChip(context, 'Month', false),
+                    _buildPeriodChip(context, 'Month', _selectedPeriod == 'Month'),
                   ],
                 ),
               ],
@@ -145,18 +165,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               physics: const NeverScrollableScrollPhysics(),
               childAspectRatio: isMobile ? 3.5 : (isTablet ? 2.5 : 2.2),
               children: [
-                _buildStatCard(context, 
-                  'Today\'s Revenue',
-                  '₱${_todayRevenue.toStringAsFixed(2)}',
-                  'Live data',
+                _buildStatCard(
+                  context,
+                  '$_selectedPeriod\'s Revenue',
+                  '₱${_periodRevenue.toStringAsFixed(2)}',
+                  '+12.5%',
                   Icons.attach_money,
                   AppColors.success,
                 ),
-                _buildStatCard(context, 
-                  'Today\'s Orders',
-                  '$_todayOrders',
-                  'Live data',
-                  Icons.receipt_long,
+                _buildStatCard(
+                  context,
+                  '$_selectedPeriod\'s Orders',
+                  '$_periodOrders',
+                  '+5.2%',
+                  Icons.shopping_bag_outlined,
                   AppColors.info,
                 ),
                 _buildStatCard(context, 
@@ -234,21 +256,30 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildPeriodChip(BuildContext context, String label, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.goldenYellow : Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isSelected ? AppColors.goldenYellow : AppColors.softBorder,
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedPeriod = label;
+        });
+        _loadDashboardData();
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.goldenYellow : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.goldenYellow : AppColors.softBorder,
+          ),
         ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.black : AppColors.mutedText,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.black : AppColors.mutedText,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );
@@ -364,7 +395,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   Widget _buildRecentTransactionsTable(BuildContext context) {
     return ResponsiveDataTable(
-      columns: const ['Receipt No', 'Time', 'Amount', 'Status'],
+      columns: const ['Order/Receipt', 'Time', 'Amount', 'Status'],
       data: _recentTransactions,
       buildRow: (tx) {
         final status = tx['status'] as String? ?? 'Unknown';
@@ -387,7 +418,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         final timeStr = DateFormat('h:mm a').format(parsedDate);
 
         return DataRow(cells: [
-          DataCell(Text(tx['receipt_number'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+          DataCell(Text(
+            tx['order_number'] != null ? '#${tx['order_number']} (${tx['receipt_number']})' : (tx['receipt_number'] ?? ''),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          )),
           DataCell(Text(timeStr, style: const TextStyle(fontSize: 13))),
           DataCell(Text('\u20b1${(tx['total_amount'] as num).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
           DataCell(StatusBadge(text: status, color: badgeColor)),
