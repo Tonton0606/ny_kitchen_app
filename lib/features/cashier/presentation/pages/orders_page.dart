@@ -76,7 +76,7 @@ class _OrdersPageState extends State<OrdersPage> {
   }
 
   List<Map<String, dynamic>> get _filteredOrders {
-    if (_statusFilter == 'All') return _orders;
+    if (_statusFilter == 'All') return _orders.where((o) => o['status'] != 'Served').toList();
     return _orders.where((o) => o['status'] == _statusFilter).toList();
   }
 
@@ -510,7 +510,7 @@ class _OrdersPageState extends State<OrdersPage> {
               ) {
                 final isSelected = _statusFilter == f;
                 final count = f == 'All'
-                    ? _orders.length
+                    ? _orders.where((o) => o['status'] != 'Served').length
                     : _orders.where((o) => o['status'] == f).length;
                 return Padding(
                   padding: const EdgeInsets.only(right: 12),

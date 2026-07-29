@@ -17,7 +17,7 @@ This document recaps all the features, improvements, and bug fixes applied to th
   * Replaced the standard Enable/Disable button with a dedicated **Unlock** button for locked accounts.
   * Implemented an unlock confirmation dialog which securely resets the `failed_login_count` and logs the unlock action to the audit logs.
 
-## 2. Bug Fixes & Refinements 🐛
+## 2. Bug Fixes & Refinements 🐛fluu
 * **Client-side Login Rate Limiting (`lib/features/auth/presentation/pages/login_page.dart`)**
   * Added a local rate limiter that locks the username and password fields for 30 seconds after 5 consecutive failed login attempts on the device.
   * Cleaned up the UI by removing redundant error messages on both text fields, placing a single, clean countdown message below the password input during the lockout period.
@@ -43,3 +43,17 @@ This document recaps all the features, improvements, and bug fixes applied to th
 
 ## 6. Database & Sync Fixes 🪲
 * **Status Snap-back Fix:** Repaired an issue where changing an order to "Served" would momentarily snap back to "Preparing". This was caused by the background Supabase cloud sync running at the exact same moment. The logic is now hardened against concurrency overlap.
+
+## 7. Activity Logs & Cashier Updates 📝
+* **Cashier Personal Logs:** Created a dedicated 'My Activity Logs' page for cashiers, accessible via their Account Settings, allowing them to view their personal logins and system actions.
+* **Activity Logs Excel Export:** Added full Excel (.xlsx) export capabilities to both the Admin and Cashier activity logs, matching the robust formatting of the Sales Reports.
+* **Date Range Filtering:** Upgraded the Activity Logs date filter from a simple dropdown to a comprehensive, interactive Date Range Picker.
+
+## 8. Admin Dashboard Integration 📊
+* **Real Data Integration:** Replaced the static Mock Data in the Admin Dashboard with live database queries.
+* **Top Selling Foods:** Implemented a new SQL query in `TransactionRepository` to accurately calculate and display the Top 5 Selling Foods based on actual synced `transaction_items` and `transactions`.
+* **Recent Activities:** The recent activities feed on the dashboard now correctly pulls the 4 most recent events directly from the live `AuditRepository`.
+
+## 9. Transaction History Refinements 🧾
+* **Orders Page Tabs:** Restored the "Served" tab to the Cashier Orders view.
+* **History Logic:** Updated the 'All' tab (Transaction History) to exclusively show completed/served/voided/refunded orders, completely filtering out any orders that are still "Preparing".

@@ -201,4 +201,78 @@ class ExportService {
       }
     }
   }
+
+  static Future<void> exportLogsToExcel(List<Map<String, dynamic>> logs, BuildContext context) async {
+    try {
+      final workbook = excel.Workbook();
+      final sheet = workbook.worksheets[0];
+      sheet.name = 'Activity Logs';
+      
+      // Headers
+      sheet.getRangeByName('A1').setText('Timestamp');
+      sheet.getRangeByName('B1').setText('User');
+      sheet.getRangeByName('C1').setText('Role');
+      sheet.getRangeByName('D1').setText('Module');
+      sheet.getRangeByName('E1').setText('Action');
+      sheet.getRangeByName('F1').setText('Status');
+      sheet.getRangeByName('G1').setText('Device');
+
+      final headerRange = sheet.getRangeByName('A1:G1');
+      headerRange.cellStyle.bold = true;
+
+      // Set column widths
+      sheet.setColumnWidthInPixels(1, 150);
+      sheet.setColumnWidthInPixels(2, 120);
+      sheet.setColumnWidthInPixels(3, 80);
+      sheet.setColumnWidthInPixels(4, 120);
+      sheet.setColumnWidthInPixels(5, 180);
+      sheet.setColumnWidthInPixels(6, 100);
+      sheet.setColumnWidthInPixels(7, 100);
+
+      int row = 2;
+      for (var log in logs) {
+        final dateStr = log['created_at'] ?? '';
+        String formattedDate = dateStr;
+        if (dateStr.isNotEmpty) {
+          final parsedDate = DateTime.tryParse(dateStr);
+          if (parsedDate != null) {
+            formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(parsedDate);
+          }
+        }
+
+        final role = log['role'] as String? ?? '';
+        final roleDisplay = role.isNotEmpty ? role[0].toUpperCase() + role.substring(1) : '';
+
+        sheet.getRangeByIndex(row, 1).setText(formattedDate);
+        sheet.getRangeByIndex(row, 2).setText(log['username'] ?? 'System');
+        sheet.getRangeByIndex(row, 3).setText(roleDisplay);
+        sheet.getRangeByIndex(row, 4).setText(log['module'] ?? '');
+        sheet.getRangeByIndex(row, 5).setText(log['action'] ?? '');
+        sheet.getRangeByIndex(row, 6).setText(log['status'] ?? '');
+        sheet.getRangeByIndex(row, 7).setText(log['device_info'] ?? 'Local');
+        
+        row++;
+      }
+
+      final List<int> bytes = workbook.saveAsStream();
+      workbook.dispose();
+
+      final directory = await getApplicationDocumentsDirectory();
+      final path = '${directory.path}/activity_logs_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      final file = File(path);
+      await file.writeAsBytes(bytes, flush: true);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exported Logs to Excel: $path')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to export Logs to Excel: $e')),
+        );
+      }
+    }
+  }
 }

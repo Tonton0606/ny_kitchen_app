@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../../../core/database/repositories/audit_repository.dart';
+import '../../../../../core/services/export_service.dart';
 import '../../../../../core/theme/app_colors.dart';
 
 class ActivityLogsPage extends StatefulWidget {
@@ -16,7 +18,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
 
   String _searchQuery = '';
   String _roleFilter = 'All';
-  String _dateFilter = 'All';
+  DateTimeRange? _selectedDateRange;
 
   @override
   void initState() {
@@ -27,7 +29,8 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
   Future<void> _loadLogs() async {
     final logs = await _auditRepo.getLogs(
       role: _roleFilter,
-      date: _dateFilter,
+      startDate: _selectedDateRange?.start,
+      endDate: _selectedDateRange?.end,
       search: _searchQuery,
     );
     if (mounted) {
@@ -70,7 +73,11 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                   ],
                 ),
                 ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    if (!_isLoading && filteredLogs.isNotEmpty) {
+                      ExportService.exportLogsToExcel(filteredLogs, context);
+                    }
+                  },
                   icon: const Icon(Icons.download, size: 18),
                   label: const Text('Export Logs'),
                   style: ElevatedButton.styleFrom(
@@ -123,15 +130,63 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                   },
                 ),
                 const SizedBox(width: 12),
-                _buildFilterDropdown(
-                  value: _dateFilter,
-                  icon: Icons.date_range,
-                  items: const ['All', 'Today'],
-                  onChanged: (val) {
-                    setState(() => _dateFilter = val!);
-                    _onFilterChanged();
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final picked = await showDateRangePicker(
+                      context: context,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now(),
+                      initialDateRange: _selectedDateRange,
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.light(
+                              primary: AppColors.goldenYellow,
+                              onPrimary: AppColors.darkCharcoal,
+                              surface: Colors.white,
+                              onSurface: AppColors.darkCharcoal,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _selectedDateRange = picked;
+                      });
+                      _onFilterChanged();
+                    }
                   },
+                  icon: const Icon(Icons.date_range, size: 18, color: AppColors.darkCharcoal),
+                  label: Text(
+                    _selectedDateRange != null 
+                        ? '${DateFormat('MM/dd/yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MM/dd/yyyy').format(_selectedDateRange!.end)}'
+                        : 'Filter Date',
+                    style: const TextStyle(color: AppColors.darkCharcoal, fontSize: 13),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.softBorder),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: Colors.white,
+                  ),
                 ),
+                if (_selectedDateRange != null) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.clear, color: AppColors.brandRed),
+                    onPressed: () {
+                      setState(() {
+                        _selectedDateRange = null;
+                      });
+                      _onFilterChanged();
+                    },
+                    tooltip: 'Clear Date Filter',
+                  ),
+                ],
               ],
             ),
           ),

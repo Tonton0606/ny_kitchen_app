@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../../core/database/repositories/user_repository.dart';
+import 'cashier_activity_logs_page.dart';
 
 class AccountSettingsPage extends StatefulWidget {
   const AccountSettingsPage({super.key});
@@ -84,6 +85,18 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 icon: Icons.person_outline,
                 title: 'Edit Profile',
                 onTap: () {},
+              ),
+              _buildTile(
+                icon: Icons.history,
+                title: 'My Activity Logs',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CashierActivityLogsPage(),
+                    ),
+                  );
+                },
               ),
               _buildTile(
                 icon: Icons.lock_outline,

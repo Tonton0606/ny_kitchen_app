@@ -80,6 +80,8 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     return await db.query(
       'transactions',
+      where: 'status != ?',
+      whereArgs: ['Preparing'],
       orderBy: 'created_at DESC',
     );
   }
@@ -119,15 +121,30 @@ class TransactionRepository {
 
   Future<List<Map<String, dynamic>>> getActiveTransactions() async {
     final db = await _dbHelper.database;
-    // Get transactions that are not fully served/completed or voided/refunded.
-    // Actually we want Taken, Preparing, Ready, Served to show up maybe?
-    // Let's get all that are not 'voided' or 'refunded'. 
-    // And if it's 'Served', maybe we still show it in a history or just keep it around.
+    // Get transactions that are currently active (e.g. Preparing)
+    // Served transactions are considered completed and will appear in history.
     return await db.query(
       'transactions',
       where: 'status IN (?, ?)',
       whereArgs: ['Preparing', 'Served'],
       orderBy: 'created_at ASC',
     );
+  }
+
+  Future<List<Map<String, dynamic>>> getTopSellingFoods({int limit = 5}) async {
+    final db = await _dbHelper.database;
+    final result = await db.rawQuery('''
+      SELECT 
+        ti.food_name as name, 
+        SUM(ti.quantity) as sold, 
+        SUM(ti.subtotal) as revenue
+      FROM transaction_items ti
+      JOIN transactions t ON ti.transaction_id = t.id
+      WHERE t.status NOT IN ('Voided', 'Refunded')
+      GROUP BY ti.food_name
+      ORDER BY sold DESC
+      LIMIT ?
+    ''', [limit]);
+    return result;
   }
 }

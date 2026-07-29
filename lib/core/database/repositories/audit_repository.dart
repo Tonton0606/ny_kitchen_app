@@ -28,8 +28,10 @@ class AuditRepository {
   }
 
   Future<List<Map<String, dynamic>>> getLogs({
+    int? userId,
     String? role,
-    String? date, // Format 'YYYY-MM-DD'
+    DateTime? startDate,
+    DateTime? endDate,
     String? search,
   }) async {
     final db = await _dbHelper.database;
@@ -37,16 +39,23 @@ class AuditRepository {
     String where = '1 = 1';
     List<dynamic> whereArgs = [];
 
+    if (userId != null) {
+      where += ' AND user_id = ?';
+      whereArgs.add(userId);
+    }
+
     if (role != null && role != 'All') {
       where += ' AND role = ?';
       whereArgs.add(role);
     }
 
-    if (date != null && date == 'Today') {
-      final today = DateTime.now();
-      final dateStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-      where += ' AND created_at LIKE ?';
-      whereArgs.add('$dateStr%');
+    if (startDate != null && endDate != null) {
+      final startIso = startDate.toIso8601String();
+      // Add 1 day to end date to make it inclusive up to the end of the day
+      final endIso = endDate.add(const Duration(days: 1)).toIso8601String();
+      where += ' AND created_at >= ? AND created_at < ?';
+      whereArgs.add(startIso);
+      whereArgs.add(endIso);
     }
 
     if (search != null && search.isNotEmpty) {

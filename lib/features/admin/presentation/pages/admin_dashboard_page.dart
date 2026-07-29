@@ -5,6 +5,7 @@ import '../../../../../core/utils/responsive.dart';
 import '../../../../../core/utils/mock_data.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/database/repositories/transaction_repository.dart';
+import '../../../../../core/database/repositories/audit_repository.dart';
 import '../../../shared/widgets/responsive_data_table.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/ny_watermark.dart';
@@ -20,7 +21,10 @@ class AdminDashboardPage extends StatefulWidget {
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   final TransactionRepository _txRepo = TransactionRepository();
+  final AuditRepository _auditRepo = AuditRepository();
   List<Map<String, dynamic>> _recentTransactions = [];
+  List<Map<String, dynamic>> _topSellingFoods = [];
+  List<Map<String, dynamic>> _recentLogs = [];
   
   String _selectedPeriod = 'Today'; // 'Today', 'Week', 'Month'
   double _periodRevenue = 0;
@@ -102,6 +106,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       return {'hour': hourStr, 'amount': e.value};
     }).toList();
 
+    final topFoods = await _txRepo.getTopSellingFoods(limit: 5);
+    final logs = await _auditRepo.getLogs();
+
     if (mounted) {
       setState(() {
         _recentTransactions = transactions.take(5).toList();
@@ -109,6 +116,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _periodOrders = pOrders;
         _monthlyRevenue = mRev;
         _hourlyData = chartData;
+        _topSellingFoods = topFoods;
+        _recentLogs = logs.take(4).toList();
         _isLoading = false;
       });
     }
@@ -434,13 +443,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildTopSellingList(BuildContext context) {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_topSellingFoods.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24.0),
+        child: Center(child: Text('No sales data yet.', style: TextStyle(color: AppColors.mutedText))),
+      );
+    }
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: MockData.topSelling.length,
+      itemCount: _topSellingFoods.length,
       separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
       itemBuilder: (context, index) {
-        final item = MockData.topSelling[index];
+        final item = _topSellingFoods[index];
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
@@ -452,10 +468,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   color: AppColors.goldenYellow.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
-                    '#',
-                    style: TextStyle(
+                    '${index + 1}',
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                       color: AppColors.darkCharcoal,
@@ -469,7 +485,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item['name'],
+                      item['name'] ?? 'Unknown',
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -488,7 +504,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
               ),
               Text(
-                '\u20b1${(item['revenue'] as double).toStringAsFixed(0)}',
+                '\u20b1${_parseAmount(item['revenue']).toStringAsFixed(0)}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -503,14 +519,31 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildRecentActivitiesList(BuildContext context) {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_recentLogs.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24.0),
+        child: Center(child: Text('No recent activities.', style: TextStyle(color: AppColors.mutedText))),
+      );
+    }
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: MockData.logs.length >= 4 ? 4 : MockData.logs.length,
+      itemCount: _recentLogs.length,
       separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
       itemBuilder: (context, index) {
-        final log = MockData.logs[index];
+        final log = _recentLogs[index];
         final isSuccess = log['status'] == 'Success';
+        
+        final dateStr = log['created_at'] ?? '';
+        String formattedDate = '';
+        if (dateStr.isNotEmpty) {
+          final parsedDate = DateTime.tryParse(dateStr);
+          if (parsedDate != null) {
+            formattedDate = '${parsedDate.month}/${parsedDate.day} ${parsedDate.hour.toString().padLeft(2, '0')}:${parsedDate.minute.toString().padLeft(2, '0')}';
+          }
+        }
+        
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
@@ -535,7 +568,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      log['action'],
+                      log['action'] ?? '',
                       style: const TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 13,
@@ -544,7 +577,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${log['user']} \u2022 ${log['timestamp']}',
+                      '${log['username'] ?? 'System'} \u2022 $formattedDate',
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.mutedText,
