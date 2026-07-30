@@ -16,4 +16,12 @@ class AppColors {
   static const Color softBorder = Color(0xFFE7DCCB);
   static const Color brandTint = Color(0xFFFFF3C4);
   static const Color successSurface = Color(0xFFE8F5E9);
+
+  static const LinearGradient surfaceGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [creamBackground, surfaceWhite],
+  );
+
+  static const Color cardShadow = Color(0x1A000000); // 10% black
 }

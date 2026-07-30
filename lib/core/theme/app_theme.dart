@@ -91,9 +91,9 @@ class AppTheme {
         color: colorScheme.onSurfaceVariant,
       ),
       textTheme: const TextTheme(
-        displayLarge: TextStyle(fontSize: 57, fontWeight: FontWeight.normal, height: 1.12),
-        headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, height: 1.25),
-        headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.25),
+        displayLarge: TextStyle(fontSize: 57, fontWeight: FontWeight.normal, height: 1.12, letterSpacing: 0.5),
+        headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, height: 1.25, letterSpacing: 0.5),
+        headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.25, letterSpacing: 0.5),
         titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, height: 1.27),
         titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.5),
         bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.normal, height: 1.5),

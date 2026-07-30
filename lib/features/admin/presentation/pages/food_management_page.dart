@@ -1619,9 +1619,37 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                           color: Colors.red,
                                         ),
                                         onPressed: () async {
-                                          await repo.archiveCategory(cat['id']);
-                                          _loadData();
-                                          setDialogState(() {});
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (confirmCtx) => AlertDialog(
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                              title: Row(
+                                                children: [
+                                                  Icon(Icons.warning_amber_rounded, color: AppColors.brandRed),
+                                                  const SizedBox(width: 8),
+                                                  const Text('Delete Category?'),
+                                                ],
+                                              ),
+                                              content: Text('Are you sure you want to delete "${cat['name']}"?'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(confirmCtx, false),
+                                                  child: const Text('Cancel'),
+                                                ),
+                                                FilledButton(
+                                                  style: FilledButton.styleFrom(backgroundColor: AppColors.brandRed),
+                                                  onPressed: () => Navigator.pop(confirmCtx, true),
+                                                  child: const Text('Delete'),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          
+                                          if (confirm == true) {
+                                            await repo.archiveCategory(cat['id']);
+                                            _loadData();
+                                            setDialogState(() {});
+                                          }
                                         },
                                       ),
                                     ],

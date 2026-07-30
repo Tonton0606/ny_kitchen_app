@@ -4,7 +4,17 @@ import 'package:ny_kitchen_app/core/session/session_manager.dart';
 import 'package:ny_kitchen_app/features/auth/presentation/widgets/guarded_route.dart';
 import 'package:ny_kitchen_app/features/auth/presentation/pages/login_page.dart';
 
+import 'package:ny_kitchen_app/core/database/database_helper.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 void main() {
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    FlutterSecureStorage.setMockInitialValues({});
+  });
+
   group('Authorization Guard Tests', () {
     late SessionManager sessionManager;
 

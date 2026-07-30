@@ -569,25 +569,41 @@ class _CashierHomePageState extends State<CashierHomePage> {
 
     final isWide = !isMobile && !_isOrderPanelExpanded;
 
-    return GridView.builder(
-      padding: EdgeInsets.all(isWide ? 20 : 24),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isMobile ? 2 : (isWide ? 4 : 3),
-        childAspectRatio: isWide ? 1.1 : 0.8,
-        crossAxisSpacing: isWide ? 12 : 16,
-        mainAxisSpacing: isWide ? 14 : 16,
-      ),
-      itemCount: displayedFoods.length,
-      itemBuilder: (context, index) {
-        final food = displayedFoods[index];
-        final inCart = foodIdsInCart.contains(food['id'].toString());
-        return FoodCard(
-          food: food,
-          isInCart: inCart,
-          onAdd: () => _addToOrder(food),
-          onRemove: () => _removeFoodFromCart(food['id'].toString()),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.05),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+          child: FadeTransition(
+            opacity: animation,
+            child: child,
+          ),
         );
       },
+      child: GridView.builder(
+        key: ValueKey('grid_$_selectedCategoryId\_${_searchQuery.isEmpty ? 'all' : _searchQuery}'),
+        padding: EdgeInsets.all(isWide ? 20 : 24),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: isMobile ? 2 : (isWide ? 4 : 3),
+          childAspectRatio: isWide ? 1.1 : 0.8,
+          crossAxisSpacing: isWide ? 12 : 16,
+          mainAxisSpacing: isWide ? 14 : 16,
+        ),
+        itemCount: displayedFoods.length,
+        itemBuilder: (context, index) {
+          final food = displayedFoods[index];
+          final inCart = foodIdsInCart.contains(food['id'].toString());
+          return FoodCard(
+            food: food,
+            isInCart: inCart,
+            onAdd: () => _addToOrder(food),
+            onRemove: () => _removeFoodFromCart(food['id'].toString()),
+          );
+        },
+      ),
     );
   }
 }

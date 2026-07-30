@@ -363,6 +363,15 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                     Icons.attach_money,
                     AppColors.success,
                     'Gross sales for $period',
+                    customIcon: const Text(
+                      '₱',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.success,
+                        height: 1.0,
+                      ),
+                    ),
                   ),
                   _buildSummaryCard(
                     'Average Order',
@@ -645,6 +654,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
     IconData icon,
     Color color,
     String subtitle,
+    {Widget? customIcon}
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -671,7 +681,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                   color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: customIcon ?? Icon(icon, color: color, size: 24),
               ),
               const SizedBox(width: 14),
               Expanded(

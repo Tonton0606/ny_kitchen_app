@@ -182,6 +182,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   '+12.5%',
                   Icons.attach_money,
                   AppColors.success,
+                  customIcon: const Text(
+                    '₱',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.success,
+                      height: 1.0,
+                    ),
+                  ),
                 ),
                 _buildStatCard(
                   context,
@@ -197,6 +206,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   'Live data',
                   Icons.show_chart,
                   AppColors.tertiary,
+                  customIcon: const Text(
+                    '₱',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.tertiary,
+                      height: 1.0,
+                    ),
+                  ),
                 ),
                 _buildStatCard(context, 
                   'Active Cashiers',
@@ -301,6 +319,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     String subtitle,
     IconData icon,
     Color color,
+    {Widget? customIcon}
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -317,7 +336,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 28),
+            child: customIcon ?? Icon(icon, color: color, size: 28),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -333,12 +352,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.darkCharcoal,
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+                  child: Text(
+                    value,
+                    key: ValueKey<String>(value),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkCharcoal,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),

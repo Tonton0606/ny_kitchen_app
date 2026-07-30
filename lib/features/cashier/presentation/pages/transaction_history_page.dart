@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../../core/database/repositories/audit_repository.dart';
+import '../../../../../core/session/session_manager.dart';
 import 'package:intl/intl.dart';
 
 class TransactionHistoryPage extends StatefulWidget {
@@ -457,9 +458,9 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                 Navigator.pop(ctx);
                 await _repository.updateTransactionStatus(tx['id'], 'Voided');
                 await _auditRepo.logAction(
-                  userId: 1, // System default for now
-                  username: 'admin',
-                  role: 'admin',
+                  userId: SessionManager().userId ?? 1,
+                  username: SessionManager().fullName ?? 'unknown',
+                  role: SessionManager().role ?? 'cashier',
                   module: 'Transactions',
                   action: 'Void Transaction',
                   status: 'Success',

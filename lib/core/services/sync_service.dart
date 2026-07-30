@@ -98,50 +98,56 @@ class SyncService {
       final db = await _dbHelper.database;
 
       for (String table in _tables) {
-        // 1. Fetch all local records
-        final List<Map<String, dynamic>> localData = await db.query(table);
+        try {
+          // 1. Fetch all local records
+          final List<Map<String, dynamic>> localData = await db.query(table);
 
-        if (localData.isNotEmpty) {
-          final List<Map<String, dynamic>> dataToSync = [];
-          for (var record in localData) {
-            final mutableRecord = Map<String, dynamic>.from(record);
-            if (table == 'food_items' && mutableRecord['image_path'] != null) {
-              final String imgPath = mutableRecord['image_path'];
-              // If it's a local file path (not starting with http), upload it first
-              if (!imgPath.startsWith('http') && imgPath.isNotEmpty) {
-                final publicUrl = await uploadImage(imgPath);
-                if (publicUrl != null && publicUrl.startsWith('http')) {
-                  mutableRecord['image_path'] = publicUrl;
-                  // Also update local DB with the public URL
-                  await db.update(
-                    'food_items',
-                    {'image_path': publicUrl},
-                    where: 'id = ?',
-                    whereArgs: [mutableRecord['id']],
-                  );
+          if (localData.isNotEmpty) {
+            final List<Map<String, dynamic>> dataToSync = [];
+            for (var record in localData) {
+              final mutableRecord = Map<String, dynamic>.from(record);
+              if (table == 'food_items' && mutableRecord['image_path'] != null) {
+                final String imgPath = mutableRecord['image_path'];
+                // If it's a local file path (not starting with http), upload it first
+                if (!imgPath.startsWith('http') && imgPath.isNotEmpty) {
+                  final publicUrl = await uploadImage(imgPath);
+                  if (publicUrl != null && publicUrl.startsWith('http')) {
+                    mutableRecord['image_path'] = publicUrl;
+                    // Also update local DB with the public URL
+                    await db.update(
+                      'food_items',
+                      {'image_path': publicUrl},
+                      where: 'id = ?',
+                      whereArgs: [mutableRecord['id']],
+                    );
+                  }
                 }
               }
+              if (table == 'users') {
+                mutableRecord.remove('password_hash'); // Do NOT sync password_hash to cloud
+                // face_encoding might be missing in older cloud schema, but we attempt to push it.
+              }
+              if (table == 'food_categories') {
+                mutableRecord.remove('updated_at');
+              }
+              if (table == 'transactions') {
+                // Keep order_number so it syncs to cloud
+                // mutableRecord.remove('order_number');
+                mutableRecord.remove('amount_received');
+                mutableRecord.remove('change');
+                mutableRecord.remove('void_reason');
+                mutableRecord.remove('refund_reason');
+              }
+              dataToSync.add(mutableRecord);
             }
-            if (table == 'users') {
-              mutableRecord.remove('password_hash'); // Do NOT sync password_hash to cloud
-            }
-            if (table == 'food_categories') {
-              mutableRecord.remove('updated_at');
-            }
-            if (table == 'transactions') {
-              mutableRecord.remove('order_number');
-              mutableRecord.remove('amount_received');
-              mutableRecord.remove('change');
-              mutableRecord.remove('void_reason');
-              mutableRecord.remove('refund_reason');
-            }
-            dataToSync.add(mutableRecord);
+
+            // 2. Upsert to Supabase
+            await _supabase?.from(table).upsert(dataToSync).select();
+
+            print('Synced ${dataToSync.length} records to $table.');
           }
-
-          // 2. Upsert to Supabase
-          await _supabase?.from(table).upsert(dataToSync).select();
-
-          print('Synced ${dataToSync.length} records to $table.');
+        } catch (e) {
+          print('SyncToCloud failed for table $table: $e');
         }
       }
 
@@ -157,47 +163,60 @@ class SyncService {
       final db = await _dbHelper.database;
 
       for (String table in _tables) {
-        final cloudData = await _supabase?.from(table).select();
+        try {
+          final cloudData = await _supabase?.from(table).select();
 
-        if (cloudData != null && cloudData.isNotEmpty) {
-          for (var record in cloudData) {
-            // Download images to local storage cache in background
-            if (table == 'food_items' && record['image_path'] != null) {
-              final String pathString = record['image_path'];
-              if (pathString.startsWith('http')) {
-                _downloadImageToLocal(pathString);
+          if (cloudData != null && cloudData.isNotEmpty) {
+            for (var record in cloudData) {
+              // Download images to local storage cache in background
+              if (table == 'food_items' && record['image_path'] != null) {
+                final String pathString = record['image_path'];
+                if (pathString.startsWith('http')) {
+                  _downloadImageToLocal(pathString);
+                }
               }
-            }
 
-            // Using REPLACE in SQLite handles upserts while keeping URL in local DB
-            if (table == 'transactions') {
-              final existing = await db.query('transactions', where: 'id = ?', whereArgs: [record['id']]);
-              if (existing.isNotEmpty) {
-                record['order_number'] = existing.first['order_number'];
-                record['amount_received'] = existing.first['amount_received'];
-                record['change'] = existing.first['change'];
-                record['void_reason'] = existing.first['void_reason'];
-                record['refund_reason'] = existing.first['refund_reason'];
+              // Using REPLACE in SQLite handles upserts while keeping URL in local DB
+              if (table == 'transactions') {
+                final existing = await db.query('transactions', where: 'id = ?', whereArgs: [record['id']]);
+                if (existing.isNotEmpty) {
+                  // If local transaction is "Served" but cloud is "Preparing", don't overwrite with older cloud status!
+                  final localStatus = existing.first['status'] as String;
+                  final cloudStatus = record['status'] as String;
+                  
+                  // Only allow cloud to overwrite if cloud is moving forward or local is same.
+                  if (localStatus == 'Served' && cloudStatus == 'Preparing') {
+                     record['status'] = 'Served'; // Preserve local served status
+                  }
+                  
+                  record['order_number'] = record['order_number'] ?? existing.first['order_number'];
+                  record['amount_received'] = record['amount_received'] ?? existing.first['amount_received'];
+                  record['change'] = record['change'] ?? existing.first['change'];
+                  record['void_reason'] = record['void_reason'] ?? existing.first['void_reason'];
+                  record['refund_reason'] = record['refund_reason'] ?? existing.first['refund_reason'];
+                }
               }
-            }
-            if (table == 'users') {
-              final existing = await db.query('users', where: 'id = ?', whereArgs: [record['id']]);
-              if (existing.isNotEmpty) {
-                record['face_encoding'] = existing.first['face_encoding'];
-                record['failed_login_count'] = existing.first['failed_login_count'];
-                record['password_hash'] = existing.first['password_hash'] ?? record['password_hash'];
+              if (table == 'users') {
+                final existing = await db.query('users', where: 'id = ?', whereArgs: [record['id']]);
+                if (existing.isNotEmpty) {
+                  record['face_encoding'] = record['face_encoding'] ?? existing.first['face_encoding'];
+                  record['failed_login_count'] = record['failed_login_count'] ?? existing.first['failed_login_count'];
+                  record['password_hash'] = record['password_hash'] ?? existing.first['password_hash'];
+                }
               }
-            }
 
-            await db.insert(
-              table,
-              record,
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              await db.insert(
+                table,
+                record,
+                conflictAlgorithm: ConflictAlgorithm.replace,
+              );
+            }
+            print(
+              'Synced ${cloudData.length} records from cloud to local $table.',
             );
           }
-          print(
-            'Synced ${cloudData.length} records from cloud to local $table.',
-          );
+        } catch (e) {
+          print('SyncFromCloud failed for table $table: $e');
         }
       }
     } catch (e) {

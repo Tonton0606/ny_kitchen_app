@@ -19,19 +19,28 @@ class CustomTitleBar extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: DragToMoveArea(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                alignment: Alignment.centerLeft,
-                child:
-                    title ??
-                    const Text(
-                      'N.Y Kitchen POS',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+            child: GestureDetector(
+              onDoubleTap: () async {
+                if (await windowManager.isMaximized()) {
+                  windowManager.unmaximize();
+                } else {
+                  windowManager.maximize();
+                }
+              },
+              child: DragToMoveArea(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  alignment: Alignment.centerLeft,
+                  child:
+                      title ??
+                      const Text(
+                        'N.Y Kitchen POS',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
+                ),
               ),
             ),
           ),
