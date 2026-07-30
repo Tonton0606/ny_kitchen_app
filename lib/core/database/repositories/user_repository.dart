@@ -177,4 +177,36 @@ class UserRepository {
       );
     }
   }
+
+  // Update face encoding
+  Future<void> updateFaceEncoding(int userId, String encodingJson) async {
+    final db = await _dbHelper.database;
+    final encryptedEncoding = await SecurityUtils.encryptFaceEncoding(encodingJson);
+    await db.update(
+      'users',
+      {'face_encoding': encryptedEncoding},
+      where: 'id = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  // Get users with face encoding
+  Future<List<Map<String, dynamic>>> getUsersWithFaceEncoding() async {
+    final db = await _dbHelper.database;
+    final users = await db.query(
+      'users',
+      where: 'status = ? AND face_encoding IS NOT NULL',
+      whereArgs: ['active'],
+    );
+    
+    // Decrypt the face encodings
+    final decryptedUsers = await Future.wait(users.map((user) async {
+      final mutableUser = Map<String, dynamic>.from(user);
+      if (mutableUser['face_encoding'] != null) {
+        mutableUser['face_encoding'] = await SecurityUtils.decryptFaceEncoding(mutableUser['face_encoding'] as String);
+      }
+      return mutableUser;
+    }));
+    return decryptedUsers;
+  }
 }

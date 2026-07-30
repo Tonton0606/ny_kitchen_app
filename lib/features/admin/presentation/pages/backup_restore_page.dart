@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/database/repositories/backup_repository.dart';
 
@@ -17,28 +19,31 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
   Future<void> _handleExport() async {
     setState(() => _isExporting = true);
     
-    final path = await _backupRepo.exportDatabase();
+    final file = await _backupRepo.exportDatabase();
     
     if (mounted) {
       setState(() {
         _isExporting = false;
-        if (path != null) {
-          _lastBackupPath = path;
+        if (file != null) {
+          _lastBackupPath = file.path;
         }
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            path != null 
-                ? 'Database successfully backed up!' 
-                : 'Failed to backup database.',
-            style: const TextStyle(color: Colors.white),
+      if (file != null) {
+        // Trigger the cross-platform native share dialog
+        await Share.shareXFiles(
+          [XFile(file.path)], 
+          text: 'NY Kitchen MySQL Database Backup'
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to backup database.', style: TextStyle(color: Colors.white)),
+            backgroundColor: AppColors.brandRed,
+            behavior: SnackBarBehavior.floating,
           ),
-          backgroundColor: path != null ? AppColors.success : AppColors.brandRed,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+        );
+      }
     }
   }
 

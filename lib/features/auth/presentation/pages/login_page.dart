@@ -7,6 +7,7 @@ import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../admin/presentation/pages/admin_shell.dart';
 import '../../../cashier/presentation/pages/cashier_shell.dart';
+import '../widgets/face_login_sheet.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -385,6 +386,35 @@ class _LoginPageState extends State<LoginPage>
                           fontWeight: FontWeight.w700,
                         ),
                       ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 56,
+            child: OutlinedButton.icon(
+              onPressed: (_isLoading || _isLockedOut) ? null : () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => const FaceLoginSheet(),
+                );
+              },
+              icon: const Icon(Icons.face, color: AppColors.darkCharcoal),
+              label: const Text(
+                'Login with Face',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkCharcoal,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.goldenYellow, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
           ),

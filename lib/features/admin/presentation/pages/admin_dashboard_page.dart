@@ -9,6 +9,7 @@ import '../../../../../core/database/repositories/audit_repository.dart';
 import '../../../shared/widgets/responsive_data_table.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/ny_watermark.dart';
+import '../../../shared/widgets/food_image.dart';
 import '../shared/widgets/sales_chart.dart';
 import 'package:intl/intl.dart';
 
@@ -457,28 +458,39 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
       itemBuilder: (context, index) {
         final item = _topSellingFoods[index];
+        final imagePath = item['image_path'] as String? ?? '';
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.goldenYellow.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Text(
-                    '${index + 1}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: AppColors.darkCharcoal,
+              if (imagePath.isNotEmpty)
+                SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: FoodImage(food: item, height: 44),
+                  ),
+                )
+              else
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.goldenYellow.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: AppColors.darkCharcoal,
+                      ),
                     ),
                   ),
                 ),
-              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

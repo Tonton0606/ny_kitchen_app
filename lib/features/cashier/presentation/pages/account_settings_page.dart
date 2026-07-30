@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../../core/database/repositories/user_repository.dart';
+import '../../../auth/presentation/pages/face_registration_page.dart';
 import 'cashier_activity_logs_page.dart';
 
 class AccountSettingsPage extends StatefulWidget {
@@ -96,6 +97,21 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       builder: (context) => const CashierActivityLogsPage(),
                     ),
                   );
+                },
+              ),
+              _buildTile(
+                icon: Icons.face_retouching_natural,
+                title: 'Register Face Login',
+                onTap: () {
+                  final userId = SessionManager().userId;
+                  if (userId != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FaceRegistrationPage(userId: userId),
+                      ),
+                    );
+                  }
                 },
               ),
               _buildTile(

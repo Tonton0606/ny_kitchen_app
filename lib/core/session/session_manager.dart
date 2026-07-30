@@ -29,6 +29,9 @@ class SessionManager {
   // --- Session Expiration Logic ---
   DateTime? _lastActive;
   static const Duration sessionTimeout = Duration(minutes: 30);
+  
+  // For testing purposes
+  set lastActive(DateTime? time) => _lastActive = time;
 
   void updateActivity() {
     _lastActive = DateTime.now();

@@ -6,12 +6,17 @@ import '../utils/security_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "ny_kitchen.db";
-  static const _databaseVersion = 6;
+  static const _databaseVersion = 7;
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
 
   static Database? _database;
+
+  // Allows injecting an in-memory database for testing
+  static void setMockDatabase(Database mockDb) {
+    _database = mockDb;
+  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -94,6 +99,11 @@ class DatabaseHelper {
         await db.execute('ALTER TABLE transactions ADD COLUMN order_number INTEGER');
       } catch (_) {}
     }
+    if (oldVersion < 7) {
+      try {
+        await db.execute('ALTER TABLE users ADD COLUMN face_encoding TEXT');
+      } catch (_) {}
+    }
   }
 
   Future _onConfigure(Database db) async {
@@ -113,6 +123,7 @@ class DatabaseHelper {
         status TEXT NOT NULL,
         last_login TEXT,
         failed_login_count INTEGER DEFAULT 0,
+        face_encoding TEXT,
         created_at TEXT NOT NULL
       )
     ''');

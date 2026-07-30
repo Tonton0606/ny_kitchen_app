@@ -7,7 +7,14 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
 class SyncService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  SupabaseClient? get _supabase {
+    try {
+      return Supabase.instance.client;
+    } catch (_) {
+      return null;
+    }
+  }
+  
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   // List of tables to sync in order of dependency (parents first)
@@ -51,7 +58,7 @@ class SyncService {
 
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${path.basename(localPath)}';
-      await _supabase.storage
+      await _supabase?.storage
           .from('food_images')
           .upload(
             fileName,
@@ -62,7 +69,7 @@ class SyncService {
             ),
           );
 
-      return _supabase.storage.from('food_images').getPublicUrl(fileName);
+      return _supabase?.storage.from('food_images').getPublicUrl(fileName);
     } catch (e) {
       print('Image upload failed: $e');
       return localPath; // fallback to local path if upload fails
@@ -115,6 +122,9 @@ class SyncService {
                 }
               }
             }
+            if (table == 'users') {
+              mutableRecord.remove('password_hash'); // Do NOT sync password_hash to cloud
+            }
             if (table == 'food_categories') {
               mutableRecord.remove('updated_at');
             }
@@ -129,7 +139,7 @@ class SyncService {
           }
 
           // 2. Upsert to Supabase
-          await _supabase.from(table).upsert(dataToSync).select();
+          await _supabase?.from(table).upsert(dataToSync).select();
 
           print('Synced ${dataToSync.length} records to $table.');
         }
@@ -147,9 +157,9 @@ class SyncService {
       final db = await _dbHelper.database;
 
       for (String table in _tables) {
-        final cloudData = await _supabase.from(table).select();
+        final cloudData = await _supabase?.from(table).select();
 
-        if (cloudData.isNotEmpty) {
+        if (cloudData != null && cloudData.isNotEmpty) {
           for (var record in cloudData) {
             // Download images to local storage cache in background
             if (table == 'food_items' && record['image_path'] != null) {
@@ -168,6 +178,14 @@ class SyncService {
                 record['change'] = existing.first['change'];
                 record['void_reason'] = existing.first['void_reason'];
                 record['refund_reason'] = existing.first['refund_reason'];
+              }
+            }
+            if (table == 'users') {
+              final existing = await db.query('users', where: 'id = ?', whereArgs: [record['id']]);
+              if (existing.isNotEmpty) {
+                record['face_encoding'] = existing.first['face_encoding'];
+                record['failed_login_count'] = existing.first['failed_login_count'];
+                record['password_hash'] = existing.first['password_hash'] ?? record['password_hash'];
               }
             }
 

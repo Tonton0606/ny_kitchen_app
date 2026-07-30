@@ -11,29 +11,94 @@ import 'core/session/session_manager.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/shared/widgets/custom_title_bar.dart';
 import 'core/services/sync_service.dart';
+import 'package:flutter/foundation.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Set up global error boundary
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+  };
+  
+  PlatformDispatcher.instance.onError = (error, stack) {
+    print('Async Error Caught: $error');
+    return true; // Prevent app crash
+  };
+  
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            const Text('Something went wrong', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(details.exceptionAsString(), textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                // Restart app logic or just return to home
+                if (navigatorKey.currentState != null) {
+                  navigatorKey.currentState!.pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                    (route) => false,
+                  );
+                }
+              },
+              child: const Text('Restart App'),
+            ),
+          ],
+        ),
+      ),
+    );
+  };
   if (Platform.isAndroid || Platform.isIOS) {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
   
   // Load environment variables
-  await dotenv.load(fileName: ".env");
+  Map<String, String> envVars = {};
+  try {
+    await dotenv.load(fileName: ".env");
+    envVars = dotenv.env;
+  } catch (e) {
+    print('Failed to load .env from assets: $e');
+    try {
+      final file = File('.env');
+      if (await file.exists()) {
+        final lines = await file.readAsLines();
+        for (var line in lines) {
+          if (line.trim().isEmpty || line.startsWith('#')) continue;
+          final idx = line.indexOf('=');
+          if (idx != -1) {
+            final key = line.substring(0, idx).trim();
+            final value = line.substring(idx + 1).trim();
+            envVars[key] = value;
+          }
+        }
+      }
+    } catch (_) {}
+  }
 
-  // Initialize Supabase
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-    headers: {
-      'x-device-secret': dotenv.env['SUPABASE_DEVICE_SECRET'] ?? '',
-    },
-  );
+  // Initialize Supabase if credentials exist
+  if (envVars.containsKey('SUPABASE_URL') && envVars.containsKey('SUPABASE_ANON_KEY')) {
+    await Supabase.initialize(
+      url: envVars['SUPABASE_URL']!,
+      anonKey: envVars['SUPABASE_ANON_KEY']!,
+      headers: {
+        'x-device-secret': envVars['SUPABASE_DEVICE_SECRET'] ?? '',
+      },
+    );
 
-  // Initial fetch and periodic auto-sync from cloud
-  final syncService = SyncService();
-  syncService.startAutomaticSync(intervalSeconds: 10);
-  print("Started automatic cloud synchronization (every 10 seconds)");
+    // Initial fetch and periodic auto-sync from cloud
+    final syncService = SyncService();
+    syncService.startAutomaticSync(intervalSeconds: 10);
+    print("Started automatic cloud synchronization (every 10 seconds)");
+  } else {
+    print("WARNING: Supabase credentials not found. Cloud sync is disabled.");
+  }
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();

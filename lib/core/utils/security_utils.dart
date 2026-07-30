@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:pointycastle/export.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecurityUtils {
   static const int _iterations = 10000;
@@ -45,6 +46,86 @@ class SecurityUtils {
       return newHash == storedHash;
     } catch (_) {
       return false; // Fallback fail
+    }
+  }
+
+  static const String _keyStorageKey = 'ny_kitchen_aes_key';
+  static const String _ivStorageKey = 'ny_kitchen_aes_iv';
+  static final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  static Future<Map<String, Uint8List>> _getEncryptionKeys() async {
+    String? storedKeyStr = await _secureStorage.read(key: _keyStorageKey);
+    String? storedIvStr = await _secureStorage.read(key: _ivStorageKey);
+
+    Uint8List keyBytes;
+    Uint8List ivBytes;
+
+    if (storedKeyStr == null || storedIvStr == null) {
+      // Generate new secure random keys
+      final random = Random.secure();
+      keyBytes = Uint8List(32);
+      ivBytes = Uint8List(16);
+      for (int i = 0; i < 32; i++) keyBytes[i] = random.nextInt(256);
+      for (int i = 0; i < 16; i++) ivBytes[i] = random.nextInt(256);
+
+      // Save them securely
+      await _secureStorage.write(key: _keyStorageKey, value: base64.encode(keyBytes));
+      await _secureStorage.write(key: _ivStorageKey, value: base64.encode(ivBytes));
+    } else {
+      keyBytes = base64.decode(storedKeyStr);
+      ivBytes = base64.decode(storedIvStr);
+    }
+
+    return {'key': keyBytes, 'iv': ivBytes};
+  }
+
+  /// Encrypts a string (e.g. face encoding JSON) using AES-CBC with PKCS7 padding
+  static Future<String> encryptFaceEncoding(String plainText) async {
+    final keys = await _getEncryptionKeys();
+    final cipher = CBCBlockCipher(AESEngine())
+      ..init(true, ParametersWithIV(KeyParameter(keys['key']!), keys['iv']!));
+
+    final plainTextBytes = utf8.encode(plainText);
+    
+    // Add PKCS7 padding
+    final paddingLength = 16 - (plainTextBytes.length % 16);
+    final paddedBytes = Uint8List(plainTextBytes.length + paddingLength);
+    paddedBytes.setAll(0, plainTextBytes);
+    for (int i = 0; i < paddingLength; i++) {
+      paddedBytes[plainTextBytes.length + i] = paddingLength;
+    }
+
+    final cipherText = Uint8List(paddedBytes.length);
+    for (int offset = 0; offset < paddedBytes.length; offset += 16) {
+      cipher.processBlock(paddedBytes, offset, cipherText, offset);
+    }
+    
+    return base64.encode(cipherText);
+  }
+
+  /// Decrypts a base64 encoded AES-CBC cipher text
+  static Future<String> decryptFaceEncoding(String cipherTextBase64) async {
+    try {
+      final keys = await _getEncryptionKeys();
+      final cipher = CBCBlockCipher(AESEngine())
+        ..init(false, ParametersWithIV(KeyParameter(keys['key']!), keys['iv']!));
+        
+      final cipherText = base64.decode(cipherTextBase64);
+      final paddedBytes = Uint8List(cipherText.length);
+      
+      for (int offset = 0; offset < cipherText.length; offset += 16) {
+        cipher.processBlock(cipherText, offset, paddedBytes, offset);
+      }
+      
+      // Remove padding
+      final paddingLength = paddedBytes.last;
+      if (paddingLength > 0 && paddingLength <= 16) {
+        return utf8.decode(paddedBytes.sublist(0, paddedBytes.length - paddingLength));
+      }
+      return utf8.decode(paddedBytes);
+    } catch (e) {
+      // Fallback
+      return cipherTextBase64;
     }
   }
 }

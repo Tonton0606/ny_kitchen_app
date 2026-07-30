@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/session/session_manager.dart';
+import '../../../auth/presentation/pages/face_registration_page.dart';
 
 class AdminAccountSettingsPage extends StatefulWidget {
   const AdminAccountSettingsPage({super.key});
@@ -147,6 +148,30 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.goldenYellow,
                           foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          final userId = SessionManager().userId;
+                          if (userId != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FaceRegistrationPage(userId: userId),
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.face_retouching_natural, size: 20, color: AppColors.darkCharcoal),
+                        label: const Text('Register Face Login', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal)),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.goldenYellow, width: 2),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),

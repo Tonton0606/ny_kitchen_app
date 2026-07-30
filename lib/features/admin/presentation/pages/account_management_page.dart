@@ -962,23 +962,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         ),
                         obscureText: true,
                       ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: _addRole,
-                        decoration: const InputDecoration(
-                          labelText: 'Role',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                          DropdownMenuItem(value: 'cashier', child: Text('Cashier')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) setState(() => _addRole = val);
-                        },
-                      ),
+                      // Role is automatically set to 'cashier'
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,

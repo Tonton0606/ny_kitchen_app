@@ -137,11 +137,13 @@ class TransactionRepository {
       SELECT 
         ti.food_name as name, 
         SUM(ti.quantity) as sold, 
-        SUM(ti.subtotal) as revenue
+        SUM(ti.subtotal) as revenue,
+        fi.image_path
       FROM transaction_items ti
       JOIN transactions t ON ti.transaction_id = t.id
+      LEFT JOIN food_items fi ON ti.food_item_id = fi.id
       WHERE t.status NOT IN ('Voided', 'Refunded')
-      GROUP BY ti.food_name
+      GROUP BY ti.food_name, fi.image_path
       ORDER BY sold DESC
       LIMIT ?
     ''', [limit]);

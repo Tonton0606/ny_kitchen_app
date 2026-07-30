@@ -100,21 +100,15 @@ class _AdminNavRailState extends State<AdminNavRail> {
             child: Row(
               mainAxisAlignment: widget.isExpanded ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
               children: [
-                GestureDetector(
-                  onTap: widget.onSettingsTap,
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: CircleAvatar(
-                      radius: 22,
-                      backgroundColor: AppColors.goldenYellow,
-                      child: const Text(
-                        'NY',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: AppColors.goldenYellow,
+                  child: const Text(
+                    'NY',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
                     ),
                   ),
                 ),

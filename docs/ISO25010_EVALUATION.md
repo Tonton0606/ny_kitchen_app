@@ -1,67 +1,74 @@
-﻿# docs/ISO25010_EVALUATION.md
-# N.Y Kitchen — ISO/IEC 25010 Quality Evaluation
+# docs/ISO25010_EVALUATION.md
+# N.Y Kitchen — ISO/IEC 25010:2023 Quality Evaluation
 
 > Source of Truth: PROJECT_BLUEPRINT.md Section 13.4
 
 ---
 
 ## Purpose
-Evaluate N.Y Kitchen against the ISO/IEC 25010 Software Quality Model.
+Evaluate N.Y Kitchen against the updated ISO/IEC 25010:2023 Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model.
 
 ---
 
 ## Quality Characteristics
 
 ### Functional Suitability
-- [ ] Ordering: All food items can be added to order and checked out
-- [ ] Sales: Transactions are saved accurately
-- [ ] Receipt Printing: Receipts are generated correctly after every transaction
-- [ ] Reports: All report types generate correct data
-- [ ] User Management: All CRUD operations work correctly
+*Completeness, correctness, and appropriateness of functions.*
+- [ ] Ordering: All food items can be added to order and checked out (Functional completeness)
+- [ ] Sales: Transactions are saved accurately (Functional correctness)
+- [ ] Roles: Features accurately facilitate intended tasks for Admin and Cashier (Functional appropriateness)
 
 ### Performance Efficiency
-- [ ] Login completes within 2 seconds
-- [ ] Transaction save completes within 1 second
-- [ ] Menu loading completes within 2 seconds
-- [ ] Report generation completes within 5 seconds
+*Time behavior, resource utilization, and capacity.*
+- [ ] Login completes within 2 seconds (Time behavior)
+- [ ] Menu loading completes within 2 seconds (Time behavior)
+- [ ] Works efficiently with limited device resources (Resource utilization)
 
 ### Compatibility
-- [ ] Functions correctly on Android Phone
-- [ ] Functions correctly on Android Tablet
-- [ ] Functions correctly on Windows Desktop
-- [ ] Consistent behavior across all platforms
+*Co-existence and interoperability.*
+- [ ] Functions correctly alongside other apps on Android (Co-existence)
+- [ ] Database structures can interoperate for future backup sync (Interoperability)
 
-### Usability (Interaction Capability)
-- [ ] Interface is usable without training for basic operations
-- [ ] Touch targets are at least 48dp on mobile
-- [ ] Error messages are user-friendly
-- [ ] Navigation is consistent and predictable
+### Interaction Capability
+*Appropriateness recognizability, learnability, operability, user error protection, user engagement.*
+- [ ] Interface is usable without training for basic operations (Learnability)
+- [ ] Navigation is consistent and predictable (Operability)
+- [ ] Touch targets are at least 48dp on mobile (Operability)
+- [ ] Prevent cashiers from accidental voiding (User error protection)
+- [ ] Modern UI/UX encourages continued interaction (User engagement)
 
 ### Reliability
-- [ ] No data loss on unexpected errors
-- [ ] All transactions are preserved
-- [ ] Application recovers gracefully from errors
-- [ ] Works without internet connection
+*Faultlessness, availability, fault tolerance, recoverability.*
+- [ ] No data loss on unexpected errors (Fault tolerance)
+- [ ] Works 100% offline (Availability)
+- [ ] Application recovers gracefully from errors and can restore backups (Recoverability)
 
 ### Security
-- [ ] Authentication is enforced
-- [ ] Authorization is enforced at logic layer
-- [ ] Passwords are hashed
-- [ ] Activity logs are immutable
-- [ ] Input is validated
+*Confidentiality, integrity, non-repudiation, accountability, authenticity, resistance.*
+- [ ] Passwords are hashed and sessions are managed (Confidentiality & Authenticity)
+- [ ] Activity logs are immutable (Integrity & Non-repudiation)
+- [ ] Every action is logged with user and timestamp (Accountability)
+- [ ] Input is validated to prevent injection (Resistance)
 
 ### Maintainability
-- [ ] Feature-first architecture is followed
-- [ ] No duplicated logic or widgets
-- [ ] Architecture decisions are documented
-- [ ] Documentation is consistent with implementation
+*Modularity, reusability, analysability, modifiability, testability.*
+- [ ] Feature-first architecture is followed (Modularity)
+- [ ] No duplicated logic or widgets (Reusability)
+- [ ] High widget test coverage (Testability)
+- [ ] Architecture decisions are documented for easy updates (Analysability)
 
-### Portability/Flexibility
-- [ ] Single Flutter codebase supports Android and Windows
-- [ ] No platform-specific code without abstraction
+### Flexibility
+*Adaptability, scalability, installability, replaceability.*
+- [ ] Single Flutter codebase supports Android and Windows (Adaptability)
+- [ ] Easily installed via standard package formats (Installability)
+
+### Safety
+*Operational constraint, risk identification, fail safe, hazard warning, safe integration.*
+- [ ] System reverts to safe state on critical errors (Fail safe)
+- [ ] Warning dialogues on destructive actions like deletion or voiding (Hazard warning)
 
 ---
 
 ## TODO
-- [ ] Conduct formal ISO/IEC 25010 evaluation during Phase 10
+- [ ] Conduct formal ISO/IEC 25010:2023 evaluation during Phase 10
 - [ ] Document evaluation score and identified gaps
