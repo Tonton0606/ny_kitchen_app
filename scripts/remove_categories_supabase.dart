@@ -7,9 +7,29 @@ void main() async {
     'float', 'soup', 'drinks', 'Meow', 'lalala', 'specials', 'Rice Meals', 'Snacks'
   ];
 
-  // Update Supabase via REST API
-  final String supabaseUrl = 'https://wiuttklnxkagrvydekvt.supabase.co';
-  final String anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpdXR0a2xueGthZ3J2eWRla3Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MDIzMzksImV4cCI6MjEwMDA3ODMzOX0.74wRSujtW-8DfMOVJVfI3LMnLtj1DFH2AtzMQzq88UE';
+  // Retrieve Supabase credentials dynamically from environment or local .env
+  String supabaseUrl = Platform.environment['SUPABASE_URL'] ?? '';
+  String anonKey = Platform.environment['SUPABASE_ANON_KEY'] ?? '';
+
+  // Fallback: read from local .env if present and environment variables not set
+  final envFile = File('.env');
+  if ((supabaseUrl.isEmpty || anonKey.isEmpty) && envFile.existsSync()) {
+    for (final line in envFile.readAsLinesSync()) {
+      final trimmed = line.trim();
+      if (trimmed.startsWith('#') || !trimmed.contains('=')) continue;
+      final idx = trimmed.indexOf('=');
+      final key = trimmed.substring(0, idx).trim();
+      final val = trimmed.substring(idx + 1).trim();
+      if (key == 'SUPABASE_URL' && supabaseUrl.isEmpty) supabaseUrl = val;
+      if (key == 'SUPABASE_ANON_KEY' && anonKey.isEmpty) anonKey = val;
+    }
+  }
+
+  if (supabaseUrl.isEmpty || anonKey.isEmpty) {
+    print('ERROR: SUPABASE_URL or SUPABASE_ANON_KEY not configured.');
+    print('Please set them in your environment or in a local .env file.');
+    exit(1);
+  }
 
   final inList = categoriesToRemove.map((c) => '"$c"').join(',');
   final url = Uri.parse('$supabaseUrl/rest/v1/food_categories?name=in.($inList)');
