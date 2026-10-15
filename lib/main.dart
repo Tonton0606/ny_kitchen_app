@@ -140,8 +140,9 @@ class _NYKitchenAppState extends State<NYKitchenApp> {
     // Check for session expiration every 1 minute
     _sessionTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
       if (SessionManager().currentUser != null && SessionManager().isSessionExpired()) {
-        SessionManager().clearSession();
+        SessionManager().clearSession(reason: 'Session expired due to inactivity');
         if (navigatorKey.currentState != null) {
+
           navigatorKey.currentState!.pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const LoginPage()),
             (route) => false,

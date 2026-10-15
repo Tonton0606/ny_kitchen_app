@@ -45,6 +45,17 @@ class UserRepository {
         whereArgs: [userId],
       );
       
+      // Audit successful login (Gap 7)
+      await _auditRepo.logAction(
+        userId: userId,
+        username: username,
+        role: userRow['role'] as String?,
+        module: 'Auth',
+        action: 'Login Successful',
+        status: 'Success',
+        description: 'User logged in successfully',
+      );
+
       // Re-fetch the updated user to return
       final updatedMaps = await db.query(
         'users',
@@ -53,6 +64,7 @@ class UserRepository {
         limit: 1,
       );
       return updatedMaps.first;
+
     } else {
       // Failed login attempt
       final newFailedCount = failedAttempts + 1;
@@ -125,33 +137,75 @@ class UserRepository {
   }
 
   // Create a new user
-  Future<int> createUser(Map<String, dynamic> user) async {
+  Future<int> createUser(Map<String, dynamic> user, {int? adminId, String? adminUsername}) async {
     final db = await _dbHelper.database;
     user['created_at'] = DateTime.now().toIso8601String();
-    return await db.insert('users', user, conflictAlgorithm: ConflictAlgorithm.abort);
+    final newId = await db.insert('users', user, conflictAlgorithm: ConflictAlgorithm.abort);
+    
+    // Audit user creation (Gap 9) - never log passwords or hashes
+    await _auditRepo.logAction(
+      userId: adminId,
+      username: adminUsername ?? 'Admin',
+      role: 'admin',
+      module: 'User Management',
+      action: 'User Created',
+      status: 'Success',
+      description: 'Created user "${user['username']}" with role "${user['role']}"',
+    );
+    
+    return newId;
   }
 
   // Update a user
-  Future<int> updateUser(int id, Map<String, dynamic> user) async {
+  Future<int> updateUser(int id, Map<String, dynamic> user, {int? adminId, String? adminUsername}) async {
     final db = await _dbHelper.database;
-    return await db.update(
+    final count = await db.update(
       'users',
       user,
       where: 'id = ?',
       whereArgs: [id],
     );
+
+    // Audit user update (Gap 9) - sanitize fields, never log password_hash or face_encoding
+    final sanitizedKeys = user.keys.where((k) => k != 'password_hash' && k != 'face_encoding').join(', ');
+    await _auditRepo.logAction(
+      userId: adminId,
+      username: adminUsername ?? 'Admin',
+      role: 'admin',
+      module: 'User Management',
+      action: 'User Updated',
+      status: 'Success',
+      description: 'Updated user ID $id (modified fields: $sanitizedKeys)',
+    );
+
+
+    return count;
   }
 
   // Delete/Disable a user (We prefer changing status to 'inactive' over hard delete)
-  Future<int> disableUser(int id) async {
+  Future<int> disableUser(int id, {int? adminId, String? adminUsername}) async {
     final db = await _dbHelper.database;
-    return await db.update(
+    final count = await db.update(
       'users',
       {'status': 'inactive'},
       where: 'id = ?',
       whereArgs: [id],
     );
+
+    // Audit user disable (Gap 9)
+    await _auditRepo.logAction(
+      userId: adminId,
+      username: adminUsername ?? 'Admin',
+      role: 'admin',
+      module: 'User Management',
+      action: 'User Disabled',
+      status: 'Success',
+      description: 'Disabled user account ID $id',
+    );
+
+    return count;
   }
+
 
   // Unlock user
   Future<void> unlockUser(int id, String adminName) async {

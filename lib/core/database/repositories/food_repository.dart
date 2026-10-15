@@ -1,10 +1,12 @@
 import 'package:sqflite/sqflite.dart';
 import '../database_helper.dart';
 import '../../services/sync_service.dart';
+import 'audit_repository.dart';
 
 class FoodRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final SyncService _syncService = SyncService();
+  final AuditRepository _auditRepo = AuditRepository();
 
   // Retrieve all active and available food items
   Future<List<Map<String, dynamic>>> getAvailableFoodItems() async {
@@ -32,7 +34,7 @@ class FoodRepository {
   }
 
   // Create a new food item
-  Future<int> insertFoodItem(Map<String, dynamic> foodItem) async {
+  Future<int> insertFoodItem(Map<String, dynamic> foodItem, {int? adminId, String? adminUsername}) async {
     final db = await _dbHelper.database;
     foodItem['created_at'] = DateTime.now().toIso8601String();
     if (foodItem['image_path'] != null) {
@@ -46,11 +48,23 @@ class FoodRepository {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
     await _syncService.syncToCloud();
+
+    // Audit food creation (Gap 9)
+    await _auditRepo.logAction(
+      userId: adminId,
+      username: adminUsername ?? 'Admin',
+      role: 'admin',
+      module: 'Food Management',
+      action: 'Food Created',
+      status: 'Success',
+      description: 'Created food item "${foodItem['name']}" (Price: ${foodItem['price']})',
+    );
+
     return id;
   }
 
   // Update an existing food item
-  Future<int> updateFoodItem(int id, Map<String, dynamic> foodItem) async {
+  Future<int> updateFoodItem(int id, Map<String, dynamic> foodItem, {int? adminId, String? adminUsername}) async {
     final db = await _dbHelper.database;
     foodItem['updated_at'] = DateTime.now().toIso8601String();
     if (foodItem['image_path'] != null) {
@@ -65,11 +79,23 @@ class FoodRepository {
       whereArgs: [id],
     );
     await _syncService.syncToCloud();
+
+    // Audit food update (Gap 9)
+    await _auditRepo.logAction(
+      userId: adminId,
+      username: adminUsername ?? 'Admin',
+      role: 'admin',
+      module: 'Food Management',
+      action: 'Food Updated',
+      status: 'Success',
+      description: 'Updated food item ID $id (${foodItem['name'] ?? 'Fields: ${foodItem.keys.join(', ')}'})',
+    );
+
     return count;
   }
 
   // Delete/Archive a food item (We prefer archiving to maintain receipt history integrity)
-  Future<int> archiveFoodItem(int id) async {
+  Future<int> archiveFoodItem(int id, {int? adminId, String? adminUsername}) async {
     final db = await _dbHelper.database;
     int count = await db.update(
       'food_items',
@@ -78,8 +104,21 @@ class FoodRepository {
       whereArgs: [id],
     );
     await _syncService.syncToCloud();
+
+    // Audit food archive (Gap 9)
+    await _auditRepo.logAction(
+      userId: adminId,
+      username: adminUsername ?? 'Admin',
+      role: 'admin',
+      module: 'Food Management',
+      action: 'Food Archived',
+      status: 'Success',
+      description: 'Archived food item ID $id',
+    );
+
     return count;
   }
+
 
   // --- Category Management --- //
 

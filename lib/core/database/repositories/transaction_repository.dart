@@ -1,9 +1,11 @@
 import '../database_helper.dart';
 import '../../services/sync_service.dart';
+import 'audit_repository.dart';
 
 class TransactionRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final SyncService _syncService = SyncService();
+  final AuditRepository _auditRepo = AuditRepository();
 
   Future<Map<String, dynamic>> createTransaction({
     required int userId,
@@ -14,16 +16,20 @@ class TransactionRepository {
     required double change,
     required List<Map<String, dynamic>> items,
     int? customOrderNumber,
+    String? username,
+    String? role,
   }) async {
     final db = await _dbHelper.database;
     int transactionId = 0;
     int orderNumber = 0;
+    String finalReceiptNumber = '';
 
     await db.transaction((txn) async {
       final now = DateTime.now();
       final dateStr = '${now.year.toString().substring(2)}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
       final timeStr = '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
       final receiptNumber = '$dateStr-$timeStr';
+      finalReceiptNumber = receiptNumber;
 
       // Calculate daily order number
       if (customOrderNumber != null) {
@@ -62,6 +68,17 @@ class TransactionRepository {
       }
     });
 
+    // Audit transaction creation (Gap 9)
+    await _auditRepo.logAction(
+      userId: userId,
+      username: username ?? 'User $userId',
+      role: role ?? 'cashier',
+      module: 'Transactions',
+      action: 'Transaction Created',
+      status: 'Success',
+      description: 'Order #$orderNumber (Receipt: $finalReceiptNumber, Total: ₱${totalAmount.toStringAsFixed(2)}, Method: $paymentMethod)',
+    );
+
     await _syncService.syncToCloud();
     return {'transaction_id': transactionId, 'order_number': orderNumber};
   }
@@ -95,7 +112,7 @@ class TransactionRepository {
     );
   }
 
-  Future<int> updateTransactionStatus(int id, String newStatus) async {
+  Future<int> updateTransactionStatus(int id, String newStatus, {int? userId, String? username, String? role, String? reason}) async {
     final db = await _dbHelper.database;
     int count = await db.update(
       'transactions',
@@ -103,21 +120,47 @@ class TransactionRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+
+    // Audit status update (Gap 9)
+    await _auditRepo.logAction(
+      userId: userId,
+      username: username ?? 'System',
+      role: role ?? 'System',
+      module: 'Transactions',
+      action: newStatus == 'Voided' ? 'Transaction Voided' : newStatus == 'Refunded' ? 'Transaction Refunded' : 'Transaction Status Updated',
+      status: 'Success',
+      description: 'Transaction ID $id status changed to $newStatus${reason != null ? ' ($reason)' : ''}',
+    );
+
     await _syncService.syncToCloud();
     return count;
   }
 
-  Future<int> cancelOrder(int id, {String? reason}) async {
+  Future<int> cancelOrder(int id, {String? reason, int? userId, String? username, String? role}) async {
     final db = await _dbHelper.database;
+    final voidReason = reason ?? 'Cancelled by cashier';
     int count = await db.update(
       'transactions',
-      {'status': 'Voided', 'void_reason': reason ?? 'Cancelled by cashier'},
+      {'status': 'Voided', 'void_reason': voidReason},
       where: 'id = ?',
       whereArgs: [id],
     );
+
+    // Audit transaction cancellation / void (Gap 9)
+    await _auditRepo.logAction(
+      userId: userId,
+      username: username ?? 'Cashier',
+      role: role ?? 'cashier',
+      module: 'Transactions',
+      action: 'Transaction Voided',
+      status: 'Success',
+      description: 'Order ID $id voided: $voidReason',
+    );
+
     await _syncService.syncToCloud();
     return count;
   }
+
 
   Future<List<Map<String, dynamic>>> getActiveTransactions() async {
     final db = await _dbHelper.database;
