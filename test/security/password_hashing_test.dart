@@ -47,8 +47,9 @@ void main() {
       final parts = result.split(':');
       expect(parts[0], equals('salt'));
       
-      // Known hash for password="password", salt="salt", iterations=10000, keyLen=32
-      expect(parts[1], equals('T98UqS8m43i9Fq39O31/Z42k/b4V/zJ1+r3VjF5L3z0='));
+      // Known hash for password="password", salt="salt", iterations=10000, keyLen=32 (RFC 6070)
+      expect(parts[1], equals('XsArkaS1nG9Z3V++TKZJ7OT6hWjNuLo2z0FCbogFUis='));
     });
   });
 }
+
