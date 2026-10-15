@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../../core/utils/security_utils.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../core/database/repositories/user_repository.dart';
-import '../../../../core/utils/security_utils.dart';
 import '../../../../core/session/session_manager.dart';
 
 class AccountManagementPage extends StatefulWidget {
@@ -91,6 +91,14 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
       );
       return;
     }
+    // Validate password policy
+    if (!SecurityUtils.isPasswordValid(_addPasswordController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(SecurityUtils.passwordPolicyMessage)),
+      );
+      return;
+
+    }
 
     try {
       await _userRepo.createUser({
@@ -99,6 +107,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
         'password_hash': SecurityUtils.hashPassword(_addPasswordController.text.trim()),
         'role': _addRole,
         'status': 'active',
+        'must_change_password': 1,
       });
       if (!mounted) return;
       _closeAddCashier();
@@ -340,9 +349,16 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                 );
                 return;
               }
+              if (!SecurityUtils.isPasswordValid(passwordController.text.trim())) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text(SecurityUtils.passwordPolicyMessage)),
+                );
+                return;
+              }
               try {
                 await _userRepo.updateUser(user['id'], {
                   'password_hash': SecurityUtils.hashPassword(passwordController.text.trim()),
+                  'must_change_password': 1,
                 });
                 if (!context.mounted) return;
                 Navigator.pop(ctx);

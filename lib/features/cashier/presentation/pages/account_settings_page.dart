@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../../core/database/repositories/user_repository.dart';
+import '../../../../core/utils/security_utils.dart';
 import '../../../auth/presentation/pages/face_registration_page.dart';
 import 'cashier_activity_logs_page.dart';
 
@@ -256,6 +257,12 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
               if (newPasswordController.text != confirmPasswordController.text) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Passwords do not match')),
+                );
+                return;
+              }
+              if (!SecurityUtils.isPasswordValid(newPasswordController.text.trim())) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text(SecurityUtils.passwordPolicyMessage)),
                 );
                 return;
               }

@@ -49,6 +49,15 @@ class SecurityUtils {
     }
   }
 
+  // Password policy: minimum 8 characters, at least one letter and one number
+  static const String passwordPolicyMessage = 'Password must be at least 8 characters long and include at least one letter and one number.';
+  static bool isPasswordValid(String password) {
+    if (password.length < 8) return false;
+    final hasLetter = RegExp(r'[A-Za-z]').hasMatch(password);
+    final hasDigit = RegExp(r'\d').hasMatch(password);
+    return hasLetter && hasDigit;
+  }
+
   static const String _keyStorageKey = 'ny_kitchen_aes_key';
   static const String _ivStorageKey = 'ny_kitchen_aes_iv';
   static final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -65,8 +74,12 @@ class SecurityUtils {
       final random = Random.secure();
       keyBytes = Uint8List(32);
       ivBytes = Uint8List(16);
-      for (int i = 0; i < 32; i++) keyBytes[i] = random.nextInt(256);
-      for (int i = 0; i < 16; i++) ivBytes[i] = random.nextInt(256);
+      for (int i = 0; i < 32; i++) {
+        keyBytes[i] = random.nextInt(256);
+      }
+      for (int i = 0; i < 16; i++) {
+        ivBytes[i] = random.nextInt(256);
+      }
 
       // Save them securely
       await _secureStorage.write(key: _keyStorageKey, value: base64.encode(keyBytes));
