@@ -5,7 +5,7 @@
 > **Junior Dev (JD):** Antigravity (Me)
 > **Idea Generator (User):** The User
 > **Focus:** UI Improvements
-> **Last Updated:** 2026-07-18
+> **Last Updated:** 2026-10-15
 
 ---
 
@@ -218,4 +218,64 @@ All changes since the previous `main` commit (`66c774e` — login screen redesig
 
 ### Verification
 - `flutter analyze`: no issues found.
+
+---
+
+## Session Summary - 2026-10-15
+
+### AI Service Virtual Environment & Dependencies
+- Diagnosed and resolved unresolved module errors in `ai_service/main.py` (`fastapi`, `face_recognition`, `numpy`, `PIL`, `uvicorn`).
+- Created isolated virtual environment in `c:\src\ny_kitchen_app\ai_service\.venv`.
+- Built and installed wheel binaries for `dlib-20.0.1`, `face-recognition-models-0.3.0`, and `face_recognition-1.3.0`.
+- Installed `setuptools<70` to provide `pkg_resources` compatibility for `face_recognition_models` on modern Python.
+- Installed `fastapi`, `uvicorn`, `python-multipart`, `Pillow`, and `numpy`.
+- Configured `.vscode/settings.json` to route IDE Python language server and linting to the `.venv` interpreter.
+- Added `.venv/` to `ai_service/.gitignore` and updated `ai_service/requirements.txt`.
+
+### Task A6 (Gap 3) — Force Password Change on First Login
+- Bumped database version to `8` in `lib/core/database/database_helper.dart` with schema update and migration adding `must_change_password INTEGER DEFAULT 0`.
+- Seeded default accounts (`admin`, `cashier`) and newly created / reset accounts initialize with `must_change_password = 1`.
+- Built `ForceChangePasswordDialog` modal: Non-dismissible dialog enforcing password complexity (min 8 chars, letter + digit), rejecting reuse of default credentials (`admin123`, `cashier123`), and updating credentials before shell navigation.
+- Integrated into `LoginPage` and `FaceLoginSheet`.
+- Updated `GuardedRoute` to intercept unauthorized route access when `mustChangePassword == true`.
+- Created comprehensive test suite `test/security/force_password_change_test.dart` (6/6 passing).
+
+### Task A7 (Gaps 20-21) — Dependency Pinning & Audit Evidence
+- Pinned all 21 packages in `ai_service/requirements.txt` to exact versions matching the virtual environment.
+- Ran `flutter pub outdated` and saved report to `docs/security/evidence/test_a7_pub_outdated.txt`.
+- Executed `pip check` and `pip list` in `ai_service/.venv` and recorded clean audit evidence in `docs/security/evidence/test_a7_pip_audit.txt`.
+
+### Verification
+- Python import verification (`fastapi`, `face_recognition`, `numpy`, `PIL`, `uvicorn`): All passed.
+- `ai_service` unit tests (`test_auth.py`, `test_bind.py`): 3/3 passed.
+- Flutter security test suite (`flutter test test/security`): **35/35 passed**.
+- Phase A compliance status: **100% COMPLETE (Tasks A1 through A7 Done)**.
+
+---
+
+## 🗺️ REMAINING PHASES ROADMAP
+
+### Track 1: Security Remediation (IAS Compliance)
+
+#### Phase A (Tier A - Immediate Compliance Tasks)
+- [x] **A1 (Gap 1):** Add `.env` to `.gitignore`, provide `.env.example`, un-track git index. *(DONE)*
+- [x] **A2 (Gap 15):** Bind FastAPI microservice exclusively to `127.0.0.1` (localhost only). *(DONE)*
+- [x] **A3 (Gap 14):** Enforce `X-Service-Key` shared-secret authentication on Python microservice. *(DONE)*
+- [x] **A4 (Gaps 7-9):** Comprehensive audit logging for auth, sessions, food CRUD, transactions, user edits. *(DONE)*
+- [x] **A5 (Gap 2):** Enforce strong password complexity policy ($\ge$8 chars, letter + digit). *(DONE)*
+- [x] **A6 (Gap 3):** Force password change on first login for seeded and reset accounts (`must_change_password` migration, `ForceChangePasswordDialog`, route guard). *(DONE)*
+- [x] **A7 (Gaps 20-21):** Pinned `ai_service/requirements.txt` dependencies, generated `flutter pub outdated` & pip audit evidence. *(DONE)*
+
+#### Phase B (Tier B - Architecture & Hardening, Needs User Approval)
+- [ ] **B1:** Raise PBKDF2 iterations to 600,000 with per-record iteration metadata & transparent re-hashing on login.
+- [ ] **B2:** Migrate biometric face encodings encryption from AES-CBC to AES-GCM.
+- [ ] **B3 (Gaps 16, 19):** Implement request rate limiting and magic-byte image validation on Python API.
+- [ ] **B4 (Gap 18):** Restrict image download URLs strictly to trusted Supabase storage hosts; cap redirects.
+- [ ] **B5 (Gap 12):** SQLCipher database encryption at rest.
+
+### Track 2: Core Application & UI/UX Evolution (Phase 6 Polish)
+- [ ] **Reporting Actions:** Wire real export (PDF/Excel) and print handlers for Sales Reports & Activity Logs (currently UI actions).
+- [ ] **Receipt & Hardware Printing:** Connect real ESC/POS thermal receipt printing workflow and preview.
+- [ ] **Backup & Restore:** Implement database backup/export and restore modal.
+- [ ] **Responsive & Visual Polish:** Finalize high-contrast theme consistency, card layouts, and micro-animations.
 
