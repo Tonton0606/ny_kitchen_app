@@ -37,7 +37,13 @@ class _GuardedRouteState extends State<GuardedRoute> {
         return;
       }
 
-      // 2. Check if their role is allowed on this screen
+      // 2. Check if password change is required (Gap 3)
+      if (session.mustChangePassword) {
+        _redirectToLogin("Password change required before accessing the system.");
+        return;
+      }
+
+      // 3. Check if their role is allowed on this screen
       if (!widget.allowedRoles.contains(session.role)) {
         _redirectToLogin("Unauthorized access. Wrong role.");
         return;

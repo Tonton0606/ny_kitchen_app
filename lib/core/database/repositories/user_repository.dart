@@ -113,7 +113,10 @@ class UserRepository {
     
     final changes = await db.update(
       'users',
-      {'password_hash': hashedPassword},
+      {
+        'password_hash': hashedPassword,
+        'must_change_password': 0,
+      },
       where: 'id = ?',
       whereArgs: [userId],
     );
@@ -140,6 +143,9 @@ class UserRepository {
   Future<int> createUser(Map<String, dynamic> user, {int? adminId, String? adminUsername}) async {
     final db = await _dbHelper.database;
     user['created_at'] = DateTime.now().toIso8601String();
+    if (!user.containsKey('must_change_password')) {
+      user['must_change_password'] = 1;
+    }
     final newId = await db.insert('users', user, conflictAlgorithm: ConflictAlgorithm.abort);
     
     // Audit user creation (Gap 9) - never log passwords or hashes

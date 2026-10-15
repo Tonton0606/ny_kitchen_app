@@ -8,6 +8,7 @@ import '../../../../core/session/session_manager.dart';
 import '../../../admin/presentation/pages/admin_shell.dart';
 import '../../../cashier/presentation/pages/cashier_shell.dart';
 import '../widgets/face_login_sheet.dart';
+import '../widgets/force_change_password_dialog.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -118,14 +119,12 @@ class _LoginPageState extends State<LoginPage>
 
     if (user != null) {
       _failedAttempts = 0;
-      SessionManager().setSession(user);
-      final role = user['role'] as String;
-      final destination = role == 'admin' ? const AdminShell() : const CashierShell();
-      
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute<void>(builder: (_) => destination),
-      );
+      final int mustChange = (user['must_change_password'] as int?) ?? 0;
+      if (mustChange == 1) {
+        _showForceChangePassword(user);
+      } else {
+        _proceedToShell(user);
+      }
     } else {
       _failedAttempts++;
       if (_failedAttempts >= 5) {
@@ -156,6 +155,41 @@ class _LoginPageState extends State<LoginPage>
         });
       }
     }
+  }
+
+  void _proceedToShell(Map<String, dynamic> user) {
+    SessionManager().setSession(user);
+    final role = user['role'] as String;
+    final destination = role == 'admin' ? const AdminShell() : const CashierShell();
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute<void>(builder: (_) => destination),
+    );
+  }
+
+  void _showForceChangePassword(Map<String, dynamic> user) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => ForceChangePasswordDialog(
+        user: user,
+        onSuccess: () {
+          Navigator.of(dialogCtx).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Password changed successfully. Welcome!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          _proceedToShell(user);
+        },
+        onCancel: () {
+          Navigator.of(dialogCtx).pop();
+          SessionManager().clearSession();
+        },
+      ),
+    );
   }
 
   @override

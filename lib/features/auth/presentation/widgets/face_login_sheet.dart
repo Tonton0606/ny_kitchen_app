@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../admin/presentation/pages/admin_shell.dart';
 import '../../../cashier/presentation/pages/cashier_shell.dart';
+import 'force_change_password_dialog.dart';
 
 class FaceLoginSheet extends StatefulWidget {
   const FaceLoginSheet({super.key});
@@ -147,8 +148,37 @@ class _FaceLoginSheetState extends State<FaceLoginSheet> {
             });
             await Future.delayed(const Duration(seconds: 1));
             
-            SessionManager().setSession(bestMatch);
-            final role = bestMatch['role'] as String;
+            final matchedUser = bestMatch!;
+            final int mustChange = (matchedUser['must_change_password'] as int?) ?? 0;
+            if (mustChange == 1) {
+              Navigator.pop(context); // close sheet
+              showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (dialogCtx) => ForceChangePasswordDialog(
+                  user: matchedUser,
+                  onSuccess: () {
+                    Navigator.of(dialogCtx).pop();
+                    SessionManager().setSession(matchedUser);
+                    final role = matchedUser['role'] as String;
+                    final destination = role == 'admin' ? const AdminShell() : const CashierShell();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute<void>(builder: (_) => destination),
+                      (route) => false,
+                    );
+                  },
+                  onCancel: () {
+                    Navigator.of(dialogCtx).pop();
+                    SessionManager().clearSession();
+                  },
+                ),
+              );
+              return;
+            }
+
+            SessionManager().setSession(matchedUser);
+            final role = matchedUser['role'] as String;
             final destination = role == 'admin' ? const AdminShell() : const CashierShell();
             
             Navigator.pushAndRemoveUntil(

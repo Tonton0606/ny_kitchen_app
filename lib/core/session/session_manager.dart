@@ -42,6 +42,7 @@ class SessionManager {
   int? get userId => currentUser?['id'] as int?;
   String? get role => currentUser?['role'] as String?;
   String? get fullName => currentUser?['full_name'] as String?;
+  bool get mustChangePassword => (currentUser?['must_change_password'] as int?) == 1;
 
   // --- Session Expiration Logic ---
   DateTime? _lastActive;

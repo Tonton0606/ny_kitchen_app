@@ -6,7 +6,7 @@ import '../utils/security_utils.dart';
 
 class DatabaseHelper {
   static const _databaseName = "ny_kitchen.db";
-  static const _databaseVersion = 7;
+  static const _databaseVersion = 8;
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -104,6 +104,20 @@ class DatabaseHelper {
         await db.execute('ALTER TABLE users ADD COLUMN face_encoding TEXT');
       } catch (_) {}
     }
+    if (oldVersion < 8) {
+      try {
+        await db.execute('ALTER TABLE users ADD COLUMN must_change_password INTEGER DEFAULT 0');
+      } catch (_) {}
+      // Flag seeded default accounts to force password change (Gap 3)
+      try {
+        await db.update(
+          'users',
+          {'must_change_password': 1},
+          where: 'username IN (?, ?)',
+          whereArgs: ['admin', 'cashier'],
+        );
+      } catch (_) {}
+    }
   }
 
   Future _onConfigure(Database db) async {
@@ -124,6 +138,7 @@ class DatabaseHelper {
         last_login TEXT,
         failed_login_count INTEGER DEFAULT 0,
         face_encoding TEXT,
+        must_change_password INTEGER DEFAULT 0,
         created_at TEXT NOT NULL
       )
     ''');
@@ -255,6 +270,7 @@ class DatabaseHelper {
       'password_hash': SecurityUtils.hashPassword('admin123'),
       'role': 'admin',
       'status': 'active',
+      'must_change_password': 1,
       'created_at': now,
     });
 
@@ -265,6 +281,7 @@ class DatabaseHelper {
       'password_hash': SecurityUtils.hashPassword('cashier123'),
       'role': 'cashier',
       'status': 'active',
+      'must_change_password': 1,
       'created_at': now,
     });
 
