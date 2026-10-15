@@ -6,7 +6,7 @@
 |---|---|---|---|---|---|---|
 | A1 | Gap 1 | Add `.env` to `.gitignore`, create `.env.example`, `git rm --cached .env` | DONE | `.gitignore`, `.env.example`, `.env` (untracked), `test/security/password_hashing_test.dart` | `test/security/env_gitignore_test.dart` | `docs/security/evidence/test_a1_gitignore.txt` |
 | A2 | Gap 15 | Bind FastAPI microservice to `127.0.0.1` instead of `0.0.0.0` in `ai_service/main.py` | DONE | `ai_service/main.py` | `ai_service/tests/test_bind.py` | `docs/security/evidence/test_a2_fastapi_bind.txt` |
-| A3 | Gap 14 | Require shared-secret header `X-Service-Key` on `/extract_encoding` and `/check_liveness` | TODO | - | - | - |
+| A3 | Gap 14 | Require shared-secret header `X-Service-Key` on `/extract_encoding` and `/check_liveness` | DONE | `ai_service/main.py`, `lib/core/services/ai_service_client.dart`, `.env.example` | `ai_service/tests/test_auth.py`, `test/security/ai_service_client_test.dart` | `docs/security/evidence/test_a3_service_key.txt` |
 | A4 | Gaps 7-9 | Audit logging for login, logout, session expiry, food CRUD, transaction actions, admin user edits | TODO | - | - | - |
 | A5 | Gap 2 | Password policy enforcement (min 8 chars, >=1 letter, >=1 number) | TODO | - | - | - |
 | A6 | Gap 3 | Force password change on first login for seeded accounts (`must_change_password` migration) | TODO | - | - | - |
@@ -47,6 +47,24 @@
   - *Before*: `ai_service` listened on `0.0.0.0:5000`, accepting connections from external machines on the local network.
   - *After*: `ai_service` listens on `127.0.0.1:5000`, accepting connections solely from localhost.
 
+### Task A3 (Gap 14) — Require shared-secret header `X-Service-Key` on Python microservice
+- **What changed**:
+  - In `ai_service/main.py`, added `verify_service_key` dependency reading `AI_SERVICE_KEY` environment variable and validating against `X-Service-Key` request header; applied `dependencies=[Depends(verify_service_key)]` to both `/extract_encoding` and `/check_liveness` endpoints; returns HTTP 401 when missing or invalid.
+  - In `lib/core/services/ai_service_client.dart`, updated `AIServiceClient` to inject `X-Service-Key` header sourced dynamically from `flutter_dotenv` (`AI_SERVICE_KEY`) or constructor parameter (never hardcoded); added explicit HTTP 401 exception handling.
+  - Added `AI_SERVICE_KEY` placeholder in `.env.example`.
+  - Added unit test `ai_service/tests/test_auth.py` verifying AST endpoint dependencies and `verify_service_key` presence.
+  - Added test `test/security/ai_service_client_test.dart` verifying client header generation and rejection of empty/hardcoded keys.
+- **Why**: Without an authentication header, any process running locally or requesting the API could invoke computationally heavy facial recognition or liveness checks unauthenticated.
+- **Verification**:
+  - Python test `ai_service/tests/test_auth.py` failed before fix (2 failures), passed after fix.
+  - Dart test `test/security/ai_service_client_test.dart` failed before fix (compilation error on missing constructor parameter), passed after fix (2/2 passed).
+  - All Python tests (`py -m unittest discover -s ai_service/tests -v`) passed (3/3).
+  - Full Flutter security suite (`flutter test test/security/`) passed (19/19).
+  - Combined evidence saved to `docs/security/evidence/test_a3_service_key.txt`.
+- **Before/After**:
+  - *Before*: Endpoints had zero authentication; anyone could send requests without credentials.
+  - *After*: Endpoints enforce `X-Service-Key` matching `AI_SERVICE_KEY`; client automatically attaches the key from configuration and handles 401.
+
 ## Decisions and Discrepancies
 
 - Fixed `test/security/password_hashing_test.dart` test vector discrepancy: the existing test had an incorrect expected base64 string; verified the correct RFC 6070 PBKDF2 output via independent derivation in Python (`XsArkaS1nG9Z3V++TKZJ7OT6hWjNuLo2z0FCbogFUis=`).
@@ -59,12 +77,16 @@
 
 ## Next Steps
 
-1. Start Task A3 (Gap 14): Require shared-secret header `X-Service-Key` on `/extract_encoding` and `/check_liveness` in `ai_service/main.py`.
-2. Update `lib/core/services/ai_service_client.dart` to send `X-Service-Key` sourced from env (`flutter_dotenv`).
-3. Add `AI_SERVICE_KEY` placeholder to `.env.example` and local `.env`.
-4. Add Python and Dart tests verifying 401 when missing/wrong, 200 when valid.
-5. Proceed to A4 through A7.
+1. Start Task A4 (Gaps 7-9): Add audit logging via `AuditRepository.logAction()` for:
+   - Successful login (`user_repository.dart`)
+   - Logout (`session_manager.dart` / shell)
+   - Session expiry (`main.dart`)
+   - Food CRUD operations (`food_repository.dart`)
+   - Transaction create/void/refund (`transaction_repository.dart`)
+   - Admin user create/modify (`user_repository.dart` / `account_management_page.dart`)
+2. Add security tests under `test/security/` for audit trail coverage.
+3. Proceed sequentially to A5 through A7.
 
 ## Session History (one line per session: date, tasks touched)
 
-- 2026-10-15: Initialized profile in `docs/security/ias_security_profile.md` and `SECURITY_REMEDIATION_LOG.md`; completed Tasks A1 (Gap 1) and A2 (Gap 15).
+- 2026-10-15: Initialized profile in `docs/security/ias_security_profile.md` and `SECURITY_REMEDIATION_LOG.md`; completed Tasks A1 (Gap 1), A2 (Gap 15), and A3 (Gap 14).

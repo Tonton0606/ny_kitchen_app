@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+import os
+from fastapi import FastAPI, UploadFile, File, HTTPException, Header, Depends
 import face_recognition
 import numpy as np
 from io import BytesIO
@@ -6,8 +7,21 @@ from PIL import Image
 
 app = FastAPI(title="N.Y Kitchen Face Recognition API")
 
-@app.post("/extract_encoding")
+EXPECTED_SERVICE_KEY_ENV = "AI_SERVICE_KEY"
+
+def verify_service_key(x_service_key: str = Header(None, alias="X-Service-Key")):
+    """Enforces shared-secret authentication on endpoints (Gap 14). Returns 401 when missing or wrong."""
+    expected_key = os.getenv(EXPECTED_SERVICE_KEY_ENV)
+    if not x_service_key or not expected_key or x_service_key != expected_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized: Missing or invalid X-Service-Key header",
+        )
+    return x_service_key
+
+@app.post("/extract_encoding", dependencies=[Depends(verify_service_key)])
 async def extract_encoding(file: UploadFile = File(...)):
+
     try:
         contents = await file.read()
         image = Image.open(BytesIO(contents)).convert('RGB')
@@ -33,8 +47,9 @@ def eye_aspect_ratio(eye):
     C = np.linalg.norm(np.array(eye[0]) - np.array(eye[3]))
     return (A + B) / (2.0 * C)
 
-@app.post("/check_liveness")
+@app.post("/check_liveness", dependencies=[Depends(verify_service_key)])
 async def check_liveness(file: UploadFile = File(...)):
+
     try:
         contents = await file.read()
         image = Image.open(BytesIO(contents)).convert('RGB')
