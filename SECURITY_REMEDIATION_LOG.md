@@ -168,11 +168,11 @@
    ```
    *(Confirm output: NO_SECRET and OLD_SECRET rejected [HTTP 401/403 or 0 rows], NEW_SECRET accepted [HTTP 200, >0 rows], Result: PASS; outputs INCONCLUSIVE if NO_SECRET returns rows).*
 6. **Record the rotation date here:**
-   - ROTATION DATE: ____________________
+   - ROTATION DATE: 2026-10-16 (Verified PASS via `scripts/verify_secret_rotation.py`, evidence saved to `docs/security/evidence/secret_rotation_check.txt`)
 
 ## Next Steps
 
-1. Execute manual rotation steps in Supabase dashboard.
+1. Manual cloud secret rotation in Supabase dashboard: **COMPLETED & VERIFIED (2026-10-16)**.
 2. Review remaining Risk Register items (RK-08 route guard 1-frame flash, RK-20 face temp files, RK-10 IV reuse).
 
 ## Session History (one line per session: date, tasks touched)

@@ -59,7 +59,7 @@
 | **C-12** | Face encoding encryption | **PARTIAL** | `lib/core/utils/security_utils.dart` lines 96-138: AES-256-CBC with PKCS7 padding. Key and IV stored in `FlutterSecureStorage`. **Flaw:** IV is generated once on first launch and stored in keychain (`_ivStorageKey`); **IV is reused across all records**, not unique per record. | `test/unit/security_utils_test.dart` |
 | **C-13** | Python dependencies pinned & scanned | **IMPLEMENTED** | `ai_service/requirements.txt` has 22 packages pinned with `==`. `pip check` reports 0 broken dependencies. | `docs/security/evidence/test_a7_pip_audit.txt` |
 | **C-14** | Cloud sync and manual SQL export | **IMPLEMENTED** | `lib/core/services/sync_service.dart` (download every 10s, upload on login/logout); `lib/core/database/repositories/backup_repository.dart` lines 12-82 exports `.sql` dump to temp dir. | `test/offline/sync_failure_test.dart` (partial) |
-| **C-15** | Supabase RLS policies in repo | **PARTIAL** | Template SQL prepared in `docs/security/rotation/rotate_device_secret.sql`. Verification script with `--dry-run` and control check (`NO_SECRET`) developed in `scripts/verify_secret_rotation.py`. Cloud deployment remains manual. | `scripts/verify_secret_rotation.py --dry-run` |
+| **C-15** | Supabase RLS policies in repo | **IMPLEMENTED** | Template SQL prepared in `docs/security/rotation/rotate_device_secret.sql`. Verified live with control check (`NO_SECRET`) and rotated secret via `scripts/verify_secret_rotation.py`. | `docs/security/evidence/secret_rotation_check.txt` (PASS) |
 | **C-16** | Recovery and incident response documentation | **PARTIAL** | `docs/BACKUP_STRATEGY.md` defines high-level steps (ADR-016). Formal incident response plan and step-by-step recovery runbook are **NOT FOUND**. | NONE |
 | **C-17** | Consent notice, face deletion, retention | **PARTIAL** | `docs/DATA_RETENTION.md` exists in draft form. Consent notice/screen is **NOT FOUND**. Hard face deletion function is **NOT FOUND**. | NONE |
 | **C-18** | DB and backup encryption | **NOT DONE** | SQLite file is unencrypted (no SQLCipher). Backup `.sql` export in `backup_repository.dart` line 58 is written as plaintext SQL. | NONE |
@@ -95,7 +95,7 @@
 | **T-13** | Dependency scan | `flutter pub outdated` & `pip check` | `flutter pub outdated` & `py -m pip check` | **PASS** | `docs/security/evidence/test_a7_pub_outdated.txt`, `test_a7_pip_audit.txt` |
 | **T-14** | Backup / restore drill | None | Manual procedure required | **MANUAL** | See Section 8 for manual steps |
 | **T-15** | Face encoding ciphertext in DB | `test/unit/security_utils_test.dart` (roundtrip only; DB storage test not written) | `flutter test test/unit/security_utils_test.dart` | **NOT WRITTEN** | `lib/core/utils/security_utils.dart` |
-| **T-16** | Supabase RLS verification | None | Requires live cloud console inspection | **MANUAL** | See Section 8 for manual steps |
+| **T-16** | Supabase RLS verification | `scripts/verify_secret_rotation.py` | `py scripts/verify_secret_rotation.py` | **PASS** | `docs/security/evidence/secret_rotation_check.txt` |
 | **T-17** | Privacy checklist | None | Manual audit verification | **MANUAL** | `docs/DATA_RETENTION.md` |
 | **T-18** | Tests for planned controls (Tier B) | None | Controls not implemented (deferred) | **NOT WRITTEN** | `SECURITY_REMEDIATION_LOG.md` |
 
@@ -153,7 +153,7 @@
 | **AC-10** | Dependency health | **MET** | Python dependencies pinned; `pip check` reports 0 broken dependencies; Flutter dependencies pinned within semver bounds. |
 | **AC-11** | Recoverability (restore drill) | **NOT MET** | While `BackupRepository.exportDatabase()` generates a `.sql` file, there is no restore mechanism in code or documented restoration drill. |
 | **AC-12** | No plaintext face encodings | **MET** | Biometric vectors encrypted using AES-256-CBC via PointyCastle before saving into SQLite `users` table (`security_utils.dart` line 96). |
-| **AC-13** | Cloud requests without device secret are denied | **PREPARED** | Flutter app passes `x-device-secret` in headers (`main.dart` line 91). Verification script `scripts/verify_secret_rotation.py` developed with `--dry-run` and 3-way check (`NO_SECRET`, `OLD_SECRET`, `NEW_SECRET` against `users?select=id&limit=1`); outputs `INCONCLUSIVE` if `NO_SECRET` returns rows. Live verification pending manual student cloud rotation. |
+| **AC-13** | Cloud requests without device secret are denied | **MET** | Verified live via `scripts/verify_secret_rotation.py` against `users?select=id&limit=1`: `NO_SECRET` returned 0 rows, `OLD_SECRET` returned 0 rows, and `NEW_SECRET` returned 1 row (`Result: PASS`). Evidence saved to `docs/security/evidence/secret_rotation_check.txt`. |
 
 ---
 

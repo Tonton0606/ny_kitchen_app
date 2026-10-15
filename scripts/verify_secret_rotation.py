@@ -46,13 +46,13 @@ def validate_environment():
         sys.exit(1)
 
 
-def make_request(base_url, anon_key, device_secret=None):
+def make_request(base_url, anon_key, device_secret=None, table=TARGET_TABLE):
     """
-    Performs a read-only GET request to the target table (users?select=id&limit=1).
+    Performs a read-only GET request to the target table (?select=id&limit=1).
     Never prints or logs the response body.
     Returns: (status_code: int, row_count: int)
     """
-    endpoint = f"{base_url.rstrip('/')}/rest/v1/{TARGET_TABLE}?select=id&limit=1"
+    endpoint = f"{base_url.rstrip('/')}/rest/v1/{table}?select=id&limit=1"
     headers = {
         "apikey": anon_key,
         "Authorization": f"Bearer {anon_key}",
@@ -81,12 +81,17 @@ def make_request(base_url, anon_key, device_secret=None):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Verify Supabase SUPABASE_DEVICE_SECRET rotation against users table."
+        description="Verify Supabase SUPABASE_DEVICE_SECRET rotation against target table."
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Validate that environment variables are set without making network calls."
+    )
+    parser.add_argument(
+        "--table",
+        default=TARGET_TABLE,
+        help=f"Target table to query (default: {TARGET_TABLE})"
     )
     args = parser.parse_args()
 
@@ -95,24 +100,26 @@ def main():
 
     if args.dry_run:
         print("DRY-RUN VALIDATION: All required environment variables are set.")
-        print(f"Target verification table: {TARGET_TABLE}?select=id&limit=1")
+        print(f"Target verification table: {args.table}?select=id&limit=1")
         print("Requests to be executed: NO_SECRET (control), OLD_SECRET, NEW_SECRET")
         print("No network requests were executed.")
         sys.exit(0)
 
-    supabase_url = os.environ["SUPABASE_URL"]
-    anon_key = os.environ["SUPABASE_ANON_KEY"]
-    old_secret = os.environ["OLD_DEVICE_SECRET"]
-    new_secret = os.environ["NEW_DEVICE_SECRET"]
+    supabase_url = os.environ["SUPABASE_URL"].strip('"\'').rstrip('/')
+    if supabase_url.endswith('/rest/v1'):
+        supabase_url = supabase_url[:-8]
+    anon_key = os.environ["SUPABASE_ANON_KEY"].strip('"\'')
+    old_secret = os.environ["OLD_DEVICE_SECRET"].strip('"\'')
+    new_secret = os.environ["NEW_DEVICE_SECRET"].strip('"\'')
 
     # Step 2: Request 1 (Control - No Secret header)
-    no_status, no_rows = make_request(supabase_url, anon_key, device_secret=None)
+    no_status, no_rows = make_request(supabase_url, anon_key, device_secret=None, table=args.table)
 
     # Step 3: Request 2 (Old Secret)
-    old_status, old_rows = make_request(supabase_url, anon_key, device_secret=old_secret)
+    old_status, old_rows = make_request(supabase_url, anon_key, device_secret=old_secret, table=args.table)
 
     # Step 4: Request 3 (New Secret)
-    new_status, new_rows = make_request(supabase_url, anon_key, device_secret=new_secret)
+    new_status, new_rows = make_request(supabase_url, anon_key, device_secret=new_secret, table=args.table)
 
     # Output one line each for status code and row count (no URLs, keys, or body)
     print(f"NO_SECRET:  HTTP {no_status}, Rows: {no_rows}")
