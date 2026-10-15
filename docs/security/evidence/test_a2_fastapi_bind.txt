@@ -1,0 +1,7 @@
+test_uvicorn_bind_address_is_localhost_only (ai_service.tests.test_bind.TestFastApiBinding.test_uvicorn_bind_address_is_localhost_only)
+Verifies Gap 15: FastAPI must not bind to 0.0.0.0; must bind to 127.0.0.1. ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+OK
