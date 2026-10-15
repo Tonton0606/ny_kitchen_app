@@ -59,27 +59,32 @@ void main() async {
   }
   
   // Load environment variables
+  // Try filesystem first (desktop), then asset bundle (mobile)
   Map<String, String> envVars = {};
+  bool loaded = false;
   try {
-    await dotenv.load(fileName: ".env");
-    envVars = dotenv.env;
-  } catch (e) {
-    print('Failed to load .env from assets: $e');
-    try {
-      final file = File('.env');
-      if (await file.exists()) {
-        final lines = await file.readAsLines();
-        for (var line in lines) {
-          if (line.trim().isEmpty || line.startsWith('#')) continue;
-          final idx = line.indexOf('=');
-          if (idx != -1) {
-            final key = line.substring(0, idx).trim();
-            final value = line.substring(idx + 1).trim();
-            envVars[key] = value;
-          }
+    final file = File('.env');
+    if (await file.exists()) {
+      final lines = await file.readAsLines();
+      for (var line in lines) {
+        if (line.trim().isEmpty || line.startsWith('#')) continue;
+        final idx = line.indexOf('=');
+        if (idx != -1) {
+          final key = line.substring(0, idx).trim();
+          final value = line.substring(idx + 1).trim();
+          envVars[key] = value;
         }
       }
-    } catch (_) {}
+      loaded = true;
+    }
+  } catch (_) {}
+  if (!loaded) {
+    try {
+      await dotenv.load(fileName: ".env");
+      envVars = dotenv.env;
+    } catch (_) {
+      print('No .env file found (filesystem or assets). Using defaults.');
+    }
   }
 
   // Initialize Supabase if credentials exist
