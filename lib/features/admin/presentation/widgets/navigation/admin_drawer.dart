@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
+import '../../../../../core/session/session_manager.dart';
 import '../../../../auth/presentation/pages/login_page.dart';
 
 class AdminDrawer extends StatelessWidget {
@@ -19,44 +21,53 @@ class AdminDrawer extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+          side: const BorderSide(color: AppColors.softBorder, width: 1),
+        ),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppColors.brandRed.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
               ),
               child: const Icon(
-                Symbols.logout_rounded,
+                LucideIcons.log_out,
                 color: AppColors.brandRed,
-                size: 28,
-                weight: 500,
+                size: 22,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             const Expanded(
               child: Text(
                 'Confirm Logout',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal),
               ),
             ),
           ],
         ),
-        content: Text(
-          'Are you sure you want to log out of your account?',
-          style: const TextStyle(fontSize: 15, color: AppColors.mutedText),
+        content: const Text(
+          'Are you sure you want to end your administrative session and log out?',
+          style: TextStyle(fontSize: 14, color: AppColors.mutedBrown),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
+            autofocus: true,
             child: const Text(
               'Cancel',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: AppColors.darkCharcoal,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           FilledButton(
             onPressed: () {
+              SessionManager().clearSession();
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -66,10 +77,13 @@ class AdminDrawer extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.brandRed,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+              ),
             ),
             child: const Text(
               'Logout',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -98,7 +112,7 @@ class AdminDrawer extends StatelessWidget {
                     height: 60,
                     decoration: BoxDecoration(
                       color: AppColors.goldenYellow,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
                     ),
                     child: const Center(
                       child: Text(
@@ -134,33 +148,33 @@ class AdminDrawer extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               children: [
-                _buildItem(Symbols.dashboard_rounded, 'Dashboard', 0, context),
+                _buildItem(LucideIcons.layout_dashboard, 'Dashboard', 0, context),
                 _buildItem(
-                  Symbols.trending_up_rounded,
+                  LucideIcons.trending_up,
                   'Sales Reports',
                   1,
                   context,
                 ),
                 _buildItem(
-                  Symbols.menu_book_rounded,
+                  LucideIcons.utensils,
                   'Food Management',
                   2,
                   context,
                 ),
                 _buildItem(
-                  Symbols.badge_rounded,
+                  LucideIcons.users,
                   'Account Management',
                   3,
                   context,
                 ),
                 _buildItem(
-                  Symbols.assignment_rounded,
+                  LucideIcons.clipboard_list,
                   'Activity Logs',
                   4,
                   context,
                 ),
                 _buildItem(
-                  Symbols.backup_rounded,
+                  LucideIcons.database_backup,
                   'Backup & Restore',
                   5,
                   context,
@@ -171,9 +185,9 @@ class AdminDrawer extends StatelessWidget {
           const Divider(height: 1, color: Colors.white12),
           ListTile(
             leading: const Icon(
-              Symbols.logout_rounded,
+              LucideIcons.log_out,
               color: AppColors.brandRed,
-              weight: 500,
+              size: 22,
             ),
             title: const Text(
               'Logout',
@@ -204,8 +218,7 @@ class AdminDrawer extends StatelessWidget {
       leading: Icon(
         icon,
         color: isSelected ? AppColors.goldenYellow : Colors.white70,
-        size: 26,
-        weight: 500,
+        size: 22,
       ),
       title: Text(
         title,
@@ -216,7 +229,7 @@ class AdminDrawer extends StatelessWidget {
       ),
       selected: isSelected,
       selectedTileColor: AppColors.goldenYellow.withValues(alpha: 0.15),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDesignTokens.radius8)),
       onTap: () {
         onDestinationSelected(index);
         Navigator.pop(context);

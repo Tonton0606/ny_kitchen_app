@@ -201,39 +201,4 @@ class _CashierActivityLogsPageState extends State<CashierActivityLogsPage> {
       ),
     );
   }
-
-  Widget _buildFilterDropdown({
-    required String value,
-    required IconData icon,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      height: 36,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.softBorder),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          icon: const Icon(Icons.arrow_drop_down, color: AppColors.mutedText),
-          style: const TextStyle(color: AppColors.darkCharcoal, fontSize: 13, fontWeight: FontWeight.w500),
-          onChanged: onChanged,
-          items: items.map((item) => DropdownMenuItem(
-            value: item,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 16, color: AppColors.mutedText),
-                const SizedBox(width: 6),
-                Text(item),
-              ],
-            ),
-          )).toList(),
-        ),
-      ),
-    );
-  }
 }

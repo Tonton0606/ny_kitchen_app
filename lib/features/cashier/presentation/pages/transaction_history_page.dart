@@ -65,31 +65,51 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceWhite,
+              border: Border(bottom: BorderSide(color: AppColors.softBorder, width: 1)),
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Transaction History',
+                      "Recent Transactions",
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4,
+                        letterSpacing: -0.3,
                         color: AppColors.darkCharcoal,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      "View today's past orders",
-                      style: TextStyle(
-                        color: AppColors.mutedText,
-                        fontSize: 15,
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.creamBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.softBorder, width: 1),
+                      ),
+                      child: Text(
+                        '${_transactions.length} records',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.mutedBrown,
+                        ),
                       ),
                     ),
                   ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh, size: 18, color: AppColors.darkCharcoal),
+                  onPressed: _loadTransactions,
+                  tooltip: 'Refresh',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
               ],
             ),
@@ -105,7 +125,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                        padding: const EdgeInsets.all(20),
                         itemCount: _transactions.length,
                         itemBuilder: (context, index) {
                           final tx = _transactions[index];
@@ -114,34 +134,30 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                           final parsedDate = DateTime.tryParse(dateStr) ?? DateTime.now();
                           final formattedDate = DateFormat('MMM d, yyyy h:mm a').format(parsedDate);
 
-                          return Card(
+                          return Container(
                             margin: const EdgeInsets.only(bottom: 12),
-                            elevation: 0,
-                            color: AppColors.surfaceWhite,
-                            shape: RoundedRectangleBorder(
-                              side: BorderSide(
-                                color: Colors.grey.withValues(alpha: 0.15),
-                              ),
-                              borderRadius: BorderRadius.circular(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceWhite,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.softBorder, width: 1),
                             ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
-                                vertical: 12,
+                                vertical: 10,
                               ),
                               horizontalTitleGap: 12,
                               leading: CircleAvatar(
                                 radius: 18,
                                 backgroundColor: isVoided
                                     ? Colors.grey.withValues(alpha: 0.1)
-                                    : Theme.of(
-                                        context,
-                                      ).colorScheme.primary.withValues(alpha: 0.2),
+                                    : AppColors.goldenYellow,
                                 child: Icon(
                                   isVoided ? Icons.block : Icons.receipt,
                                   color: isVoided
-                                      ? Theme.of(context).colorScheme.onSurfaceVariant
-                                      : Theme.of(context).colorScheme.primary,
+                                      ? AppColors.mutedBrown
+                                      : AppColors.darkCharcoal,
+                                  size: 18,
                                 ),
                               ),
                               title: Row(
@@ -162,14 +178,15 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                   Text(
                                     '₱${(tx['total_amount'] as num).toStringAsFixed(2)}',
                                     style: TextStyle(
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w800,
                                       fontSize: 15,
                                       color: isVoided
-                                          ? Theme.of(context).colorScheme.onSurfaceVariant
-                                          : Theme.of(context).colorScheme.error,
+                                          ? AppColors.mutedBrown
+                                          : AppColors.darkCharcoal,
                                       decoration: isVoided
                                           ? TextDecoration.lineThrough
                                           : null,
+                                      fontFeatures: const [FontFeature.tabularFigures()],
                                     ),
                                   ),
                                 ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_colors.dart';
 
 class AppLogo extends StatelessWidget {
   final double size;
@@ -19,14 +20,14 @@ class AppLogo extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: 0.15),
+        color: colorScheme.primary,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: Center(
         child: Text(
           'NY',
           style: TextStyle(
-            color: colorScheme.primary,
+            color: AppColors.darkCharcoal,
             fontWeight: FontWeight.w900,
             fontSize: fontSize,
             letterSpacing: 1,

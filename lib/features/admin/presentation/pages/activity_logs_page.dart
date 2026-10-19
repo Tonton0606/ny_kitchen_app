@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../../core/database/repositories/audit_repository.dart';
 import '../../../../../core/services/export_service.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 
 class ActivityLogsPage extends StatefulWidget {
   const ActivityLogsPage({super.key});
@@ -63,12 +64,12 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                   children: [
                     const Text(
                       'Activity Logs',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
+                      style: AppTypography.pageTitle,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     const Text(
                       'System-wide security and audit trail records',
-                      style: TextStyle(color: AppColors.mutedText, fontSize: 15),
+                      style: AppTypography.pageSubtitle,
                     ),
                   ],
                 ),
@@ -215,73 +216,49 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     DataColumn(
                       label: Text(
                         'Timestamp',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                        style: AppTypography.tableHeader,
                       ),
                     ),
                     DataColumn(
                       label: Text(
                         'User',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                        style: AppTypography.tableHeader,
                       ),
                     ),
                     DataColumn(
                       label: Text(
                         'Role',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                        style: AppTypography.tableHeader,
                       ),
                     ),
                     DataColumn(
                       label: Text(
                         'Module',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                        style: AppTypography.tableHeader,
                       ),
                     ),
                     DataColumn(
                       label: Text(
                         'Action',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                        style: AppTypography.tableHeader,
                       ),
                     ),
                     DataColumn(
                       label: Text(
                         'Status',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                        style: AppTypography.tableHeader,
                       ),
                     ),
                     DataColumn(
                       label: Text(
                         'Device',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                        style: AppTypography.tableHeader,
                       ),
                     ),
                     DataColumn(
                       label: Text(
                         'IP Address',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                        style: AppTypography.tableHeader,
                       ),
                     ),
                   ],
@@ -315,16 +292,13 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                         DataCell(
                           Text(
                             formattedDate,
-                            style: const TextStyle(fontSize: 13),
+                            style: AppTypography.tableCellSecondary,
                           ),
                         ),
                         DataCell(
                           Text(
                             log['username'] ?? 'System',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
+                            style: AppTypography.tableCellPrimary,
                           ),
                         ),
                         DataCell(
@@ -335,9 +309,9 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                             ),
                             decoration: BoxDecoration(
                               color: roleDisplay == 'Admin'
-                                  ? AppColors.tertiary.withValues(alpha: 0.1)
+                                  ? AppColors.tertiary.withValues(alpha: 0.12)
                                   : (roleDisplay == 'Cashier'
-                                        ? AppColors.goldenYellow.withValues(alpha: 0.1)
+                                        ? AppColors.goldenYellow
                                         : AppColors.mutedText.withValues(alpha: 0.1)),
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -347,7 +321,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                 color: roleDisplay == 'Admin'
                                     ? AppColors.tertiary
                                     : (roleDisplay == 'Cashier'
-                                          ? AppColors.goldenYellow
+                                          ? AppColors.darkCharcoal
                                           : AppColors.mutedText),
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -380,7 +354,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                         DataCell(
                           Text(
                             log['action'] ?? '',
-                            style: const TextStyle(fontSize: 13),
+                            style: AppTypography.tableCellSecondary,
                           ),
                         ),
                         DataCell(
@@ -406,7 +380,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                         DataCell(
                           Text(
                             log['device_info'] ?? 'Local',
-                            style: const TextStyle(fontSize: 13),
+                            style: AppTypography.tableCellSecondary,
                           ),
                         ),
                         DataCell(

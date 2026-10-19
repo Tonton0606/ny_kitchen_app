@@ -8,6 +8,7 @@ import 'transaction_history_page.dart';
 import 'account_settings_page.dart';
 import '../widgets/navigation/cashier_nav_rail.dart';
 import '../widgets/navigation/cashier_bottom_nav.dart';
+import '../../../shared/widgets/app_status_strip.dart';
 
 class CashierShell extends StatefulWidget {
   const CashierShell({super.key});
@@ -92,8 +93,9 @@ class _CashierShellState extends State<CashierShell> {
 
   Widget _buildMobileLayout() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildTopBar(isMobile: true),
+        _buildTopBar(),
         Expanded(child: _pages[_selectedIndex]),
       ],
     );
@@ -115,8 +117,9 @@ class _CashierShellState extends State<CashierShell> {
           child: Stack(
             children: [
               Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildTopBar(isMobile: false),
+                  _buildTopBar(),
                   Expanded(child: _pages[_selectedIndex]),
                 ],
               ),
@@ -137,39 +140,10 @@ class _CashierShellState extends State<CashierShell> {
     );
   }
 
-  Widget _buildTopBar({required bool isMobile}) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: isMobile ? AppColors.darkCharcoal : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: isMobile ? Colors.white12 : AppColors.softBorder,
-          ),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Text(
-            _titles[_selectedIndex],
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'serif',
-              letterSpacing: 0.1,
-              color: isMobile ? Colors.white : AppColors.mutedText,
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.tune_outlined),
-            color: isMobile ? Colors.white54 : AppColors.darkCharcoal,
-            onPressed: _openSettings,
-            tooltip: 'Settings',
-          ),
-        ],
-      ),
+  Widget _buildTopBar() {
+    return AppStatusStrip(
+      title: _titles[_selectedIndex],
+      onSettingsTap: _openSettings,
     );
   }
 

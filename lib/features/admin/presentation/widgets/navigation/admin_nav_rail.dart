@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../auth/presentation/pages/login_page.dart';
 import '../../../../../core/session/session_manager.dart';
 
@@ -31,29 +34,34 @@ class _AdminNavRailState extends State<AdminNavRail> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.surfaceWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+          side: const BorderSide(color: AppColors.softBorder, width: 1),
+        ),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppColors.brandRed.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
               ),
-              child: const Icon(Symbols.logout_rounded, color: AppColors.brandRed, size: 24, weight: 500),
+              child: const Icon(LucideIcons.log_out, color: AppColors.brandRed, size: 22),
             ),
             const SizedBox(width: 12),
-            const Text('Confirm Logout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Confirm Logout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal)),
           ],
         ),
         content: const Text(
-          'Are you sure you want to log out?',
-          style: TextStyle(fontSize: 14, color: AppColors.mutedText),
+          'Are you sure you want to end your administrative session and log out?',
+          style: TextStyle(fontSize: 14, color: AppColors.mutedBrown),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            autofocus: true,
+            child: const Text('Cancel', style: TextStyle(color: AppColors.darkCharcoal, fontWeight: FontWeight.w600)),
           ),
           FilledButton(
             onPressed: () {
@@ -67,7 +75,7 @@ class _AdminNavRailState extends State<AdminNavRail> {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.brandRed,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDesignTokens.radius8)),
             ),
             child: const Text('Logout', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
@@ -79,100 +87,149 @@ class _AdminNavRailState extends State<AdminNavRail> {
   @override
   Widget build(BuildContext context) {
     final items = [
-      _NavItem(icon: Symbols.dashboard_rounded,      label: 'Dashboard'),
-      _NavItem(icon: Symbols.trending_up_rounded,    label: 'Sales Reports'),
-      _NavItem(icon: Symbols.menu_book_rounded,      label: 'Food Management'),
-      _NavItem(icon: Symbols.badge_rounded,          label: 'Account Management'),
-      _NavItem(icon: Symbols.assignment_rounded,     label: 'Activity Logs'),
-      _NavItem(icon: Symbols.backup_rounded,         label: 'Backup & Restore'),
+      _NavItem(icon: LucideIcons.layout_dashboard, label: 'Dashboard'),
+      _NavItem(icon: LucideIcons.trending_up,     label: 'Sales Reports'),
+      _NavItem(icon: LucideIcons.utensils,        label: 'Food Management'),
+      _NavItem(icon: LucideIcons.users,           label: 'Account Management'),
+      _NavItem(icon: LucideIcons.clipboard_list,  label: 'Activity Logs'),
+      _NavItem(icon: LucideIcons.database_backup, label: 'Backup & Restore'),
     ];
+
+    final isDesktop = defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.linux;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
       width: widget.isExpanded ? 220 : 80,
-      color: AppColors.darkCharcoal,
-      child: Column(
-        children: [
-          // Logo / avatar + Toggle button
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-            child: Row(
-              mainAxisAlignment: widget.isExpanded ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: AppColors.goldenYellow,
-                  child: const Text(
-                    'NY',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceWhite,
+        border: Border(
+          right: BorderSide(color: AppColors.softBorder, width: 1),
+        ),
+      ),
+      child: OverflowBox(
+        minWidth: widget.isExpanded ? 220 : 80,
+        maxWidth: widget.isExpanded ? 220 : 80,
+        alignment: Alignment.topLeft,
+        child: Column(
+          children: [
+            // Header: Logo + Title
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              child: Row(
+                mainAxisAlignment: widget.isExpanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.softBorder, width: 1),
                     ),
-                  ),
-                ),
-                if (widget.isExpanded)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text('NY Kitchen', overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            Text('Admin Portal', overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white54, fontSize: 12)),
-                          ],
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/branding/ny_kitchen_logo.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          color: AppColors.goldenYellow,
+                          child: const Center(
+                            child: Text(
+                              'NY',
+                              style: TextStyle(
+                                color: AppColors.darkCharcoal,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-              ],
+                  if (widget.isExpanded) ...[
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'NY Kitchen',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColors.darkCharcoal,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          Text(
+                            'Admin Portal',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColors.mutedBrown,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
-          
-          IconButton(
-            icon: Icon(
-              widget.isExpanded ? Symbols.chevron_left_rounded : Symbols.chevron_right_rounded,
-              color: Colors.white70,
-            ),
-            onPressed: () => widget.onToggleExpand(!widget.isExpanded),
-          ),
 
-          const Divider(color: Colors.white12, height: 1, indent: 16, endIndent: 16),
-          const SizedBox(height: 8),
+            if (isDesktop)
+              IconButton(
+                icon: Icon(
+                  widget.isExpanded ? Symbols.chevron_left_rounded : Symbols.chevron_right_rounded,
+                  color: AppColors.darkCharcoal,
+                ),
+                onPressed: () => widget.onToggleExpand(!widget.isExpanded),
+              ),
+
+            const Divider(color: AppColors.softBorder, height: 1, indent: 12, endIndent: 12),
+            const SizedBox(height: 10),
 
           // Nav items
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
                 final isSelected = widget.selectedIndex == index;
+
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.only(bottom: 6),
                   child: Material(
                     color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(24),
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(24),
                       onTap: () => widget.onDestinationSelected(index),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        duration: AppDesignTokens.motionFast,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: widget.isExpanded ? 16 : 0,
+                          vertical: 11,
+                        ),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.goldenYellow.withValues(alpha: 0.2)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
+                          color: isSelected ? AppColors.goldenYellow : Colors.transparent,
+                          borderRadius: BorderRadius.circular(24),
                         ),
                         child: widget.isExpanded
                             ? Row(
                                 children: [
                                   Icon(
                                     item.icon,
-                                    weight: 500,
-                                    size: 24,
-                                    color: isSelected ? AppColors.goldenYellow : Colors.white54,
+                                    size: 20,
+                                    color: isSelected
+                                        ? AppColors.darkCharcoal
+                                        : AppColors.darkCharcoal.withValues(alpha: 0.7),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
@@ -180,23 +237,21 @@ class _AdminNavRailState extends State<AdminNavRail> {
                                       item.label,
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: isSelected ? AppColors.goldenYellow : Colors.white54,
-                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                        color: AppColors.darkCharcoal,
+                                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                                       ),
                                     ),
                                   ),
                                 ],
                               )
-                            : Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    item.icon,
-                                    weight: 500,
-                                    size: 24,
-                                    color: isSelected ? AppColors.goldenYellow : Colors.white54,
-                                  ),
-                                ],
+                            : Center(
+                                child: Icon(
+                                  item.icon,
+                                  size: 22,
+                                  color: isSelected
+                                      ? AppColors.darkCharcoal
+                                      : AppColors.darkCharcoal.withValues(alpha: 0.7),
+                                ),
                               ),
                       ),
                     ),
@@ -206,10 +261,73 @@ class _AdminNavRailState extends State<AdminNavRail> {
             ),
           ),
 
-          // Logout
-          const Divider(color: Colors.white12, height: 1, indent: 16, endIndent: 16),
+          // Pinned Role & Admin Badge / Profile Chip
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.creamBackground,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.softBorder, width: 1),
+            ),
+            child: widget.isExpanded
+                ? Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.inkBlue,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'ADMINISTRATOR',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppColors.darkCharcoal,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            Text(
+                              'Full System Access',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppColors.inkBlue,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : Center(
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppColors.inkBlue,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+          ),
+
+          const Divider(color: AppColors.softBorder, height: 1, indent: 12, endIndent: 12),
+
+          // Logout Action
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
             child: Material(
               color: Colors.transparent,
               borderRadius: BorderRadius.circular(12),
@@ -217,26 +335,27 @@ class _AdminNavRailState extends State<AdminNavRail> {
                 borderRadius: BorderRadius.circular(12),
                 onTap: () => _showLogoutDialog(context),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                   child: widget.isExpanded
                       ? const Row(
                           children: [
-                            Icon(Symbols.logout_rounded, weight: 500, size: 24, color: Colors.white38),
-                            SizedBox(width: 12),
+                            Icon(LucideIcons.log_out, size: 18, color: AppColors.brandRed),
+                            SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 'Logout',
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 14, color: Colors.white38),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.brandRed,
+                                ),
                               ),
                             ),
                           ],
                         )
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Symbols.logout_rounded, weight: 500, size: 24, color: Colors.white38),
-                          ],
+                      : const Center(
+                          child: Icon(LucideIcons.log_out, size: 20, color: AppColors.brandRed),
                         ),
                 ),
               ),
@@ -244,8 +363,9 @@ class _AdminNavRailState extends State<AdminNavRail> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _NavItem {

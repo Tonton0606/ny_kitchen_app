@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/session/session_manager.dart';
-import '../../../auth/presentation/pages/face_registration_page.dart';
 
 class AdminAccountSettingsPage extends StatefulWidget {
   const AdminAccountSettingsPage({super.key});
@@ -33,12 +33,12 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                 children: [
                   const Text(
                     'Account Settings',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
+                    style: AppTypography.pageTitle,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   const Text(
                     'Manage administrator profile and preferences',
-                    style: TextStyle(color: AppColors.mutedText, fontSize: 15),
+                    style: AppTypography.pageSubtitle,
                   ),
                 ],
               ),
@@ -58,13 +58,13 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                           width: 88,
                           height: 88,
                           decoration: BoxDecoration(
-                            color: AppColors.goldenYellow.withValues(alpha: 0.15),
+                            color: AppColors.goldenYellow,
                             borderRadius: BorderRadius.circular(44),
                           ),
                           child: Center(
                             child: Text(
                               initial,
-                              style: const TextStyle(fontSize: 44, color: AppColors.goldenYellow, fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontSize: 44, color: AppColors.darkCharcoal, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -92,7 +92,7 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                        color: AppColors.darkCharcoal,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
@@ -152,30 +152,6 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          final userId = SessionManager().userId;
-                          if (userId != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => FaceRegistrationPage(userId: userId),
-                              ),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.face_retouching_natural, size: 20, color: AppColors.darkCharcoal),
-                        label: const Text('Register Face Login', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal)),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.goldenYellow, width: 2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -205,20 +181,20 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                       leading: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                          color: AppColors.pageBackground,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.info_outline, color: AppColors.goldenYellow, size: 24),
+                        child: const Icon(Icons.info_outline, color: AppColors.darkCharcoal, size: 24),
                       ),
                       title: const Text('About Application', style: TextStyle(fontWeight: FontWeight.w500, color: AppColors.darkCharcoal)),
                       subtitle: const Text('N.Y Kitchen Secure Order and Sales Management System', style: TextStyle(color: AppColors.mutedText)),
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                          color: AppColors.pageBackground,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('v1.0.0', style: TextStyle(color: AppColors.goldenYellow, fontWeight: FontWeight.bold, fontSize: 13)),
+                        child: const Text('v1.0.0', style: TextStyle(color: AppColors.darkCharcoal, fontWeight: FontWeight.bold, fontSize: 13)),
                       ),
                       onTap: () {},
                     ),
@@ -252,13 +228,13 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                  color: AppColors.goldenYellow,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: AppColors.goldenYellow, size: 24),
+                child: Icon(icon, color: AppColors.darkCharcoal, size: 24),
               ),
               const SizedBox(width: 12),
-              Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal)),
+              Text(title, style: AppTypography.sectionTitle),
             ],
           ),
           child,

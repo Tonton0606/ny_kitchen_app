@@ -242,7 +242,7 @@ class _FoodEmojiPickerDialogState extends State<FoodEmojiPickerDialog> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.goldenYellow.withOpacity(0.3)
+                                ? AppColors.goldenYellow
                                 : Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(

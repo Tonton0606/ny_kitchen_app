@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../../core/services/export_service.dart';
 import 'package:intl/intl.dart';
@@ -43,7 +44,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
         });
       }
     } catch (e) {
-      print('Sales reports load error: $e');
+      debugPrint('Sales reports load error: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -79,12 +80,12 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                       children: [
                         const Text(
                           'Sales Reports',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
+                          style: AppTypography.pageTitle,
                         ),
                         const SizedBox(height: 4),
                         const Text(
                           'View, filter, and export sales data',
-                          style: TextStyle(color: AppColors.mutedText, fontSize: 14),
+                          style: AppTypography.pageSubtitle,
                         ),
                       ],
                     ),
@@ -157,12 +158,13 @@ class _SalesReportsPageState extends State<SalesReportsPage>
           const SizedBox(height: 16),
           TabBar(
             controller: _tabController,
-            labelColor: AppColors.goldenYellow,
-            unselectedLabelColor: AppColors.mutedText,
+            labelColor: AppColors.darkCharcoal,
+            unselectedLabelColor: AppColors.mutedBrown,
             indicatorColor: AppColors.goldenYellow,
-            indicatorSize: TabBarIndicatorSize.tab,
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            indicatorWeight: 3,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             tabs: const [
               Tab(text: 'All'),
               Tab(text: 'Today'),
@@ -421,11 +423,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                         children: [
                           const Text(
                             'Transactions',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.darkCharcoal,
-                            ),
+                            style: AppTypography.sectionTitle,
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -433,7 +431,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                              color: AppColors.goldenYellow,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -441,7 +439,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                                 Text(
                                   '$period Report',
                                   style: const TextStyle(
-                                    color: AppColors.goldenYellow,
+                                    color: AppColors.darkCharcoal,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -481,71 +479,43 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                             DataColumn(
                               label: Text(
                                 'Receipt No',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppColors.darkCharcoal,
-                                ),
+                                style: AppTypography.tableHeader,
                               ),
                             ),
                             DataColumn(
                               label: Text(
                                 'Date & Time',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppColors.darkCharcoal,
-                                ),
+                                style: AppTypography.tableHeader,
                               ),
                             ),
                             DataColumn(
                               label: Text(
                                 'Cashier',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppColors.darkCharcoal,
-                                ),
+                                style: AppTypography.tableHeader,
                               ),
                             ),
                             DataColumn(
                               label: Text(
                                 'Items',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppColors.darkCharcoal,
-                                ),
+                                style: AppTypography.tableHeader,
                               ),
                             ),
                             DataColumn(
                               label: Text(
                                 'Payment',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppColors.darkCharcoal,
-                                ),
+                                style: AppTypography.tableHeader,
                               ),
                             ),
                             DataColumn(
                               label: Text(
                                 'Total',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppColors.darkCharcoal,
-                                ),
+                                style: AppTypography.tableHeader,
                               ),
                             ),
                             DataColumn(
                               label: Text(
                                 'Status',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppColors.darkCharcoal,
-                                ),
+                                style: AppTypography.tableHeader,
                               ),
                             ),
                           ],
@@ -573,43 +543,37 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                                 DataCell(
                                   Text(
                                     tx['receipt_number'] ?? '',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
+                                    style: AppTypography.tableCellPrimary,
                                   ),
                                 ),
                                 DataCell(
                                   Text(
                                     formattedDate,
-                                    style: const TextStyle(fontSize: 13),
+                                    style: AppTypography.tableCellSecondary,
                                   ),
                                 ),
                                 DataCell(
                                   Text(
                                     'Admin',
-                                    style: const TextStyle(fontSize: 13),
+                                    style: AppTypography.tableCellSecondary,
                                   ),
                                 ),
                                 DataCell(
                                   Text(
                                     '${tx['itemCount'] ?? 0}',
-                                    style: const TextStyle(fontSize: 13),
+                                    style: AppTypography.tableCellSecondary,
                                   ),
                                 ),
                                 DataCell(
                                   Text(
                                     tx['payment_method'] ?? '',
-                                    style: const TextStyle(fontSize: 13),
+                                    style: AppTypography.tableCellSecondary,
                                   ),
                                 ),
                                 DataCell(
                                   Text(
                                     '\u20b1${parseAmount(tx['total_amount']).toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                    ),
+                                    style: AppTypography.tableCellPrimary,
                                   ),
                                 ),
                                 DataCell(
@@ -691,30 +655,19 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: AppTypography.metricLabel,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       value,
-                      style: const TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.darkCharcoal,
-                      ),
+                      style: AppTypography.metricValue,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
-                        fontSize: 10,
-                      ),
+                      style: AppTypography.badgeLabel.copyWith(color: AppColors.mutedText),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

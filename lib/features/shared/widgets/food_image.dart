@@ -103,12 +103,12 @@ class _FoodImageState extends State<FoodImage> {
 
   Widget _buildPlaceholder(String name) {
     return Container(
-      color: AppColors.goldenYellow.withValues(alpha: 0.15),
+      color: AppColors.pageBackground,
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : '?',
           style: const TextStyle(
-            color: AppColors.darkCharcoal,
+            color: AppColors.mutedBrown,
             fontSize: 36,
             fontWeight: FontWeight.w800,
           ),

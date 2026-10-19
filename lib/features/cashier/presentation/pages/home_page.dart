@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/responsive.dart';
 import '../widgets/food_card.dart';
@@ -320,16 +321,16 @@ class _CashierHomePageState extends State<CashierHomePage> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOutCubic,
-              width: _isOrderPanelExpanded ? 350 : 40,
+              width: _isOrderPanelExpanded ? 380 : 44,
               decoration: _isOrderPanelExpanded
                   ? BoxDecoration(
-                      color: const Color(0xFFF8F6F0),
+                      color: AppColors.surfaceWhite,
                       border: Border(
                         left: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
                       ),
                     )
                   : BoxDecoration(
-                      color: const Color(0xFFF8F6F0),
+                      color: AppColors.surfaceWhite,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(12),
                         bottomLeft: Radius.circular(12),
@@ -430,65 +431,114 @@ class _CashierHomePageState extends State<CashierHomePage> {
     );
   }
 
+  IconData _getCategoryIcon(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('all')) return LucideIcons.layout_grid;
+    if (lower.contains('pastil')) return LucideIcons.utensils;
+    if (lower.contains('silog')) return LucideIcons.egg_fried;
+    if (lower.contains('drink') || lower.contains('beverage') || lower.contains('juice')) return LucideIcons.coffee;
+    if (lower.contains('soup')) return LucideIcons.soup;
+    if (lower.contains('side') || lower.contains('snack')) return LucideIcons.sandwich;
+    if (lower.contains('dessert') || lower.contains('cake')) return LucideIcons.cake_slice;
+    if (lower.contains('burger')) return LucideIcons.sandwich;
+    if (lower.contains('pasta') || lower.contains('noodle')) return LucideIcons.cooking_pot;
+    return LucideIcons.utensils;
+  }
+
+  int _getCategoryItemCount(String catId) {
+    if (catId == 'all') return _foods.length;
+    return _foods.where((f) => f['category_id'].toString() == catId).length;
+  }
+
   Widget _buildTopBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceWhite,
+        border: Border(
+          bottom: BorderSide(color: AppColors.softBorder, width: 1),
+        ),
+      ),
       child: Row(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'New Order',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    fontFamily: 'serif',
-                    letterSpacing: -0.4,
-                    color: Theme.of(context).colorScheme.onSurface,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Menu',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                  color: AppColors.darkCharcoal,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.creamBackground,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.softBorder, width: 1),
+                ),
+                child: Text(
+                  '${_foods.length} items',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.mutedBrown,
                   ),
                 ),
-                Text(
-                  'Select items for the customer',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
+          const Spacer(),
           if (_isLoading)
             const Padding(
-              padding: EdgeInsets.only(right: 16),
+              padding: EdgeInsets.only(right: 12),
               child: SizedBox(
-                width: 20,
-                height: 20,
+                width: 18,
+                height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
-          Flexible(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 300),
-              child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search food...',
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          // Search Product Pill
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.creamBackground,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.softBorder, width: 1),
               ),
-              onChanged: (value) => setState(() => _searchQuery = value),
-            ),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search product here...',
+                  hintStyle: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.mutedBrown,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  prefixIcon: const Icon(
+                    LucideIcons.search,
+                    size: 17,
+                    color: AppColors.mutedBrown,
+                  ),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(LucideIcons.x, size: 15, color: AppColors.mutedBrown),
+                          onPressed: () => setState(() => _searchQuery = ''),
+                          splashRadius: 16,
+                          padding: EdgeInsets.zero,
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+                ),
+                style: const TextStyle(fontSize: 13, color: AppColors.darkCharcoal),
+                onChanged: (value) => setState(() => _searchQuery = value),
+              ),
             ),
           ),
         ],
@@ -497,41 +547,94 @@ class _CashierHomePageState extends State<CashierHomePage> {
   }
 
   Widget _buildCategories() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 8,
-        children: _categories.map((cat) {
+    return SizedBox(
+      height: 68,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        scrollDirection: Axis.horizontal,
+        itemCount: _categories.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final cat = _categories[index];
           final catId = cat['id'].toString();
           final isSelected = catId == _selectedCategoryId;
-          return ChoiceChip(
-            label: Text(cat['name']),
-            selected: isSelected,
-            onSelected: (selected) {
-              if (selected) setState(() => _selectedCategoryId = catId);
-            },
-            selectedColor: Theme.of(context).colorScheme.primary,
-            backgroundColor: Colors.white,
-            side: BorderSide(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.outlineVariant,
+          final catName = cat['name'].toString().replaceAll(' Foods', '');
+          final itemCount = _getCategoryItemCount(catId);
+          final iconData = _getCategoryIcon(catName);
+
+          return Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () => setState(() => _selectedCategoryId = catId),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.goldenYellow
+                      : AppColors.surfaceWhite,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isSelected ? AppColors.goldenYellow : AppColors.softBorder,
+                    width: isSelected ? 1.8 : 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.darkCharcoal
+                            : AppColors.pageBackground,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        iconData,
+                        size: 17,
+                        color: isSelected
+                            ? AppColors.goldenYellow
+                            : AppColors.mutedBrown,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          catName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                            color: AppColors.darkCharcoal,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          '$itemCount items',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected
+                                ? AppColors.darkCharcoal
+                                : AppColors.mutedBrown,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-            labelStyle: TextStyle(
-              color: isSelected
-                  ? Colors.black
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            visualDensity: VisualDensity.compact,
           );
-        }).toList(),
+        },
       ),
     );
   }
@@ -554,56 +657,92 @@ class _CashierHomePageState extends State<CashierHomePage> {
 
     if (displayedFoods.isEmpty) {
       return Center(
-        child: Text(
-          'No food items found.',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(LucideIcons.utensils, size: 40, color: AppColors.mutedBrown),
+            const SizedBox(height: 12),
+            Text(
+              'No food items found.',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       );
     }
 
-    final foodIdsInCart = _orderItems
-        .map((item) => item['food']['id'].toString())
-        .toSet();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final int crossAxisCount;
+        final double childAspectRatio;
 
-    final isWide = !isMobile && !_isOrderPanelExpanded;
+        if (isMobile || availableWidth < 500) {
+          crossAxisCount = 2;
+          childAspectRatio = 0.82;
+        } else if (availableWidth < 700) {
+          crossAxisCount = 3;
+          childAspectRatio = 0.82;
+        } else if (availableWidth < 880) {
+          crossAxisCount = 4;
+          childAspectRatio = 0.80;
+        } else {
+          // Desktop POS layout: 5 items per row for compact, proportional food cards
+          crossAxisCount = 5;
+          childAspectRatio = 0.80;
+        }
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.05),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
-          child: FadeTransition(
-            opacity: animation,
-            child: child,
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.05),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+              child: FadeTransition(
+                opacity: animation,
+                child: child,
+              ),
+            );
+          },
+          child: GridView.builder(
+            key: ValueKey('grid_${_selectedCategoryId}_${_searchQuery.isEmpty ? 'all' : _searchQuery}_$crossAxisCount'),
+            padding: const EdgeInsets.all(16),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: childAspectRatio,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: displayedFoods.length,
+            itemBuilder: (context, index) {
+              final food = displayedFoods[index];
+              final cartItem = _orderItems.firstWhere(
+                (item) => item['food']['id'].toString() == food['id'].toString(),
+                orElse: () => {},
+              );
+              final inCart = cartItem.isNotEmpty;
+              final quantity = inCart ? (cartItem['quantity'] as int? ?? 1) : 0;
+              final cartIndex = inCart ? _orderItems.indexOf(cartItem) : -1;
+
+              return FoodCard(
+                food: food,
+                isInCart: inCart,
+                quantity: quantity,
+                onAdd: () => _addToOrder(food),
+                onRemove: () => _removeFoodFromCart(food['id'].toString()),
+                onIncrease: cartIndex >= 0 ? () => _increaseQuantity(cartIndex) : null,
+                onDecrease: cartIndex >= 0 ? () => _decreaseQuantity(cartIndex) : null,
+              );
+            },
           ),
         );
       },
-      child: GridView.builder(
-        key: ValueKey('grid_$_selectedCategoryId\_${_searchQuery.isEmpty ? 'all' : _searchQuery}'),
-        padding: EdgeInsets.all(isWide ? 20 : 24),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isMobile ? 2 : (isWide ? 4 : 3),
-          childAspectRatio: isWide ? 1.1 : 0.8,
-          crossAxisSpacing: isWide ? 12 : 16,
-          mainAxisSpacing: isWide ? 14 : 16,
-        ),
-        itemCount: displayedFoods.length,
-        itemBuilder: (context, index) {
-          final food = displayedFoods[index];
-          final inCart = foodIdsInCart.contains(food['id'].toString());
-          return FoodCard(
-            food: food,
-            isInCart: inCart,
-            onAdd: () => _addToOrder(food),
-            onRemove: () => _removeFoodFromCart(food['id'].toString()),
-          );
-        },
-      ),
     );
   }
 }

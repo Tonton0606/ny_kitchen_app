@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/security_utils.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/session/session_manager.dart';
 
@@ -141,19 +142,19 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                    color: AppColors.goldenYellow.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.edit_outlined,
-                    color: AppColors.goldenYellow,
+                  color: AppColors.goldenYellow,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.edit_outlined,
+                  color: AppColors.darkCharcoal,
                   size: 28,
                 ),
               ),
               const SizedBox(width: 16),
               Text(
                 'Edit ${user['full_name']}',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: AppTypography.dialogTitle,
               ),
             ],
           ),
@@ -288,7 +289,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             const SizedBox(width: 16),
             Text(
               'Reset Password',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: AppTypography.dialogTitle,
             ),
           ],
         ),
@@ -420,7 +421,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             const SizedBox(width: 16),
             Text(
               '${isActive ? 'Disable' : 'Enable'} Account',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: AppTypography.dialogTitle,
             ),
           ],
         ),
@@ -505,7 +506,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             const SizedBox(width: 16),
             const Text(
               'Unlock Account',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: AppTypography.dialogTitle,
             ),
           ],
         ),
@@ -574,7 +575,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F5F0),
+      backgroundColor: AppColors.pageBackground,
       body: Stack(
         children: [
           Padding(
@@ -583,76 +584,52 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 LayoutBuilder(builder: (context, topConstraints) {
-                  final isMobileOrNarrow = topConstraints.maxWidth < 650;
-                  if (isMobileOrNarrow) {
+                  final isCompact = topConstraints.maxWidth < 650;
+                  final titleWidget = const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Account Management',
+                        style: AppTypography.pageTitle,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Manage cashier accounts and permissions',
+                        style: AppTypography.pageSubtitle,
+                      ),
+                    ],
+                  );
+
+                  final addButton = ElevatedButton.icon(
+                    onPressed: _openAddCashier,
+                    icon: const Icon(Icons.person_add, size: 18),
+                    label: const Text('Add Cashier', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.goldenYellow,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+
+                  if (isCompact) {
                     return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Account Management',
-                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Manage cashier accounts and permissions',
-                              style: TextStyle(color: AppColors.mutedText, fontSize: 13),
-                            ),
-                          ],
-                        ),
+                        titleWidget,
                         const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: _openAddCashier,
-                            icon: const Icon(Icons.person_add, size: 18),
-                            label: const Text('Add Cashier', style: TextStyle(fontWeight: FontWeight.bold)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.goldenYellow,
-                              foregroundColor: Colors.black,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                          ),
-                        ),
+                        addButton,
                       ],
                     );
                   }
+
                   return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Account Management',
-                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Manage cashier accounts and permissions',
-                            style: TextStyle(color: AppColors.mutedText, fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      ElevatedButton.icon(
-                        onPressed: _openAddCashier,
-                        icon: const Icon(Icons.person_add, size: 18),
-                        label: const Text('Add Cashier', style: TextStyle(fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.goldenYellow,
-                          foregroundColor: Colors.black,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
+                      titleWidget,
+                      addButton,
                     ],
                   );
                 }),
@@ -701,19 +678,19 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                                       decoration: const BoxDecoration(
-                                        color: Color(0xFFFAF8F5),
+                                        color: AppColors.pageBackground,
                                         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                                         border: Border(bottom: BorderSide(color: AppColors.softBorder)),
                                       ),
                                       child: const Row(
                                         children: [
-                                          SizedBox(width: 48, child: Text('Avatar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          SizedBox(width: 48, child: Text('Avatar', style: AppTypography.tableHeader)),
                                           SizedBox(width: 16),
-                                          Expanded(flex: 3, child: Text('Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                          Expanded(flex: 2, child: Text('Username', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                          SizedBox(width: 90, child: Text('Role', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                          SizedBox(width: 90, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                          SizedBox(width: 130, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          Expanded(flex: 3, child: Text('Name', style: AppTypography.tableHeader)),
+                                          Expanded(flex: 2, child: Text('Username', style: AppTypography.tableHeader)),
+                                          SizedBox(width: 90, child: Text('Role', style: AppTypography.tableHeader)),
+                                          SizedBox(width: 90, child: Text('Status', style: AppTypography.tableHeader)),
+                                          SizedBox(width: 130, child: Text('Actions', style: AppTypography.tableHeader)),
                                         ],
                                       ),
                                     ),
@@ -738,13 +715,13 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                                         height: 48,
                                                         child: CircleAvatar(
                                                           radius: 24,
-                                                          backgroundColor: AppColors.goldenYellow.withValues(alpha: 0.2),
+                                                          backgroundColor: AppColors.goldenYellow,
                                                           child: Text(
                                                             (user['full_name'] as String).isNotEmpty
                                                                 ? (user['full_name'] as String)[0].toUpperCase()
                                                                 : '?',
                                                             style: const TextStyle(
-                                                              color: AppColors.goldenYellow,
+                                                              color: AppColors.darkCharcoal,
                                                               fontWeight: FontWeight.bold,
                                                             ),
                                                           ),
@@ -755,14 +732,14 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                                         flex: 3,
                                                         child: Text(
                                                           user['full_name'],
-                                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.darkCharcoal),
+                                                          style: AppTypography.tableCellPrimary,
                                                         ),
                                                       ),
                                                       Expanded(
                                                         flex: 2,
                                                         child: Text(
                                                           user['username'],
-                                                          style: const TextStyle(fontSize: 14),
+                                                          style: AppTypography.tableCellSecondary,
                                                         ),
                                                       ),
                                                       SizedBox(
@@ -771,15 +748,15 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                                           decoration: BoxDecoration(
                                                             color: role == 'Admin'
-                                                                ? AppColors.tertiary.withValues(alpha: 0.1)
-                                                                : AppColors.goldenYellow.withValues(alpha: 0.1),
+                                                                ? AppColors.tertiary.withValues(alpha: 0.12)
+                                                                : AppColors.goldenYellow,
                                                             borderRadius: BorderRadius.circular(6),
                                                           ),
                                                           child: Text(
                                                             role,
                                                             textAlign: TextAlign.center,
                                                             style: TextStyle(
-                                                              color: role == 'Admin' ? AppColors.tertiary : AppColors.goldenYellow,
+                                                              color: role == 'Admin' ? AppColors.tertiary : AppColors.darkCharcoal,
                                                               fontSize: 12,
                                                               fontWeight: FontWeight.bold,
                                                             ),
@@ -873,9 +850,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                             width: 190,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFF8E7),
+                                color: AppColors.creamBackground,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFFFE8A3)),
+                                border: Border.all(color: AppColors.softBorder),
                               ),
                               padding: const EdgeInsets.all(20),
                               child: const Column(
@@ -930,7 +907,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                       Container(
                         height: 120,
                         decoration: BoxDecoration(
-                          color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                          color: AppColors.pageBackground,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Center(
@@ -1023,10 +1000,10 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.goldenYellow.withValues(alpha: 0.1),
+              color: AppColors.goldenYellow,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.person_add, color: AppColors.goldenYellow, size: 20),
+            child: const Icon(Icons.person_add, color: AppColors.darkCharcoal, size: 20),
           ),
           const SizedBox(width: 12),
           const Text('Add Cashier', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal)),

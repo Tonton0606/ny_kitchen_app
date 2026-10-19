@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/utils/security_utils.dart';
 
 class ForceChangePasswordDialog extends StatefulWidget {
@@ -103,7 +104,10 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
     return PopScope(
       canPop: false,
       child: Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+          side: const BorderSide(color: AppColors.softBorder, width: 1),
+        ),
         backgroundColor: AppColors.surfaceWhite,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
@@ -120,15 +124,15 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: AppColors.brandRed.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                         ),
                         child: const Icon(
                           Icons.lock_reset_rounded,
                           color: AppColors.brandRed,
-                          size: 28,
+                          size: 26,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 14),
                       const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +140,7 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                             Text(
                               'Password Change Required',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 17,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.darkCharcoal,
                               ),
@@ -146,7 +150,7 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                               'Security Policy Requirement (Gap 3)',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.mutedText,
+                                color: AppColors.mutedBrown,
                               ),
                             ),
                           ],
@@ -159,8 +163,8 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.creamBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.softBorder),
+                      borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                      border: Border.all(color: AppColors.softBorder, width: 1),
                     ),
                     child: const Text(
                       'Default and temporary credentials must be changed on initial login. Your new password must be at least 8 characters long and include both letters and numbers.',
@@ -171,21 +175,32 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   TextField(
                     controller: _newPasswordController,
                     obscureText: _obscureNew,
                     decoration: InputDecoration(
                       labelText: 'New Password',
-                      prefixIcon: const Icon(Icons.lock_outline, color: AppColors.darkCharcoal),
+                      prefixIcon: const Icon(Icons.lock_outline, color: AppColors.mutedBrown),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          color: AppColors.mutedText,
+                          color: AppColors.mutedBrown,
                         ),
                         onPressed: () => setState(() => _obscureNew = !_obscureNew),
                       ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                        borderSide: const BorderSide(color: AppColors.softBorder, width: 1),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                        borderSide: const BorderSide(color: AppColors.softBorder, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                        borderSide: const BorderSide(color: AppColors.goldenYellow, width: 2),
+                      ),
                       filled: true,
                       fillColor: AppColors.surfaceWhite,
                     ),
@@ -196,15 +211,26 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                     obscureText: _obscureConfirm,
                     decoration: InputDecoration(
                       labelText: 'Confirm New Password',
-                      prefixIcon: const Icon(Icons.lock_outline, color: AppColors.darkCharcoal),
+                      prefixIcon: const Icon(Icons.lock_outline, color: AppColors.mutedBrown),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          color: AppColors.mutedText,
+                          color: AppColors.mutedBrown,
                         ),
                         onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                       ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                        borderSide: const BorderSide(color: AppColors.softBorder, width: 1),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                        borderSide: const BorderSide(color: AppColors.softBorder, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                        borderSide: const BorderSide(color: AppColors.goldenYellow, width: 2),
+                      ),
                       filled: true,
                       fillColor: AppColors.surfaceWhite,
                     ),
@@ -215,7 +241,7 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         color: AppColors.brandRed.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                         border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.3)),
                       ),
                       child: Row(
@@ -245,33 +271,51 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                     children: [
                       TextButton(
                         onPressed: _isSubmitting ? null : widget.onCancel,
+                        autofocus: true,
                         child: const Text(
                           'Cancel / Log Out',
                           style: TextStyle(
-                            color: AppColors.mutedText,
+                            color: AppColors.darkCharcoal,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      ElevatedButton(
-                        onPressed: _isSubmitting ? null : _handleSubmit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.goldenYellow,
-                          foregroundColor: AppColors.darkCharcoal,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 0,
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                          boxShadow: _isSubmitting
+                              ? null
+                              : const [
+                                  BoxShadow(
+                                    color: AppColors.goldTactileEdge,
+                                    offset: Offset(0, 2.5),
+                                    blurRadius: 0,
+                                    spreadRadius: 0,
+                                  ),
+                                ],
                         ),
-                        child: _isSubmitting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.darkCharcoal),
-                              )
-                            : const Text(
-                                'Set Password & Continue',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
+                        child: ElevatedButton(
+                          onPressed: _isSubmitting ? null : _handleSubmit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.goldenYellow,
+                            foregroundColor: AppColors.darkCharcoal,
+                            disabledBackgroundColor: AppColors.disabled,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDesignTokens.radius8)),
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                          ),
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.darkCharcoal),
+                                )
+                              : const Text(
+                                  'Set Password & Continue',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                        ),
                       ),
                     ],
                   ),

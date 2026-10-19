@@ -13,7 +13,7 @@ class AIServiceClient {
   /// Returns the configured service key from explicit parameter or dotenv (never hardcoded).
   String? get serviceKey {
     if (_explicitServiceKey != null) {
-      return _explicitServiceKey!.isNotEmpty ? _explicitServiceKey : null;
+      return _explicitServiceKey.isNotEmpty ? _explicitServiceKey : null;
     }
     try {
       if (dotenv.isInitialized) {

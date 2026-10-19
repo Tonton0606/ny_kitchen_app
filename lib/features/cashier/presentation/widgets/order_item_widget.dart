@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/food_image.dart';
 
 class OrderItemWidget extends StatelessWidget {
   final Map<String, dynamic> item;
@@ -19,111 +21,117 @@ class OrderItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final food = item['food'];
     final quantity = item['quantity'] as int;
-    final price = food['price'] as double;
+    final price = (food['price'] as num).toDouble();
     final total = price * quantity;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 28,
-                child: Text(
-                  '$quantity',
+          // Food Thumbnail
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.softBorder, width: 1),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: FoodImage(food: food),
+          ),
+          const SizedBox(width: 10),
+
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  food['name'] ?? 'Item',
                   style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: AppColors.darkCharcoal,
-                  ),
-                  textAlign: TextAlign.right,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'x',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.mutedText,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  food['name'],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     fontSize: 13,
                     color: AppColors.darkCharcoal,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '₱${total.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: AppColors.darkCharcoal,
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Text(
+                      '₱${price.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.mutedBrown,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    Text(
+                      '  × $quantity',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.darkCharcoal,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '₱${total.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        color: AppColors.darkCharcoal,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(width: 8),
+
+          // Compact Stepper
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(width: 28),
-              Text(
-                '₱${price.toStringAsFixed(2)} ea',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.mutedText,
-                ),
-              ),
-              const Spacer(),
               InkWell(
                 onTap: onDecrease,
+                borderRadius: BorderRadius.circular(6),
                 child: Container(
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.softBorder),
-                    borderRadius: BorderRadius.circular(4),
+                    color: AppColors.creamBackground,
+                    border: Border.all(color: AppColors.softBorder, width: 1),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Icon(Icons.remove, size: 12, color: AppColors.mutedText),
+                  child: const Icon(LucideIcons.minus, size: 12, color: AppColors.darkCharcoal),
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                '$quantity',
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  '$quantity',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                    color: AppColors.darkCharcoal,
+                  ),
+                ),
               ),
-              const SizedBox(width: 8),
               InkWell(
                 onTap: onIncrease,
+                borderRadius: BorderRadius.circular(6),
                 child: Container(
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: AppColors.goldenYellow,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Icon(Icons.add, size: 12, color: Colors.black),
-                ),
-              ),
-              const SizedBox(width: 8),
-              InkWell(
-                onTap: onRemove,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.4)),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Icon(Icons.close, size: 12, color: AppColors.brandRed.withValues(alpha: 0.7)),
+                  child: const Icon(LucideIcons.plus, size: 12, color: AppColors.darkCharcoal),
                 ),
               ),
             ],

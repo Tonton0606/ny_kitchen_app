@@ -11,6 +11,7 @@ import 'account_management_page.dart';
 import 'activity_logs_page.dart';
 import 'backup_restore_page.dart';
 import 'admin_account_settings_page.dart';
+import '../../../shared/widgets/app_status_strip.dart';
 
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key});
@@ -26,13 +27,16 @@ class _AdminShellState extends State<AdminShell> {
   bool _isNavExpanded = false;
   static const double _panelWidth = 500.0;
 
-  final List<Widget> _pages = const [
-    AdminDashboardPage(),
-    SalesReportsPage(),
-    FoodManagementPage(),
-    AccountManagementPage(),
-    ActivityLogsPage(),
-    BackupRestorePage(),
+  late final List<Widget> _pages = [
+    AdminDashboardPage(
+      onNavigate: _onItemTapped,
+      onSettingsTap: _openSettings,
+    ),
+    const SalesReportsPage(),
+    const FoodManagementPage(),
+    const AccountManagementPage(),
+    const ActivityLogsPage(),
+    const BackupRestorePage(),
   ];
 
   final List<String> _titles = [
@@ -118,6 +122,7 @@ class _AdminShellState extends State<AdminShell> {
                   ),
                 Expanded(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (!isMobile) _buildTopBar(),
                       Expanded(child: _pages[_selectedIndex]),
@@ -134,32 +139,9 @@ class _AdminShellState extends State<AdminShell> {
   }
 
   Widget _buildTopBar() {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: AppColors.softBorder)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Text(
-            _titles[_selectedIndex],
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: AppColors.mutedText,
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.tune_outlined),
-            color: AppColors.darkCharcoal,
-            onPressed: _openSettings,
-            tooltip: 'Settings',
-          ),
-        ],
-      ),
+    return AppStatusStrip(
+      title: _titles[_selectedIndex],
+      onSettingsTap: _openSettings,
     );
   }
 

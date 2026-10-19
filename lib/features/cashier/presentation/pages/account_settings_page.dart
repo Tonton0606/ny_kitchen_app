@@ -3,7 +3,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/utils/security_utils.dart';
-import '../../../auth/presentation/pages/face_registration_page.dart';
 import 'cashier_activity_logs_page.dart';
 
 class AccountSettingsPage extends StatefulWidget {
@@ -101,21 +100,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 },
               ),
               _buildTile(
-                icon: Icons.face_retouching_natural,
-                title: 'Register Face Login',
-                onTap: () {
-                  final userId = SessionManager().userId;
-                  if (userId != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FaceRegistrationPage(userId: userId),
-                      ),
-                    );
-                  }
-                },
-              ),
-              _buildTile(
                 icon: Icons.lock_outline,
                 title: 'Change Password',
                 onTap: () => _showChangePasswordDialog(context),
@@ -151,10 +135,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.goldenYellow.withValues(alpha: 0.1),
+              color: AppColors.pageBackground,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: AppColors.goldenYellow, size: 24),
+            child: Icon(icon, color: AppColors.darkCharcoal, size: 24),
           ),
           title: Text(
             title,
@@ -195,12 +179,12 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                color: AppColors.goldenYellow,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
                 Icons.lock_reset,
-                color: AppColors.goldenYellow,
+                color: AppColors.darkCharcoal,
                 size: 28,
               ),
             ),

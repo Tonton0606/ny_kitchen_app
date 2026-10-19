@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class CustomTitleBar extends StatelessWidget {
   final Widget? title;
@@ -21,10 +22,12 @@ class CustomTitleBar extends StatelessWidget {
           Expanded(
             child: GestureDetector(
               onDoubleTap: () async {
-                if (await windowManager.isMaximized()) {
-                  windowManager.unmaximize();
+                if (await windowManager.isFullScreen()) {
+                  await windowManager.setFullScreen(false);
+                } else if (await windowManager.isMaximized()) {
+                  await windowManager.unmaximize();
                 } else {
-                  windowManager.maximize();
+                  await windowManager.maximize();
                 }
               },
               child: DragToMoveArea(
@@ -65,10 +68,12 @@ class WindowButtons extends StatelessWidget {
         _buildButton(
           icon: Icons.crop_square,
           onPressed: () async {
-            if (await windowManager.isMaximized()) {
-              windowManager.unmaximize();
+            if (await windowManager.isFullScreen()) {
+              await windowManager.setFullScreen(false);
+            } else if (await windowManager.isMaximized()) {
+              await windowManager.unmaximize();
             } else {
-              windowManager.maximize();
+              await windowManager.maximize();
             }
           },
         ),
@@ -90,7 +95,7 @@ class WindowButtons extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
-        hoverColor: isClose ? Colors.red : Colors.grey.withValues(alpha: 0.2),
+        hoverColor: isClose ? AppColors.brandRed : AppColors.softBorder.withValues(alpha: 0.5),
         child: Container(
           width: 46,
           height: 40,
@@ -99,8 +104,8 @@ class WindowButtons extends StatelessWidget {
             icon,
             size: 16,
             color: isClose
-                ? null
-                : Colors.grey[700], // Will inherit or change based on theme
+                ? (Colors.white)
+                : AppColors.darkCharcoal,
           ),
         ),
       ),

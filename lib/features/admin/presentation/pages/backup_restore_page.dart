@@ -1,7 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/database/repositories/backup_repository.dart';
 
 class BackupRestorePage extends StatefulWidget {
@@ -57,16 +57,12 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
           children: [
             const Text(
               'Database Backup & Restore',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.darkCharcoal,
-              ),
+              style: AppTypography.pageTitle,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             const Text(
               'Securely export your local SQLite database for safekeeping. You can use these backups to restore the system in case of data loss.',
-              style: TextStyle(fontSize: 14, color: AppColors.mutedText),
+              style: AppTypography.pageSubtitle,
             ),
             const SizedBox(height: 32),
             
@@ -87,11 +83,7 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
                       SizedBox(width: 12),
                       Text(
                         'Export Database',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.darkCharcoal,
-                        ),
+                        style: AppTypography.sectionTitle,
                       ),
                     ],
                   ),

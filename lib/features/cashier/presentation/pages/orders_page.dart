@@ -474,100 +474,107 @@ class _OrdersPageState extends State<OrdersPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Active Orders',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    fontFamily: 'serif',
-                    letterSpacing: -0.4,
-                    color: AppColors.darkCharcoal,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$_inProgressCount in progress',
-                  style: const TextStyle(
-                    color: AppColors.mutedText,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceWhite,
+              border: Border(bottom: BorderSide(color: AppColors.softBorder, width: 1)),
             ),
-          ),
-          SizedBox(
-            height: 60,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              children: ['All', 'Preparing', 'Served'].map((
-                f,
-              ) {
-                final isSelected = _statusFilter == f;
-                final count = f == 'All'
-                    ? _orders.where((o) => o['status'] != 'Served').length
-                    : _orders.where((o) => o['status'] == f).length;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: ChoiceChip(
-                    label: f == 'All'
-                        ? const Text('All')
-                        : Row(
+            child: Row(
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Queue',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: AppColors.darkCharcoal,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.creamBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.softBorder, width: 1),
+                      ),
+                      child: Text(
+                        '$_inProgressCount in progress',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.mutedBrown,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                // Filter pills
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: ['All', 'Preparing', 'Served'].map((f) {
+                    final isSelected = _statusFilter == f;
+                    final count = f == 'All'
+                        ? _orders.where((o) => o['status'] != 'Served').length
+                        : _orders.where((o) => o['status'] == f).length;
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: InkWell(
+                        onTap: () => setState(() => _statusFilter = f),
+                        borderRadius: BorderRadius.circular(20),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppColors.goldenYellow : AppColors.creamBackground,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected ? AppColors.goldenYellow : AppColors.softBorder,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(f),
-                              const SizedBox(width: 4),
+                              Text(
+                                f,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                  color: AppColors.darkCharcoal,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
-                                      : Colors.grey.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(6),
+                                      ? Colors.white.withValues(alpha: 0.8)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   '$count',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: isSelected
-                                        ? Colors.black
-                                        : AppColors.mutedText,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.darkCharcoal,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                    selected: isSelected,
-                    onSelected: (_) => setState(() => _statusFilter = f),
-                    selectedColor: Theme.of(context).colorScheme.primary,
-                    backgroundColor: Colors.white,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? Colors.black
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    side: BorderSide(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                  ),
-                );
-              }).toList(),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -597,7 +604,7 @@ class _OrdersPageState extends State<OrdersPage> {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                    padding: const EdgeInsets.all(20),
                     itemCount: _filteredOrders.length,
                     itemBuilder: (context, index) {
                       final order = _filteredOrders[index];
@@ -610,11 +617,9 @@ class _OrdersPageState extends State<OrdersPage> {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Colors.grey.withValues(alpha: 0.15),
-                          ),
+                          color: AppColors.surfaceWhite,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.softBorder, width: 1),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -754,6 +759,15 @@ class _OrdersPageState extends State<OrdersPage> {
                                 const SizedBox(height: 10),
                                 Row(
                                   children: [
+                                    TextButton.icon(
+                                      onPressed: () => _cancelOrder(order),
+                                      icon: const Icon(Icons.cancel_outlined, size: 16),
+                                      label: const Text('Cancel'),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: AppColors.brandRed,
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    ),
                                     const Spacer(),
                                     TextButton.icon(
                                       onPressed: () => _advanceStatus(order),
