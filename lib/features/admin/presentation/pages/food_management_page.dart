@@ -586,9 +586,11 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     BoxConstraints constraints,
     bool isSidePanelVisible,
   ) {
-    final double tableWidth = isSidePanelVisible
-        ? (constraints.maxWidth - 420).clamp(680.0, 1100.0)
-        : constraints.maxWidth.clamp(720.0, 1300.0);
+    final double availableWidth = isSidePanelVisible
+        ? constraints.maxWidth - 416.0
+        : constraints.maxWidth;
+    final double minTableWidth = isSidePanelVisible ? 680.0 : 820.0;
+    final double tableWidth = availableWidth < minTableWidth ? minTableWidth : availableWidth;
 
     final totalPages = (filteredFoods.isEmpty)
         ? 1
@@ -643,30 +645,42 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     SizedBox(width: 16),
                     Expanded(
                       flex: 3,
-                      child: Text(
-                        'Name',
-                        style: AppTypography.tableHeader,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 16),
+                        child: Text(
+                          'Name',
+                          style: AppTypography.tableHeader,
+                        ),
                       ),
                     ),
                     Expanded(
                       flex: 2,
-                      child: Text(
-                        'Category',
-                        style: AppTypography.tableHeader,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 16),
+                        child: Text(
+                          'Category',
+                          style: AppTypography.tableHeader,
+                        ),
                       ),
                     ),
                     SizedBox(
-                      width: 90,
-                      child: Text(
-                        'Price',
-                        style: AppTypography.tableHeader,
+                      width: 100,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 16),
+                        child: Text(
+                          'Price',
+                          style: AppTypography.tableHeader,
+                        ),
                       ),
                     ),
                     SizedBox(
-                      width: 110,
-                      child: Text(
-                        'Status',
-                        style: AppTypography.tableHeader,
+                      width: 120,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 16),
+                        child: Text(
+                          'Status',
+                          style: AppTypography.tableHeader,
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -739,74 +753,92 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                     const SizedBox(width: 16),
                                     Expanded(
                                       flex: 3,
-                                      child: Text(
-                                        food['name'] ?? 'Unknown',
-                                        style: isSelected
-                                            ? AppTypography.tableCellPrimary.copyWith(fontWeight: FontWeight.w800)
-                                            : AppTypography.tableCellPrimary,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(right: 16),
+                                        child: Text(
+                                          food['name'] ?? 'Unknown',
+                                          style: isSelected
+                                              ? AppTypography.tableCellPrimary.copyWith(fontWeight: FontWeight.w800)
+                                              : AppTypography.tableCellPrimary,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                     ),
                                     Expanded(
                                       flex: 2,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 5,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(right: 16),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: chipColor.withValues(alpha: 0.12),
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(catIcon, style: const TextStyle(fontSize: 13)),
+                                                const SizedBox(width: 5),
+                                                Flexible(
+                                                  child: Text(
+                                                    catName,
+                                                    style: TextStyle(
+                                                      color: chipColor,
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
-                                        decoration: BoxDecoration(
-                                          color: chipColor.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(20),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 100,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(right: 16),
+                                        child: Text(
+                                          '₱${(food["price"] as num).toDouble().toStringAsFixed(2)}',
+                                          style: AppTypography.tableCellPrimary,
                                         ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 120,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(right: 16),
                                         child: Row(
-                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Text(catIcon, style: const TextStyle(fontSize: 13)),
-                                            const SizedBox(width: 5),
+                                            Container(
+                                              width: 7,
+                                              height: 7,
+                                              decoration: BoxDecoration(
+                                                color: isAvailable ? AppColors.success : AppColors.brandRed,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
                                             Flexible(
                                               child: Text(
-                                                catName,
-                                                style: TextStyle(
-                                                  color: chipColor,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
+                                                isAvailable ? 'Available' : 'Unavailable',
+                                                style: AppTypography.badgeLabel.copyWith(
+                                                  color: isAvailable ? AppColors.success : AppColors.brandRed,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 90,
-                                      child: Text(
-                                        '₱${(food["price"] as num).toDouble().toStringAsFixed(2)}',
-                                        style: AppTypography.tableCellPrimary,
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 110,
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 7,
-                                            height: 7,
-                                            decoration: BoxDecoration(
-                                              color: isAvailable ? AppColors.success : AppColors.brandRed,
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Flexible(
-                                            child: Text(
-                                              isAvailable ? 'Available' : 'Unavailable',
-                                              style: AppTypography.badgeLabel.copyWith(
-                                                color: isAvailable ? AppColors.success : AppColors.brandRed,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
                                       ),
                                     ),
                                     SizedBox(

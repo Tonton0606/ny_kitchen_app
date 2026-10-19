@@ -659,217 +659,234 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                 const SizedBox(height: 16),
                 Expanded(
                   child: LayoutBuilder(builder: (context, bodyConstraints) {
-                    final showSideCard = bodyConstraints.maxWidth >= 950;
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.softBorder)),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: SizedBox(
-                                width: showSideCard
-                                    ? (bodyConstraints.maxWidth - 240).clamp(750.0, 1100.0)
-                                    : bodyConstraints.maxWidth.clamp(750.0, 1200.0),
-                                height: bodyConstraints.maxHeight,
-                                child: Column(
+                    final double minTableWidth = 820.0;
+                    final double tableWidth = bodyConstraints.maxWidth < minTableWidth
+                        ? minTableWidth
+                        : bodyConstraints.maxWidth;
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.softBorder),
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: tableWidth,
+                          height: bodyConstraints.maxHeight,
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.pageBackground,
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                                  border: Border(bottom: BorderSide(color: AppColors.softBorder)),
+                                ),
+                                child: const Row(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.pageBackground,
-                                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                                        border: Border(bottom: BorderSide(color: AppColors.softBorder)),
-                                      ),
-                                      child: const Row(
-                                        children: [
-                                          SizedBox(width: 48, child: Text('Avatar', style: AppTypography.tableHeader)),
-                                          SizedBox(width: 16),
-                                          Expanded(flex: 3, child: Text('Name', style: AppTypography.tableHeader)),
-                                          Expanded(flex: 2, child: Text('Username', style: AppTypography.tableHeader)),
-                                          SizedBox(width: 90, child: Text('Role', style: AppTypography.tableHeader)),
-                                          SizedBox(width: 90, child: Text('Status', style: AppTypography.tableHeader)),
-                                          SizedBox(width: 130, child: Text('Actions', style: AppTypography.tableHeader)),
-                                        ],
+                                    SizedBox(width: 48, child: Text('Avatar', style: AppTypography.tableHeader)),
+                                    SizedBox(width: 16),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Padding(
+                                        padding: EdgeInsets.only(right: 16),
+                                        child: Text('Name', style: AppTypography.tableHeader),
                                       ),
                                     ),
                                     Expanded(
-                                      child: filteredUsers.isEmpty
-                                          ? const Center(child: Text('No users found.', style: TextStyle(color: AppColors.mutedText)))
-                                          : ListView.separated(
-                                              padding: EdgeInsets.zero,
-                                              itemCount: filteredUsers.length,
-                                              separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
-                                              itemBuilder: (context, index) {
-                                                final user = filteredUsers[index];
-                                                final isActive = user['status'] == 'active';
-                                                final isLocked = user['status'] == 'locked';
-                                                final role = user['role'] == 'admin' ? 'Admin' : 'Cashier';
-                                                return Padding(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                                  child: Row(
-                                                    children: [
-                                                      SizedBox(
-                                                        width: 48,
-                                                        height: 48,
-                                                        child: CircleAvatar(
-                                                          radius: 24,
-                                                          backgroundColor: AppColors.goldenYellow,
-                                                          child: Text(
-                                                            (user['full_name'] as String).isNotEmpty
-                                                                ? (user['full_name'] as String)[0].toUpperCase()
-                                                                : '?',
-                                                            style: const TextStyle(
-                                                              color: AppColors.darkCharcoal,
-                                                              fontWeight: FontWeight.bold,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 16),
-                                                      Expanded(
-                                                        flex: 3,
-                                                        child: Text(
-                                                          user['full_name'],
-                                                          style: AppTypography.tableCellPrimary,
-                                                        ),
-                                                      ),
-                                                      Expanded(
-                                                        flex: 2,
-                                                        child: Text(
-                                                          user['username'],
-                                                          style: AppTypography.tableCellSecondary,
-                                                        ),
-                                                      ),
-                                                      SizedBox(
-                                                        width: 90,
-                                                        child: Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                                          decoration: BoxDecoration(
-                                                            color: role == 'Admin'
-                                                                ? AppColors.tertiary.withValues(alpha: 0.12)
-                                                                : AppColors.goldenYellow,
-                                                            borderRadius: BorderRadius.circular(6),
-                                                          ),
-                                                          child: Text(
-                                                            role,
-                                                            textAlign: TextAlign.center,
-                                                            style: TextStyle(
-                                                              color: role == 'Admin' ? AppColors.tertiary : AppColors.darkCharcoal,
-                                                              fontSize: 12,
-                                                              fontWeight: FontWeight.bold,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      SizedBox(
-                                                        width: 90,
-                                                        child: Row(
-                                                          children: [
-                                                            Container(
-                                                              width: 7,
-                                                              height: 7,
-                                                              decoration: BoxDecoration(
-                                                                color: isLocked ? Colors.orange : (isActive ? AppColors.success : AppColors.brandRed),
-                                                                shape: BoxShape.circle,
-                                                              ),
-                                                            ),
-                                                            const SizedBox(width: 6),
-                                                            Text(
-                                                              isLocked ? 'Locked' : (isActive ? 'Active' : 'Inactive'),
-                                                              style: TextStyle(
-                                                                color: isLocked ? Colors.orange : (isActive ? AppColors.success : AppColors.brandRed),
-                                                                fontWeight: FontWeight.w600,
-                                                                fontSize: 12,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      SizedBox(
-                                                        width: 130,
-                                                        child: Row(
-                                                          children: [
-                                                            _buildActionButton(
-                                                              icon: Icons.edit_outlined,
-                                                              color: AppColors.goldenYellow,
-                                                              tooltip: 'Edit',
-                                                              onPressed: () => _showEditCashierDialog(context, user),
-                                                            ),
-                                                            const SizedBox(width: 6),
-                                                            _buildActionButton(
-                                                              icon: Icons.lock_reset,
-                                                              color: AppColors.tertiary,
-                                                              tooltip: 'Reset Password',
-                                                              onPressed: () => _showResetPasswordDialog(context, user),
-                                                            ),
-                                                            const SizedBox(width: 6),
-                                                            if (isLocked)
-                                                              _buildActionButton(
-                                                                icon: Icons.lock_open,
-                                                                color: Colors.orange,
-                                                                tooltip: 'Unlock Account',
-                                                                onPressed: () => _showUnlockDialog(context, user),
-                                                              )
-                                                            else
-                                                              _buildActionButton(
-                                                                icon: isActive ? Icons.block : Icons.check_circle,
-                                                                color: isActive ? AppColors.brandRed : AppColors.success,
-                                                                tooltip: isActive ? 'Disable' : 'Enable',
-                                                                onPressed: () => _showDisableDialog(context, user),
-                                                              ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                      decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.softBorder))),
-                                      child: Row(
-                                        children: [
-                                          Text('Showing ${filteredUsers.length} of ${_users.length} accounts',
-                                              style: const TextStyle(color: AppColors.mutedText, fontSize: 13)),
-                                        ],
+                                      flex: 2,
+                                      child: Padding(
+                                        padding: EdgeInsets.only(right: 16),
+                                        child: Text('Username', style: AppTypography.tableHeader),
                                       ),
                                     ),
+                                    SizedBox(
+                                      width: 120,
+                                      child: Padding(
+                                        padding: EdgeInsets.only(right: 16),
+                                        child: Text('Role', style: AppTypography.tableHeader),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 120,
+                                      child: Padding(
+                                        padding: EdgeInsets.only(right: 16),
+                                        child: Text('Status', style: AppTypography.tableHeader),
+                                      ),
+                                    ),
+                                    SizedBox(width: 140, child: Text('Actions', style: AppTypography.tableHeader)),
                                   ],
                                 ),
                               ),
-                            ),
+                              Expanded(
+                                child: filteredUsers.isEmpty
+                                    ? const Center(child: Text('No users found.', style: TextStyle(color: AppColors.mutedText)))
+                                    : ListView.separated(
+                                        padding: EdgeInsets.zero,
+                                        itemCount: filteredUsers.length,
+                                        separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
+                                        itemBuilder: (context, index) {
+                                          final user = filteredUsers[index];
+                                          final isActive = user['status'] == 'active';
+                                          final isLocked = user['status'] == 'locked';
+                                          final role = user['role'] == 'admin' ? 'Admin' : 'Cashier';
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                            child: Row(
+                                              children: [
+                                                SizedBox(
+                                                  width: 48,
+                                                  height: 48,
+                                                  child: CircleAvatar(
+                                                    radius: 24,
+                                                    backgroundColor: AppColors.goldenYellow,
+                                                    child: Text(
+                                                      (user['full_name'] as String).isNotEmpty
+                                                          ? (user['full_name'] as String)[0].toUpperCase()
+                                                          : '?',
+                                                      style: const TextStyle(
+                                                        color: AppColors.darkCharcoal,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 16),
+                                                Expanded(
+                                                  flex: 3,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(right: 16),
+                                                    child: Text(
+                                                      user['full_name'],
+                                                      style: AppTypography.tableCellPrimary,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(right: 16),
+                                                    child: Text(
+                                                      user['username'],
+                                                      style: AppTypography.tableCellSecondary,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  width: 120,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(right: 16),
+                                                    child: Align(
+                                                      alignment: Alignment.centerLeft,
+                                                      child: Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                        decoration: BoxDecoration(
+                                                          color: role == 'Admin'
+                                                              ? AppColors.tertiary.withValues(alpha: 0.12)
+                                                              : AppColors.goldenYellow,
+                                                          borderRadius: BorderRadius.circular(6),
+                                                        ),
+                                                        child: Text(
+                                                          role,
+                                                          textAlign: TextAlign.center,
+                                                          style: TextStyle(
+                                                            color: role == 'Admin' ? AppColors.tertiary : AppColors.darkCharcoal,
+                                                            fontSize: 12,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  width: 120,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(right: 16),
+                                                    child: Row(
+                                                      children: [
+                                                        Container(
+                                                          width: 7,
+                                                          height: 7,
+                                                          decoration: BoxDecoration(
+                                                            color: isLocked ? Colors.orange : (isActive ? AppColors.success : AppColors.brandRed),
+                                                            shape: BoxShape.circle,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 6),
+                                                        Flexible(
+                                                          child: Text(
+                                                            isLocked ? 'Locked' : (isActive ? 'Active' : 'Inactive'),
+                                                            style: TextStyle(
+                                                              color: isLocked ? Colors.orange : (isActive ? AppColors.success : AppColors.brandRed),
+                                                              fontWeight: FontWeight.w600,
+                                                              fontSize: 12,
+                                                            ),
+                                                            overflow: TextOverflow.ellipsis,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  width: 140,
+                                                  child: Row(
+                                                    children: [
+                                                      _buildActionButton(
+                                                        icon: Icons.edit_outlined,
+                                                        color: AppColors.goldenYellow,
+                                                        tooltip: 'Edit',
+                                                        onPressed: () => _showEditCashierDialog(context, user),
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      _buildActionButton(
+                                                        icon: Icons.lock_reset,
+                                                        color: AppColors.tertiary,
+                                                        tooltip: 'Reset Password',
+                                                        onPressed: () => _showResetPasswordDialog(context, user),
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      if (isLocked)
+                                                        _buildActionButton(
+                                                          icon: Icons.lock_open,
+                                                          color: Colors.orange,
+                                                          tooltip: 'Unlock Account',
+                                                          onPressed: () => _showUnlockDialog(context, user),
+                                                        )
+                                                      else
+                                                        _buildActionButton(
+                                                          icon: isActive ? Icons.block : Icons.check_circle,
+                                                          color: isActive ? AppColors.brandRed : AppColors.success,
+                                                          tooltip: isActive ? 'Disable' : 'Enable',
+                                                          onPressed: () => _showDisableDialog(context, user),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.softBorder))),
+                                child: Row(
+                                  children: [
+                                    Text('Showing ${filteredUsers.length} of ${_users.length} accounts',
+                                        style: const TextStyle(color: AppColors.mutedText, fontSize: 13)),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        if (showSideCard) ...[
-                          const SizedBox(width: 20),
-                          SizedBox(
-                            width: 190,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.creamBackground,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: AppColors.softBorder),
-                              ),
-                              padding: const EdgeInsets.all(20),
-                              child: const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text('👨‍💼', style: TextStyle(fontSize: 52)),
-                                  SizedBox(height: 16),
-                                  Text('Team Security,', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal)),
-                                  Text('Organized & Safe!', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.goldenYellow, fontStyle: FontStyle.italic)),
-                                  SizedBox(height: 10),
-                                  Text('Manage permissions and keep your operations running smoothly.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.mutedText, height: 1.5)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+                      ),
                     );
                   }),
                 ),
