@@ -94,9 +94,14 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                       children: [
                         OutlinedButton.icon(
                           onPressed: () {
-                            if (!_isLoading && _transactions.isNotEmpty) {
-                              ExportService.printPDF(_transactions);
+                            if (_isLoading) return;
+                            if (_transactions.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('No transactions to print')),
+                              );
+                              return;
                             }
+                            ExportService.printPDF(_transactions);
                           },
                           icon: const Icon(Icons.print, size: 18),
                           label: const Text('Print'),
@@ -112,15 +117,21 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                             ),
                           ),
                         ),
+                        const SizedBox(width: 8),
                         PopupMenuButton<String>(
                           offset: const Offset(0, 40),
                           onSelected: (value) {
-                            if (!_isLoading && _transactions.isNotEmpty) {
-                              if (value == 'excel') {
-                                ExportService.exportToExcel(_transactions, context);
-                              } else if (value == 'pdf') {
-                                ExportService.exportToPDF(_transactions, context);
-                              }
+                            if (_isLoading) return;
+                            if (_transactions.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('No transactions to export')),
+                              );
+                              return;
+                            }
+                            if (value == 'excel') {
+                              ExportService.exportToExcel(_transactions, context);
+                            } else if (value == 'pdf') {
+                              ExportService.exportToPDF(_transactions, context);
                             }
                           },
                           itemBuilder: (context) => [

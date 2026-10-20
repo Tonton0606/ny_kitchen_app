@@ -81,8 +81,10 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
       if (!mounted) return;
 
       if (success) {
-        // Update local map
-        widget.user['must_change_password'] = 0;
+        // Update local map if mutable
+        try {
+          widget.user['must_change_password'] = 0;
+        } catch (_) {}
         widget.onSuccess();
       } else {
         setState(() {

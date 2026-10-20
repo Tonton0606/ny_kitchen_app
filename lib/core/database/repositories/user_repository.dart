@@ -34,13 +34,22 @@ class UserRepository {
     }
 
     if (SecurityUtils.verifyPassword(password, userRow['password_hash'] as String)) {
-      // Success! Reset failed login count and update last_login
+      final currentHash = userRow['password_hash'] as String;
+      final updates = <String, dynamic>{
+        'last_login': DateTime.now().toIso8601String(),
+        'failed_login_count': 0,
+      };
+
+      // Transparent re-hash on login with modern target iterations (Task B1)
+      if (SecurityUtils.needsRehash(currentHash)) {
+        final upgradedHash = SecurityUtils.hashPassword(password);
+        updates['password_hash'] = upgradedHash;
+      }
+
+      // Success! Reset failed login count and update last_login (plus upgraded hash if needed)
       await db.update(
         'users',
-        {
-          'last_login': DateTime.now().toIso8601String(),
-          'failed_login_count': 0,
-        },
+        updates,
         where: 'id = ?',
         whereArgs: [userId],
       );
@@ -259,11 +268,28 @@ class UserRepository {
       whereArgs: ['active'],
     );
     
-    // Decrypt the face encodings
+    // Decrypt the face encodings and transparently migrate legacy CBC to GCM (Task B2)
     final decryptedUsers = await Future.wait(users.map((user) async {
       final mutableUser = Map<String, dynamic>.from(user);
       if (mutableUser['face_encoding'] != null) {
-        mutableUser['face_encoding'] = await SecurityUtils.decryptFaceEncoding(mutableUser['face_encoding'] as String);
+        final rawCipher = mutableUser['face_encoding'] as String;
+        try {
+          final decrypted = await SecurityUtils.decryptFaceEncoding(rawCipher);
+          mutableUser['face_encoding'] = decrypted;
+
+          // Transparent re-encrypt to GCM on read if stored in legacy format
+          if (SecurityUtils.isLegacyFaceEncoding(rawCipher)) {
+            final upgradedGcm = await SecurityUtils.encryptFaceEncoding(decrypted);
+            await db.update(
+              'users',
+              {'face_encoding': upgradedGcm},
+              where: 'id = ?',
+              whereArgs: [mutableUser['id']],
+            );
+          }
+        } catch (_) {
+          mutableUser['face_encoding'] = null;
+        }
       }
       return mutableUser;
     }));

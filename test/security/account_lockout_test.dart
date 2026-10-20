@@ -4,7 +4,6 @@ import 'package:ny_kitchen_app/core/database/repositories/user_repository.dart';
 import 'package:ny_kitchen_app/core/utils/security_utils.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   late UserRepository userRepository;
@@ -13,9 +12,14 @@ void main() {
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    SecurityUtils.defaultIterations = 1000;
     
     // We need to initialize flutter_secure_storage Mock for tests
     FlutterSecureStorage.setMockInitialValues({});
+  });
+
+  tearDownAll(() {
+    SecurityUtils.defaultIterations = SecurityUtils.targetIterations;
   });
 
   setUp(() async {
@@ -55,7 +59,7 @@ void main() {
               ''');
 
               // Seed a test user
-              final hash = await SecurityUtils.hashPassword('password123');
+              final hash = SecurityUtils.hashPassword('password123');
               await db.insert('users', {
                 'full_name': 'Test User',
                 'username': 'testuser',

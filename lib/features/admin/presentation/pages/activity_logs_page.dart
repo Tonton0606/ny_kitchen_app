@@ -73,22 +73,76 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     ),
                   ],
                 ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    if (!_isLoading && filteredLogs.isNotEmpty) {
-                      ExportService.exportLogsToExcel(filteredLogs, context);
-                    }
-                  },
-                  icon: const Icon(Icons.download, size: 18),
-                  label: const Text('Export Logs'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.goldenYellow,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
+                Row(
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        if (_isLoading) return;
+                        if (filteredLogs.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('No logs to print')),
+                          );
+                          return;
+                        }
+                        ExportService.printLogsPDF(filteredLogs);
+                      },
+                      icon: const Icon(Icons.print, size: 18),
+                      label: const Text('Print'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.darkCharcoal,
+                        side: const BorderSide(color: AppColors.softBorder),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    PopupMenuButton<String>(
+                      offset: const Offset(0, 40),
+                      onSelected: (value) {
+                        if (_isLoading) return;
+                        if (filteredLogs.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('No logs to export')),
+                          );
+                          return;
+                        }
+                        if (value == 'excel') {
+                          ExportService.exportLogsToExcel(filteredLogs, context);
+                        } else if (value == 'pdf') {
+                          ExportService.exportLogsToPDF(filteredLogs, context);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'excel',
+                          child: Text('Export as Excel (.xlsx)'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'pdf',
+                          child: Text('Export as PDF (.pdf)'),
+                        ),
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.goldenYellow,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.download, size: 18, color: Colors.black),
+                            SizedBox(width: 8),
+                            Text('Export', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
