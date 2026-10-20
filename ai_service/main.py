@@ -10,15 +10,45 @@ except BaseException:
 import numpy as np
 from PIL import Image
 
-app = FastAPI(title="N.Y Kitchen Face Recognition API")
+from contextlib import asynccontextmanager
 
 EXPECTED_SERVICE_KEY_ENV = "AI_SERVICE_KEY"
 MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 
+def validate_service_key_configuration() -> str:
+    """Validates that AI_SERVICE_KEY is configured in the environment.
+    
+    Refuses service execution if unset or empty (fail-closed architecture).
+    """
+    key = os.getenv(EXPECTED_SERVICE_KEY_ENV)
+    if not key or not key.strip():
+        raise RuntimeError(
+            f"FATAL: Required environment variable '{EXPECTED_SERVICE_KEY_ENV}' is not set or empty. "
+            f"The AI microservice refuses to start without an explicit shared secret."
+        )
+    return key.strip()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Enforce fail-closed startup: refuse startup if AI_SERVICE_KEY is missing
+    validate_service_key_configuration()
+    yield
+
+app = FastAPI(title="N.Y Kitchen Face Recognition API", lifespan=lifespan)
+
 def verify_service_key(x_service_key: str = Header(None, alias="X-Service-Key")):
-    """Enforces shared-secret authentication on endpoints (Gap 14). Returns 401 when missing or wrong."""
+    """Enforces shared-secret authentication on endpoints (Gap 14).
+    
+    Returns 500 when server configuration is missing AI_SERVICE_KEY.
+    Returns 401 when X-Service-Key header is missing or wrong.
+    """
     expected_key = os.getenv(EXPECTED_SERVICE_KEY_ENV)
-    if not x_service_key or not expected_key or x_service_key != expected_key:
+    if not expected_key or not expected_key.strip():
+        raise HTTPException(
+            status_code=500,
+            detail="Server misconfiguration: AI_SERVICE_KEY environment variable is not configured",
+        )
+    if not x_service_key or x_service_key != expected_key.strip():
         raise HTTPException(
             status_code=401,
             detail="Unauthorized: Missing or invalid X-Service-Key header",
@@ -152,6 +182,8 @@ async def check_liveness(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
+    validate_service_key_configuration()
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=5000)
+
 

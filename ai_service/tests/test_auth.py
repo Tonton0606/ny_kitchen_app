@@ -44,5 +44,77 @@ class TestFastApiAuthentication(unittest.TestCase):
         )
         self.assertTrue(has_verifier, "ai_service/main.py must define a service key verification function")
 
+    def test_startup_validation_refuses_when_service_key_unset(self):
+        """Verifies Fix 1: Service must refuse to start (fail-closed) when AI_SERVICE_KEY is unset or empty."""
+        import sys
+        ai_dir = str(self.main_path.parent)
+        if ai_dir not in sys.path:
+            sys.path.insert(0, ai_dir)
+        import main
+
+        old_key = os.environ.get("AI_SERVICE_KEY")
+        try:
+            # Case 1: Unset
+            if "AI_SERVICE_KEY" in os.environ:
+                del os.environ["AI_SERVICE_KEY"]
+            with self.assertRaises(RuntimeError) as ctx:
+                main.validate_service_key_configuration()
+            self.assertIn("AI_SERVICE_KEY", str(ctx.exception))
+
+            # Case 2: Empty or whitespace
+            os.environ["AI_SERVICE_KEY"] = "   "
+            with self.assertRaises(RuntimeError) as ctx:
+                main.validate_service_key_configuration()
+            self.assertIn("AI_SERVICE_KEY", str(ctx.exception))
+
+            # Case 3: Valid key returns configured value
+            os.environ["AI_SERVICE_KEY"] = "valid-secret-key-456"
+            configured = main.validate_service_key_configuration()
+            self.assertEqual(configured, "valid-secret-key-456")
+        finally:
+            if old_key is not None:
+                os.environ["AI_SERVICE_KEY"] = old_key
+            elif "AI_SERVICE_KEY" in os.environ:
+                del os.environ["AI_SERVICE_KEY"]
+
+    def test_verify_service_key_runtime_behavior(self):
+        """Verifies verify_service_key runtime behavior for 500 (misconfigured), 401 (invalid/missing), and 200 (valid)."""
+        import sys
+        from fastapi import HTTPException
+        ai_dir = str(self.main_path.parent)
+        if ai_dir not in sys.path:
+            sys.path.insert(0, ai_dir)
+        import main
+
+        old_key = os.environ.get("AI_SERVICE_KEY")
+        try:
+            # 1. Server missing key -> 500 Server misconfiguration
+            if "AI_SERVICE_KEY" in os.environ:
+                del os.environ["AI_SERVICE_KEY"]
+            with self.assertRaises(HTTPException) as ctx:
+                main.verify_service_key("any-client-key")
+            self.assertEqual(ctx.exception.status_code, 500)
+
+            # 2. Server has key, client header missing -> 401
+            os.environ["AI_SERVICE_KEY"] = "configured-secret-key"
+            with self.assertRaises(HTTPException) as ctx:
+                main.verify_service_key(None)
+            self.assertEqual(ctx.exception.status_code, 401)
+
+            # 3. Server has key, client header wrong -> 401
+            with self.assertRaises(HTTPException) as ctx:
+                main.verify_service_key("wrong-key")
+            self.assertEqual(ctx.exception.status_code, 401)
+
+            # 4. Server has key, client header matches -> Success
+            result = main.verify_service_key("configured-secret-key")
+            self.assertEqual(result, "configured-secret-key")
+        finally:
+            if old_key is not None:
+                os.environ["AI_SERVICE_KEY"] = old_key
+            elif "AI_SERVICE_KEY" in os.environ:
+                del os.environ["AI_SERVICE_KEY"]
+
 if __name__ == "__main__":
     unittest.main()
+
