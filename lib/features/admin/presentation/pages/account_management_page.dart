@@ -5,6 +5,8 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/session/session_manager.dart';
+import '../../../auth/presentation/widgets/biometric_consent_dialog.dart';
+import '../../../shared/widgets/app_confirm_dialog.dart';
 
 class AccountManagementPage extends StatefulWidget {
   const AccountManagementPage({super.key});
@@ -561,6 +563,63 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     );
   }
 
+  void _showBiometricManagementDialog(BuildContext context, Map<String, dynamic> user) async {
+    final hasBiometrics = user['face_encoding'] != null;
+    final userName = user['full_name'] as String;
+    final userId = user['id'] as int;
+
+    if (hasBiometrics) {
+      final confirmed = await AppConfirmDialog.show(
+        context,
+        title: 'Delete Biometric Profile',
+        consequenceText:
+            'Permanently delete the enrolled facial biometric template for $userName? '
+            'This action removes all local mathematical vectors and cannot be undone.',
+        confirmText: 'Delete Template',
+        cancelText: 'Keep Template',
+        isDestructive: true,
+      );
+
+      if (confirmed == true) {
+        try {
+          final adminName = SessionManager().fullName ?? 'Admin';
+          await _userRepo.deleteBiometricProfile(userId, adminName: adminName);
+          if (!context.mounted) return;
+          _loadUsers();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Biometric profile deleted for $userName')),
+          );
+        } catch (e) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete biometric profile: $e')),
+          );
+        }
+      }
+    } else {
+      // Prompt for explicit informed biometric consent before enrollment
+      final consentGranted = await BiometricConsentDialog.show(
+        context,
+        targetUserName: userName,
+      );
+
+      if (!consentGranted) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Biometric enrollment cancelled (Consent not confirmed).')),
+        );
+        return;
+      }
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Biometric consent recorded for $userName. Ready for face capture.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -715,7 +774,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                         child: Text('Status', style: AppTypography.tableHeader),
                                       ),
                                     ),
-                                    SizedBox(width: 140, child: Text('Actions', style: AppTypography.tableHeader)),
+                                    SizedBox(width: 180, child: Text('Actions', style: AppTypography.tableHeader)),
                                   ],
                                 ),
                               ),
@@ -833,7 +892,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                                   ),
                                                 ),
                                                 SizedBox(
-                                                  width: 140,
+                                                  width: 180,
                                                   child: Row(
                                                     children: [
                                                       _buildActionButton(
@@ -848,6 +907,19 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                                         color: AppColors.tertiary,
                                                         tooltip: 'Reset Password',
                                                         onPressed: () => _showResetPasswordDialog(context, user),
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      _buildActionButton(
+                                                        icon: user['face_encoding'] != null
+                                                            ? Icons.fingerprint_rounded
+                                                            : Icons.add_reaction_outlined,
+                                                        color: user['face_encoding'] != null
+                                                            ? AppColors.brandRed
+                                                            : AppColors.mutedBrown,
+                                                        tooltip: user['face_encoding'] != null
+                                                            ? 'Delete Biometrics'
+                                                            : 'Enroll Biometrics',
+                                                        onPressed: () => _showBiometricManagementDialog(context, user),
                                                       ),
                                                       const SizedBox(width: 6),
                                                       if (isLocked)
