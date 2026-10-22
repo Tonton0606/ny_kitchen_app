@@ -188,9 +188,13 @@ class TransactionRepository {
     }
 
     final db = await _dbHelper.database;
+    final Map<String, dynamic> updateValues = {'status': newStatus};
+    if (newStatus == 'Voided' && reason != null && reason.trim().isNotEmpty) {
+      updateValues['void_reason'] = reason.trim();
+    }
     int count = await db.update(
       'transactions',
-      {'status': newStatus},
+      updateValues,
       where: 'id = ?',
       whereArgs: [id],
     );

@@ -878,6 +878,181 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
     );
   }
 
+  void _showTransactionDetails(BuildContext context, Map<String, dynamic> tx) async {
+    final items = await _txRepo.getTransactionItems(tx['id']);
+    if (!context.mounted) return;
+
+    final rawStatus = (tx['status'] as String? ?? 'Served').trim();
+    final isVoided = rawStatus.toLowerCase() == 'voided';
+    final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
+    final formattedDate = DateFormat('MMM d, yyyy • h:mm a').format(parsedDate);
+    final totalAmount = _parseAmount(tx['total_amount']);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isVoided
+                    ? AppColors.brandRed.withValues(alpha: 0.1)
+                    : AppColors.forest.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                isVoided ? Icons.block : LucideIcons.receipt,
+                color: isVoided ? AppColors.brandRed : AppColors.forest,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Receipt #${tx['receipt_number'] ?? tx['order_number']?.toString() ?? '—'}',
+                    style: AppTypography.heading,
+                  ),
+                  Text(
+                    formattedDate,
+                    style: AppTypography.caption,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isVoided) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandRed.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.25)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, size: 16, color: AppColors.brandRed),
+                          const SizedBox(width: 6),
+                          Text(
+                            'TRANSACTION VOIDED',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.brandRed,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Reason: ${tx['void_reason'] != null && tx['void_reason'].toString().trim().isNotEmpty ? tx['void_reason'] : 'Not specified'}',
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.brandRed,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Cashier:', style: AppTypography.bodyMuted),
+                  Text(_getCashierName(tx), style: AppTypography.body),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Payment Method:', style: AppTypography.bodyMuted),
+                  Text(tx['payment_method'] ?? 'Cash', style: AppTypography.body),
+                ],
+              ),
+              const Divider(height: 24, color: AppColors.softBorder),
+              const Text('ITEMS ORDERED', style: AppTypography.label),
+              const SizedBox(height: 8),
+              if (items.isEmpty)
+                Text('No line items recorded', style: AppTypography.bodyMuted)
+              else
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 180),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: items.length,
+                    separatorBuilder: (context, index) => const Divider(height: 8, color: AppColors.softBorder),
+                    itemBuilder: (ctx, idx) {
+                      final it = items[idx];
+                      final qty = it['quantity'] ?? 1;
+                      final price = _parseAmount(it['food_price']);
+                      final subtotal = _parseAmount(it['subtotal'] ?? (price * qty));
+                      return Row(
+                        children: [
+                          Text('$qty×', style: AppTypography.tabularFigure),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(it['food_name'] ?? 'Item', style: AppTypography.body),
+                          ),
+                          Text(
+                            _formatCurrency(subtotal),
+                            style: AppTypography.tabularFigure.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              const Divider(height: 24, color: AppColors.softBorder),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Total Amount:', style: AppTypography.heading),
+                  Text(
+                    _formatCurrency(totalAmount),
+                    style: AppTypography.heading.copyWith(
+                      color: isVoided ? AppColors.brandRed : AppColors.darkCharcoal,
+                      decoration: isVoided ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close', style: AppTypography.buttonSmall),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDataTable(BuildContext context, List<Map<String, dynamic>> filtered) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -890,7 +1065,7 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
         child: DataTable(
           headingRowHeight: 44,
           dataRowMinHeight: 48,
-          dataRowMaxHeight: 54,
+          dataRowMaxHeight: 64,
           horizontalMargin: 20,
           columnSpacing: 28,
           headingRowColor: WidgetStateProperty.all(AppColors.pageBackground),
@@ -941,6 +1116,7 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
             final amount = _parseAmount(tx['total_amount']);
 
             return DataRow(
+              onSelectChanged: (_) => _showTransactionDetails(context, tx),
               cells: [
                 DataCell(
                   Text(
@@ -967,10 +1143,34 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                   ),
                 ),
                 DataCell(
-                  AppStatusChip(
-                    label: displayStatus,
-                    type: chipType,
-                    isCompact: true,
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppStatusChip(
+                        label: displayStatus,
+                        type: chipType,
+                        isCompact: true,
+                      ),
+                      if (statusLower == 'voided' &&
+                          tx['void_reason'] != null &&
+                          tx['void_reason'].toString().trim().isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 130),
+                          child: Text(
+                            '${tx['void_reason']}',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.brandRed,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 DataCell(

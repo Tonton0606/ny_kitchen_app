@@ -117,9 +117,9 @@ class _CashierHomePageState extends State<CashierHomePage> {
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
-        title: const Text('Void current order?'),
+        title: const Text('Clear current order?'),
         content: const Text(
-          'All items in this order will be voided and removed. ',
+          'All items in this order will be removed from the cart.',
         ),
         actions: [
           TextButton(
@@ -135,7 +135,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text('Void order'),
+            child: const Text('Clear cart'),
           ),
         ],
       ),

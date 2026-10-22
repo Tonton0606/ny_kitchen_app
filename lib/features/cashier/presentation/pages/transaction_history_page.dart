@@ -760,6 +760,33 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                 ),
                               ],
                             ),
+                            if (isVoided && tx['void_reason'] != null && tx['void_reason'].toString().trim().isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.brandRed.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.25)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.info_outline, size: 15, color: AppColors.brandRed),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        'Reason: ${tx['void_reason']}',
+                                        style: AppTypography.caption.copyWith(
+                                          color: AppColors.brandRed,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -784,64 +811,152 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   }
 
   void _confirmVoid(Map<String, dynamic> tx) {
+    String selectedReason = 'Wrong item punched';
+    final otherController = TextEditingController();
+    final reasons = [
+      'Wrong item punched',
+      'Customer cancelled / walked out',
+      'Kitchen out of stock / issue',
+      'Customer complaint / return',
+      'Other reason',
+    ];
+
     showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          title: const Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: AppColors.brandRed, size: 22),
-              SizedBox(width: 8),
-              Text('Void Transaction', style: AppTypography.heading),
-            ],
-          ),
-          content: Text(
-            'Are you sure you want to void receipt ${tx['receipt_number']}? This action will mark the transaction as cancelled and cannot be undone.',
-            style: AppTypography.body,
-          ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: AppTypography.buttonSmall),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.brandRed,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final isOther = selectedReason == 'Other reason';
+            final canConfirm = !isOther || otherController.text.trim().isNotEmpty;
+
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
-              onPressed: () async {
-                Navigator.pop(ctx);
-                await _repository.updateTransactionStatus(tx['id'], 'Voided');
-                await _auditRepo.logAction(
-                  userId: SessionManager().userId ?? 1,
-                  username: SessionManager().fullName ?? 'unknown',
-                  role: SessionManager().role ?? 'cashier',
-                  module: 'Transactions',
-                  action: 'Void Transaction',
-                  status: 'Success',
-                  description: 'Voided receipt ${tx['receipt_number']}',
-                );
-                _loadTransactions();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Receipt ${tx['receipt_number']} voided successfully.'),
-                      behavior: SnackBarBehavior.floating,
+              title: const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: AppColors.brandRed, size: 22),
+                  SizedBox(width: 8),
+                  Text('Void Transaction', style: AppTypography.heading),
+                ],
+              ),
+              content: SizedBox(
+                width: 440,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Are you sure you want to void receipt ${tx['receipt_number']}? This action will mark the transaction as cancelled and cannot be undone.',
+                      style: AppTypography.body,
                     ),
-                  );
-                }
-              },
-              child: const Text('Void Transaction'),
-            ),
-          ],
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Select Void Reason:',
+                      style: AppTypography.label,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.softBorder),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedReason,
+                          isExpanded: true,
+                          items: reasons.map((r) {
+                            return DropdownMenuItem<String>(
+                              value: r,
+                              child: Text(r, style: AppTypography.body),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setDialogState(() {
+                                selectedReason = val;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    if (isOther) ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: otherController,
+                        maxLength: 80,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: 'Enter specific void reason...',
+                          hintStyle: AppTypography.bodyMuted,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: AppColors.softBorder),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          counterText: '',
+                        ),
+                        onChanged: (_) => setDialogState(() {}),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actionsPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel', style: AppTypography.buttonSmall),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.brandRed,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: AppColors.brandRed.withValues(alpha: 0.3),
+                    disabledForegroundColor: Colors.white70,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: !canConfirm
+                      ? null
+                      : () async {
+                          final finalReason = isOther
+                              ? otherController.text.trim()
+                              : selectedReason;
+                          Navigator.pop(ctx);
+                          await _repository.updateTransactionStatus(
+                            tx['id'],
+                            'Voided',
+                            reason: finalReason,
+                          );
+                          await _auditRepo.logAction(
+                            userId: SessionManager().userId ?? 1,
+                            username: SessionManager().fullName ?? 'unknown',
+                            role: SessionManager().role ?? 'cashier',
+                            module: 'Transactions',
+                            action: 'Void Transaction',
+                            status: 'Success',
+                            description: 'Voided receipt ${tx['receipt_number']} (Reason: $finalReason)',
+                          );
+                          _loadTransactions();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Receipt ${tx['receipt_number']} voided successfully.'),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        },
+                  child: const Text('Void Transaction'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
