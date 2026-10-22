@@ -19,10 +19,21 @@ void main() async {
   
   // Set up global error boundary
   FlutterError.onError = (FlutterErrorDetails details) {
+    final exceptionStr = details.exception.toString();
+    // Filter known Flutter Windows framework assertion on Alt / Alt-Tab modifier keydown events
+    if (exceptionStr.contains('raw_keyboard.dart') ||
+        (exceptionStr.contains('keysPressed') && exceptionStr.contains('RawKeyDownEvent'))) {
+      return;
+    }
     FlutterError.presentError(details);
   };
   
   PlatformDispatcher.instance.onError = (error, stack) {
+    final errorStr = error.toString();
+    if (errorStr.contains('raw_keyboard.dart') ||
+        (errorStr.contains('keysPressed') && errorStr.contains('RawKeyDownEvent'))) {
+      return true; // Harmless framework assertion on Windows Alt-key; ignore
+    }
     print('Async Error Caught: $error');
     return true; // Prevent app crash
   };
