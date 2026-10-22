@@ -112,7 +112,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                 _buildFilterDropdown(
                   value: _roleFilter,
                   icon: Icons.person_outline,
-                  items: const ['All', 'admin', 'cashier', 'None'],
+                  items: const ['All', 'admin', 'cashier'],
                   onChanged: (val) {
                     setState(() => _roleFilter = val!);
                     _onFilterChanged();

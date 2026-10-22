@@ -158,6 +158,36 @@ class UserRepository {
     return changes > 0;
   }
 
+  // Get user by ID (secured to self or admin)
+  Future<Map<String, dynamic>?> getUserById(int userId) async {
+    await RepositorySecurityGuard.requireSelfOrAdmin(
+      userId,
+      module: 'User Management',
+      action: 'Get User By ID',
+    );
+    final db = await _dbHelper.database;
+    final res = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [userId],
+      limit: 1,
+    );
+    return res.isNotEmpty ? res.first : null;
+  }
+
+  // Change password with verification of current password
+  Future<bool> changePasswordWithVerification(int userId, String currentPassword, String newPassword) async {
+    final user = await getUserById(userId);
+    if (user == null) {
+      throw const SecurityException('User not found', code: 'USER_NOT_FOUND');
+    }
+    final storedHash = user['password_hash'] as String? ?? '';
+    if (!SecurityUtils.verifyPassword(currentPassword, storedHash)) {
+      throw const SecurityException('Current password verification failed', code: 'INVALID_CURRENT_PASSWORD');
+    }
+    return await changePassword(userId, newPassword);
+  }
+
   // Get all users
   Future<List<Map<String, dynamic>>> getAllUsers() async {
     await RepositorySecurityGuard.requireAdmin(

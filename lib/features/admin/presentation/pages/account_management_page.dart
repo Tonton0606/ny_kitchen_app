@@ -25,12 +25,23 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
 
   bool _showAddUser = false;
   bool _isLoading = true;
+  bool _addPasswordVisible = false;
   List<Map<String, dynamic>> _users = [];
 
   final _addFullNameController = TextEditingController();
   final _addUsernameController = TextEditingController();
   final _addPasswordController = TextEditingController();
-  String _addRole = 'cashier';
+  final String _addRole = 'cashier';
+
+  String _maskUsername(String username) {
+    if (username.isEmpty) return '@—';
+    if (username.length <= 3) {
+      return '@${username[0]}***';
+    }
+    final prefix = username.substring(0, 2);
+    final suffix = username.substring(username.length - 1);
+    return '@$prefix•••$suffix';
+  }
 
   final ScrollController _horizontalScrollController = ScrollController();
   final ScrollController _verticalScrollController = ScrollController();
@@ -91,7 +102,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     _addFullNameController.clear();
     _addUsernameController.clear();
     _addPasswordController.clear();
-    _addRole = 'cashier';
+    _addPasswordVisible = false;
     setState(() => _showAddUser = true);
   }
 
@@ -109,6 +120,14 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
       return;
     }
 
+    final policyError = SecurityUtils.validatePassword(password);
+    if (policyError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(policyError)),
+      );
+      return;
+    }
+
     try {
       await _userRepo.createUser({
         'full_name': fullName,
@@ -116,6 +135,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
         'password_hash': SecurityUtils.hashPassword(password),
         'role': _addRole,
         'status': 'active',
+        'must_change_password': 1,
       });
       if (!mounted) return;
       _closeAddUser();
@@ -227,36 +247,39 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Role Assignment', style: AppTypography.cardTitle),
+                  const Text('Role', style: AppTypography.cardTitle),
                   const SizedBox(height: 6),
-                  DropdownButtonFormField<String>(
-                    initialValue: editRole,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(LucideIcons.shield, size: 18),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'cashier',
-                        child: Text('Cashier (POS Operations)'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'admin',
-                        child: Text('Administrator (Full Management)'),
-                      ),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) setStateDialog(() => editRole = val);
-                    },
+                    child: Row(
+                      children: [
+                        Icon(
+                          editRole == 'admin' ? LucideIcons.shield_check : LucideIcons.shopping_bag,
+                          size: 18,
+                          color: AppColors.mutedText,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          editRole == 'admin'
+                              ? 'Administrator (Primary Account)'
+                              : 'Cashier (POS Operations)',
+                          style: AppTypography.body,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    editRole == 'admin'
+                        ? 'System Administrator privileges are reserved for system management.'
+                        : 'Cashier role is fixed to prevent unauthorized administrative privilege escalation.',
+                    style: AppTypography.caption.copyWith(color: AppColors.mutedText, fontSize: 11),
                   ),
                 ],
               ),
@@ -280,7 +303,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                   await _userRepo.updateUser(user['id'], {
                     'full_name': newName,
                     'username': newUsername,
-                    'role': editRole,
                   });
                   if (!context.mounted) return;
                   Navigator.pop(ctx);
@@ -315,144 +337,168 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
   void _showResetPasswordDialog(BuildContext context, Map<String, dynamic> user) {
     final passwordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
+    bool obscurePassword = true;
+    bool obscureConfirm = true;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFFE2E8F0)),
-        ),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 20, 20),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                LucideIcons.key_round,
-                color: Color(0xFF2563EB),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                'Reset Password',
-                style: AppTypography.dialogTitle,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        content: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 8, 20, 20),
+          title: Row(
             children: [
-              Text(
-                'Enter a new temporary password for ${user['full_name']} (@${user['username']}):',
-                style: AppTypography.cardSubtitle,
-              ),
-              const SizedBox(height: 16),
-              const Text('New Password', style: AppTypography.cardTitle),
-              const SizedBox(height: 6),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(64),
-                ],
-                decoration: InputDecoration(
-                  hintText: 'Enter new password',
-                  prefixIcon: const Icon(LucideIcons.lock, size: 18),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  LucideIcons.key_round,
+                  color: Color(0xFF2563EB),
+                  size: 20,
                 ),
               ),
-              const SizedBox(height: 14),
-              const Text('Confirm Password', style: AppTypography.cardTitle),
-              const SizedBox(height: 6),
-              TextField(
-                controller: confirmPasswordController,
-                obscureText: true,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(64),
-                ],
-                decoration: InputDecoration(
-                  hintText: 'Re-enter new password',
-                  prefixIcon: const Icon(LucideIcons.lock, size: 18),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  'Reset Password',
+                  style: AppTypography.dialogTitle,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.mutedText,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Enter a new temporary password for ${user['full_name']} (@${user['username']}):',
+                  style: AppTypography.cardSubtitle,
+                ),
+                const SizedBox(height: 16),
+                const Text('New Temporary Password', style: AppTypography.cardTitle),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(64),
+                  ],
+                  decoration: InputDecoration(
+                    hintText: 'Enter new password',
+                    prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscurePassword ? LucideIcons.eye_off : LucideIcons.eye, size: 18),
+                      onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text('Confirm Password', style: AppTypography.cardTitle),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: confirmPasswordController,
+                  obscureText: obscureConfirm,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(64),
+                  ],
+                  decoration: InputDecoration(
+                    hintText: 'Re-enter new password',
+                    prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureConfirm ? LucideIcons.eye_off : LucideIcons.eye, size: 18),
+                      onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  SecurityUtils.passwordPolicyMessage,
+                  style: AppTypography.caption.copyWith(color: AppColors.mutedText, fontSize: 11),
+                ),
+              ],
             ),
-            child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              final newPass = passwordController.text.trim();
-              final confirmPass = confirmPasswordController.text.trim();
-              if (newPass.isEmpty) return;
-              if (newPass != confirmPass) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Passwords do not match')),
-                );
-                return;
-              }
-              try {
-                await _userRepo.updateUser(user['id'], {
-                  'password_hash': SecurityUtils.hashPassword(newPass),
-                });
-                if (!context.mounted) return;
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Password updated successfully')),
-                );
-              } catch (e) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error resetting password: $e')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.goldenYellow,
-              foregroundColor: AppColors.darkCharcoal,
-              elevation: 0,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.mutedText,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newPass = passwordController.text.trim();
+                final confirmPass = confirmPasswordController.text.trim();
+                if (newPass.isEmpty) return;
+                if (newPass != confirmPass) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Passwords do not match')),
+                  );
+                  return;
+                }
+                final policyError = SecurityUtils.validatePassword(newPass);
+                if (policyError != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(policyError)),
+                  );
+                  return;
+                }
+                try {
+                  await _userRepo.updateUser(user['id'], {
+                    'password_hash': SecurityUtils.hashPassword(newPass),
+                    'must_change_password': 1,
+                  });
+                  if (!context.mounted) return;
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Temporary password set. User must rotate on next login.')),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error resetting password: $e')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.goldenYellow,
+                foregroundColor: AppColors.darkCharcoal,
+                elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -462,8 +508,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showDisableDialog(BuildContext context, Map<String, dynamic> user) {
     final isActive = user['status'] == 'active';
@@ -1134,7 +1181,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
           Expanded(
             flex: 2,
             child: Text(
-              '@$username',
+              _maskUsername(username),
               style: AppTypography.tableCellSecondary,
               overflow: TextOverflow.ellipsis,
             ),
@@ -1373,13 +1420,21 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         const SizedBox(height: 6),
                         TextField(
                           controller: _addPasswordController,
-                          obscureText: true,
+                          obscureText: !_addPasswordVisible,
                           inputFormatters: [
                             LengthLimitingTextInputFormatter(64),
                           ],
                           decoration: InputDecoration(
                             hintText: 'Enter initial password',
                             prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _addPasswordVisible ? LucideIcons.eye_off : LucideIcons.eye,
+                                size: 18,
+                                color: AppColors.mutedText,
+                              ),
+                              onPressed: () => setState(() => _addPasswordVisible = !_addPasswordVisible),
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -1396,34 +1451,25 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
 
                         const Text('Role Assignment', style: AppTypography.cardTitle),
                         const SizedBox(height: 6),
-                        DropdownButtonFormField<String>(
-                          initialValue: _addRole,
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(LucideIcons.shield, size: 18),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
                           ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'cashier',
-                              child: Text('Cashier (Point of Sale Access)'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'admin',
-                              child: Text('Administrator (Full System Access)'),
-                            ),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) setState(() => _addRole = val);
-                          },
+                          child: const Row(
+                            children: [
+                              Icon(LucideIcons.shopping_bag, size: 18, color: AppColors.mutedText),
+                              SizedBox(width: 10),
+                              Text('Cashier (Point of Sale Access)', style: AppTypography.body),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'New staff accounts are assigned Cashier role with POS operations access. Only the primary administrator holds Administrator privileges.',
+                          style: AppTypography.cardSubtitle,
                         ),
                         const SizedBox(height: 32),
 
