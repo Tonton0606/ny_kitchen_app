@@ -513,12 +513,6 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                             ),
                             DataColumn(
                               label: Text(
-                                'Payment',
-                                style: AppTypography.tableHeader,
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
                                 'Total',
                                 style: AppTypography.tableHeader,
                               ),
@@ -576,12 +570,6 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                                 DataCell(
                                   Text(
                                     '${tx['itemCount'] ?? 0}',
-                                    style: AppTypography.tableCellSecondary,
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    tx['payment_method'] ?? '',
                                     style: AppTypography.tableCellSecondary,
                                   ),
                                 ),
