@@ -9,13 +9,14 @@ void main() {
       FlutterSecureStorage.setMockInitialValues({});
     });
 
-    test('hashPassword returns non-null string with salt:hash format', () {
-      final hash = SecurityUtils.hashPassword('password123');
+    test('hashPassword returns non-null string with iterations:salt:hash format', () {
+      final hash = SecurityUtils.hashPassword('password123', null, 1000);
       expect(hash, isNotNull);
       final parts = hash.split(':');
-      expect(parts.length, equals(2));
-      expect(parts[0].isNotEmpty, isTrue);
+      expect(parts.length, equals(3));
+      expect(parts[0], equals('1000'));
       expect(parts[1].isNotEmpty, isTrue);
+      expect(parts[2].isNotEmpty, isTrue);
     });
 
     test('verifyPassword returns true for correct password, false for wrong', () {

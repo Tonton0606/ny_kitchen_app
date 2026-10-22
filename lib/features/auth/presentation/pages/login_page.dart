@@ -199,12 +199,14 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void _showForceChangePassword(Map<String, dynamic> user) {
+    final mutableUser = Map<String, dynamic>.from(user);
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogCtx) => ForceChangePasswordDialog(
-        user: user,
+        user: mutableUser,
         onSuccess: () {
+          mutableUser['must_change_password'] = 0;
           Navigator.of(dialogCtx).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -212,7 +214,7 @@ class _LoginPageState extends State<LoginPage>
               backgroundColor: AppColors.success,
             ),
           );
-          _proceedToShell(user);
+          _proceedToShell(mutableUser);
         },
         onCancel: () {
           Navigator.of(dialogCtx).pop();

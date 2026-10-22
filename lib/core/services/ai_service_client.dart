@@ -5,10 +5,13 @@ import 'package:http/http.dart' as http;
 import 'dart:math';
 
 class AIServiceClient {
-  static const String _baseUrl = 'http://127.0.0.1:5000';
+  static const String _defaultBaseUrl = 'http://127.0.0.1:5000';
+  final String _baseUrl;
   final String? _explicitServiceKey;
 
-  AIServiceClient({String? serviceKey}) : _explicitServiceKey = serviceKey;
+  AIServiceClient({String? serviceKey, String? baseUrl})
+      : _explicitServiceKey = serviceKey,
+        _baseUrl = baseUrl ?? _defaultBaseUrl;
 
   /// Returns the configured service key from explicit parameter or dotenv (never hardcoded).
   String? get serviceKey {
@@ -51,6 +54,8 @@ class AIServiceClient {
         }
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized: Invalid or missing AI service key');
+      } else if (response.statusCode == 429) {
+        throw Exception('Too Many Requests: Rate limit exceeded');
       } else {
         throw Exception(jsonDecode(responseBody)['detail'] ?? 'Failed to extract face');
       }
@@ -78,12 +83,14 @@ class AIServiceClient {
         return data['eyes_closed'] as bool?;
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized: Invalid or missing AI service key');
+      } else if (response.statusCode == 429) {
+        throw Exception('Too Many Requests: Rate limit exceeded');
       }
     } catch (e) {
-      if (e.toString().contains('Unauthorized')) {
+      if (e.toString().contains('Unauthorized') || e.toString().contains('Too Many Requests')) {
         rethrow;
       }
-      // Ignore non-auth errors for liveness checks so we don't spam the UI
+      // Ignore non-auth/non-rate-limit errors for liveness checks so we don't spam the UI
     }
     return null;
   }

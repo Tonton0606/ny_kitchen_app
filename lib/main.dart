@@ -124,7 +124,8 @@ void main() async {
         await storage.write(key: storageKey, value: token);
       }
       BackendSyncService.instance = service;
-      SyncService().startAutomaticSync(intervalSeconds: 30);
+      // Automatic periodic background sync disabled in favor of manual Cloud Sync button
+      // SyncService().startAutomaticSync(intervalSeconds: 30);
     } catch (_) {
       debugPrint('Backend configuration unavailable; local operation remains available.');
     }
@@ -136,7 +137,8 @@ void main() async {
         anonKey: envVars['SUPABASE_ANON_KEY']!,
         headers: {'x-device-secret': envVars['SUPABASE_DEVICE_SECRET'] ?? ''},
       );
-      SyncService().startAutomaticSync(intervalSeconds: 10);
+      // Automatic periodic background sync disabled in favor of manual Cloud Sync button
+      // SyncService().startAutomaticSync(intervalSeconds: 10);
     } catch (_) {
       debugPrint('Cloud initialization unavailable; continuing with local storage.');
     }

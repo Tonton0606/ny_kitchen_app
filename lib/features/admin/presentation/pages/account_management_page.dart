@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/utils/security_utils.dart';
+import '../../../../core/session/session_manager.dart';
+import '../../../auth/presentation/widgets/biometric_consent_dialog.dart';
+import '../../../shared/widgets/app_confirm_dialog.dart';
 
 class AccountManagementPage extends StatefulWidget {
   const AccountManagementPage({super.key});
@@ -463,6 +466,147 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     );
   }
 
+void _showUnlockDialog(BuildContext context, Map<String, dynamic> user) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.lock_open,
+                color: Colors.orange,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            const Text(
+              'Unlock Account',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.darkCharcoal,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to unlock ${user['full_name']}\'s account?',
+          style: const TextStyle(
+            fontSize: 15,
+            color: AppColors.mutedText,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                final adminName = SessionManager().fullName ?? 'Admin';
+                await _userRepo.unlockUser(user['id'], adminName);
+                if (!context.mounted) return;
+                Navigator.pop(ctx);
+                _loadUsers();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Account unlocked successfully')),
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error unlocking account: $e')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Unlock',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBiometricManagementDialog(BuildContext context, Map<String, dynamic> user) async {
+    final hasBiometrics = user['face_encoding'] != null;
+    final userName = user['full_name'] as String;
+    final userId = user['id'] as int;
+
+    if (hasBiometrics) {
+      final confirmed = await AppConfirmDialog.show(
+        context,
+        title: 'Delete Biometric Profile',
+        consequenceText:
+            'Permanently delete the enrolled facial biometric template for $userName? '
+            'This action removes all local mathematical vectors and cannot be undone.',
+        confirmText: 'Delete Template',
+        cancelText: 'Keep Template',
+        isDestructive: true,
+      );
+
+      if (confirmed == true) {
+        try {
+          final adminName = SessionManager().fullName ?? 'Admin';
+          await _userRepo.deleteBiometricProfile(userId, adminName: adminName);
+          if (!context.mounted) return;
+          _loadUsers();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Biometric profile deleted for $userName')),
+          );
+        } catch (e) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete biometric profile: $e')),
+          );
+        }
+      }
+    } else {
+      // Prompt for explicit informed biometric consent before enrollment
+      final consentGranted = await BiometricConsentDialog.show(
+        context,
+        targetUserName: userName,
+      );
+
+      if (!consentGranted) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Biometric enrollment cancelled (Consent not confirmed).')),
+        );
+        return;
+      }
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Biometric consent recorded for $userName. Ready for face capture.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -616,7 +760,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                           Expanded(flex: 2, child: Text('Username', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
                                           SizedBox(width: 90, child: Text('Role', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
                                           SizedBox(width: 90, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
-                                          SizedBox(width: 160, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          SizedBox(width: 200, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
                                         ],
                                       ),
                                     ),
@@ -630,6 +774,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                               itemBuilder: (context, index) {
                                                 final user = filteredUsers[index];
                                                 final isActive = user['status'] == 'active';
+                                                final isLocked = user['status'] == 'locked';
                                                 final role = user['role'] == 'admin' ? 'Admin' : 'Cashier';
                                                 return Padding(
                                                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -713,7 +858,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                                         ),
                                                       ),
                                                       SizedBox(
-                                                        width: 160,
+                                                        width: 200,
                                                         child: Row(
                                                           children: [
                                                             _buildActionButton(
@@ -731,11 +876,32 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                                             ),
                                                             const SizedBox(width: 6),
                                                             _buildActionButton(
-                                                              icon: isActive ? Icons.block : Icons.check_circle,
-                                                              color: isActive ? AppColors.brandRed : AppColors.success,
-                                                              tooltip: isActive ? 'Disable' : 'Enable',
-                                                              onPressed: () => _showDisableDialog(context, user),
+                                                              icon: user['face_encoding'] != null
+                                                                  ? Icons.fingerprint_rounded
+                                                                  : Icons.add_reaction_outlined,
+                                                              color: user['face_encoding'] != null
+                                                                  ? AppColors.brandRed
+                                                                  : AppColors.mutedBrown,
+                                                              tooltip: user['face_encoding'] != null
+                                                                  ? 'Delete Biometrics'
+                                                                  : 'Enroll Biometrics',
+                                                              onPressed: () => _showBiometricManagementDialog(context, user),
                                                             ),
+                                                            const SizedBox(width: 6),
+                                                            if (isLocked)
+                                                              _buildActionButton(
+                                                                icon: Icons.lock_open,
+                                                                color: Colors.orange,
+                                                                tooltip: 'Unlock Account',
+                                                                onPressed: () => _showUnlockDialog(context, user),
+                                                              )
+                                                            else
+                                                              _buildActionButton(
+                                                                icon: isActive ? Icons.block : Icons.check_circle,
+                                                                color: isActive ? AppColors.brandRed : AppColors.success,
+                                                                tooltip: isActive ? 'Disable' : 'Enable',
+                                                                onPressed: () => _showDisableDialog(context, user),
+                                                              ),
                                                           ],
                                                         ),
                                                       ),
