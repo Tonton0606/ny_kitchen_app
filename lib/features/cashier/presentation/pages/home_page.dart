@@ -7,6 +7,7 @@ import '../widgets/food_card.dart';
 import '../widgets/order_summary_panel.dart';
 import '../../../../../core/database/repositories/food_repository.dart';
 import '../../../../../core/database/repositories/transaction_repository.dart';
+import '../../../../../core/session/session_manager.dart';
 import '../../../shared/widgets/manual_sync_button.dart';
 
 class CashierHomePage extends StatefulWidget {
@@ -109,7 +110,12 @@ class _CashierHomePageState extends State<CashierHomePage> {
     final shouldClear = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
         title: const Text('Void current order?'),
         content: const Text(
           'All items in this order will be voided and removed. ',
@@ -212,8 +218,13 @@ class _CashierHomePageState extends State<CashierHomePage> {
     }).toList();
 
     try {
+      final session = SessionManager();
+      final currentUserId = session.userId ?? 1;
+      final currentUsername = session.currentUser?['full_name'] ?? session.currentUser?['username'] ?? 'Cashier';
+      final currentRole = session.role ?? 'cashier';
+
       final result = await _transactionRepo.createTransaction(
-        userId: 1,
+        userId: currentUserId,
         totalAmount: total,
         discount: 0,
         paymentMethod: 'cash',
@@ -221,6 +232,8 @@ class _CashierHomePageState extends State<CashierHomePage> {
         change: change,
         items: itemsForDb,
         customOrderNumber: customOrderNumber,
+        username: currentUsername,
+        role: currentRole,
       );
 
       if (!mounted) return;
@@ -232,62 +245,88 @@ class _CashierHomePageState extends State<CashierHomePage> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
           contentPadding: const EdgeInsets.all(32),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 64),
-              const SizedBox(height: 16),
+              Container(
+                width: 68,
+                height: 68,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFDCFCE7),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_rounded, color: AppColors.forest, size: 38),
+              ),
+              const SizedBox(height: 18),
               const Text(
                 'Payment Complete!',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.darkCharcoal,
+                  letterSpacing: -0.3,
+                ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               const Text(
-                'Order has been submitted.',
-                style: TextStyle(color: Colors.grey),
+                'Order has been successfully recorded.',
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
               ),
               const SizedBox(height: 24),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      'ORDER #',
+                    const Text(
+                      'ORDER NUMBER',
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF64748B),
+                        letterSpacing: 1.2,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       '$orderNumber',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.w900,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        color: AppColors.darkCharcoal,
+                        letterSpacing: -1,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.goldenYellow,
+                    foregroundColor: AppColors.darkCharcoal,
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Start Next Order', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: const Text('Start Next Order', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                 ),
               ),
             ],
@@ -768,14 +807,24 @@ class _OrderReviewDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
       title: const Row(
         children: [
-          Icon(Icons.checklist, color: AppColors.brandRed),
+          Icon(Icons.receipt_long_rounded, color: AppColors.darkCharcoal, size: 22),
           SizedBox(width: 10),
           Text(
             'Confirm Order',
-            style: TextStyle(fontWeight: FontWeight.w800),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: AppColors.darkCharcoal,
+              letterSpacing: -0.3,
+            ),
           ),
         ],
       ),
@@ -786,24 +835,23 @@ class _OrderReviewDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.brandRed.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.25)),
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: const Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: AppColors.brandRed, size: 20),
-                  const SizedBox(width: 8),
-                  const Expanded(
+                  Icon(Icons.info_outline_rounded, color: Color(0xFF64748B), size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
                     child: Text(
-                      'Is this order correct? Please confirm with the customer before proceeding.',
+                      'Please verify order items and total with the customer.',
                       style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.brandRed,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: Color(0xFF475569),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -906,18 +954,28 @@ class _OrderReviewDialog extends StatelessWidget {
       actions: [
         OutlinedButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Go Back'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.brandRed,
-            foregroundColor: Colors.white,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.darkCharcoal,
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          child: const Text('Confirm & Proceed'),
+          child: const Text('Go Back'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.goldenYellow,
+            foregroundColor: AppColors.darkCharcoal,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text('Confirm & Proceed', style: TextStyle(fontWeight: FontWeight.w800)),
         ),
       ],
     );
@@ -1026,9 +1084,9 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: AppColors.creamBackground,
+                          color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.softBorder),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1114,13 +1172,13 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                         ),
                         decoration: BoxDecoration(
                           color: change > 0
-                              ? AppColors.brandRed.withValues(alpha: 0.08)
-                              : Colors.grey.withValues(alpha: 0.06),
+                              ? const Color(0xFFF0FDF4)
+                              : const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: change > 0
-                                ? AppColors.brandRed.withValues(alpha: 0.2)
-                                : Colors.transparent,
+                                ? const Color(0xFFBBF7D0)
+                                : const Color(0xFFE2E8F0),
                           ),
                         ),
                         child: Row(
@@ -1131,12 +1189,15 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                                 Icon(
                                   Icons.swap_horiz_rounded,
                                   size: 18,
-                                  color: change > 0 ? AppColors.brandRed : AppColors.mutedText,
+                                  color: change > 0 ? AppColors.forest : const Color(0xFF64748B),
                                 ),
                                 const SizedBox(width: 8),
                                 const Text(
                                   'Change due',
-                                  style: TextStyle(color: AppColors.mutedText),
+                                  style: TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1145,7 +1206,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
-                                color: change > 0 ? AppColors.brandRed : AppColors.darkCharcoal,
+                                color: change > 0 ? AppColors.forest : AppColors.darkCharcoal,
                               ),
                             ),
                           ],

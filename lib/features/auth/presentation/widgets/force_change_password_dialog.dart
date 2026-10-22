@@ -107,10 +107,11 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
       canPop: false,
       child: Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
-          side: const BorderSide(color: AppColors.softBorder, width: 1),
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
         ),
-        backgroundColor: AppColors.surfaceWhite,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: Padding(
@@ -164,9 +165,9 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.creamBackground,
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-                      border: Border.all(color: AppColors.softBorder, width: 1),
+                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
                     ),
                     child: const Text(
                       'Default and temporary credentials must be changed on initial login. Your new password must be at least 8 characters long and include both letters and numbers.',

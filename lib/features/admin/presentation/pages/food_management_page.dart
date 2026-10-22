@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/database/repositories/food_repository.dart';
-import '../widgets/food_emoji_picker_dialog.dart';
+import '../widgets/food_icon_picker_dialog.dart';
 
 class FoodManagementPage extends StatefulWidget {
   final bool enableAutoRefresh;
@@ -25,6 +25,9 @@ class FoodManagementPage extends StatefulWidget {
 
 class _FoodManagementPageState extends State<FoodManagementPage> {
   String _searchQuery = '';
+  String _selectedCategory = 'All';
+  String _selectedStatus = 'All';
+  String _sortBy = 'none';
   bool _showAddFood = false;
   Map<String, dynamic>? _selectedFood;
   bool _isEditingSelected = false;
@@ -78,11 +81,11 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   }
 
   Future<void> _loadDataSilent() async {
-    if (!mounted) return;
+    if (!mounted || _isEditingSelected || _showAddFood) return;
     final repo = FoodRepository();
     final foods = await repo.getAllFoodItems();
     final categories = await repo.getCategories();
-    if (!mounted) return;
+    if (!mounted || _isEditingSelected || _showAddFood) return;
     setState(() {
       _foods = foods;
       _categories = categories;
@@ -126,9 +129,10 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   void _openAddFood() {
     _addNameController.clear();
     _addPriceController.clear();
-    _addCategoryId = _categories.isNotEmpty
-        ? _categories.first['id'] as int
-        : null;
+    final matchingCat = _categories.where((c) => c['name'] == _selectedCategory);
+    _addCategoryId = matchingCat.isNotEmpty
+        ? matchingCat.first['id'] as int
+        : (_categories.isNotEmpty ? _categories.first['id'] as int : null);
     _addIsAvailable = true;
     _addImageUrl = null;
     setState(() {
@@ -250,7 +254,12 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
         titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
         contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
         actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -351,15 +360,38 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    final filteredFoods = _foods.where((f) {
-      if (_searchQuery.isEmpty) return true;
-      final q = _searchQuery.toLowerCase();
-      return ((f['name'] as String?) ?? '').toLowerCase().contains(q) ||
-          ((f['category_name'] as String?) ?? '').toLowerCase().contains(q);
+    var filteredFoods = _foods.where((f) {
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        final match = ((f['name'] as String?) ?? '').toLowerCase().contains(q) ||
+            ((f['category_name'] as String?) ?? '').toLowerCase().contains(q);
+        if (!match) return false;
+      }
+      if (_selectedCategory != 'All') {
+        if ((f['category_name'] as String?) != _selectedCategory) {
+          return false;
+        }
+      }
+      if (_selectedStatus != 'All') {
+        if ((f['availability'] as String?) != _selectedStatus) {
+          return false;
+        }
+      }
+      return true;
     }).toList();
+
+    if (_sortBy == 'name_asc') {
+      filteredFoods.sort((a, b) => ((a['name'] as String?) ?? '').toLowerCase().compareTo(((b['name'] as String?) ?? '').toLowerCase()));
+    } else if (_sortBy == 'name_desc') {
+      filteredFoods.sort((a, b) => ((b['name'] as String?) ?? '').toLowerCase().compareTo(((a['name'] as String?) ?? '').toLowerCase()));
+    } else if (_sortBy == 'price_asc') {
+      filteredFoods.sort((a, b) => ((a['price'] as num?) ?? 0).compareTo((b['price'] as num?) ?? 0));
+    } else if (_sortBy == 'price_desc') {
+      filteredFoods.sort((a, b) => ((b['price'] as num?) ?? 0).compareTo((a['price'] as num?) ?? 0));
+    }
     final Map<String, String> catIcons = {
       for (final c in _categories)
-        c['name'] as String: (c['icon_url'] as String?) ?? '🍽️',
+        c['name'] as String: (c['icon_url'] as String?) ?? 'utensils',
     };
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
@@ -465,13 +497,14 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     );
                   },
                 ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: SizedBox(
-                      width: 340,
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 320,
                       child: TextField(
                         onChanged: (val) => setState(() {
                           _searchQuery = val;
@@ -509,9 +542,86 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                         ),
                       ),
                     ),
-                  ),
+                    // Category Filter Dropdown
+                    Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _selectedCategory != 'All'
+                              ? AppColors.goldenYellow
+                              : AppColors.softBorder,
+                          width: _selectedCategory != 'All' ? 1.5 : 1,
+                        ),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _categories.any((c) => c['name'] == _selectedCategory) || _selectedCategory == 'All'
+                              ? _selectedCategory
+                              : 'All',
+                          icon: const Icon(Icons.arrow_drop_down, color: AppColors.mutedText),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.darkCharcoal,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          onChanged: (val) => setState(() {
+                            _selectedCategory = val ?? 'All';
+                            _currentPage = 1;
+                          }),
+                          items: [
+                            const DropdownMenuItem(
+                              value: 'All',
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.category_outlined, size: 16, color: AppColors.mutedText),
+                                  SizedBox(width: 8),
+                                  Text('All Categories'),
+                                ],
+                              ),
+                            ),
+                            ..._categories.map((c) {
+                              final name = c['name'] as String;
+                              final icon = (c['icon_url'] as String?) ?? 'utensils';
+                              return DropdownMenuItem(
+                                value: name,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    buildCategoryIconWidget(icon, size: 14),
+                                    const SizedBox(width: 8),
+                                    Text(name),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (_selectedCategory != 'All' || _selectedStatus != 'All' || _searchQuery.isNotEmpty)
+                      OutlinedButton.icon(
+                        onPressed: () => setState(() {
+                          _selectedCategory = 'All';
+                          _selectedStatus = 'All';
+                          _searchQuery = '';
+                          _sortBy = 'none';
+                          _currentPage = 1;
+                        }),
+                        icon: const Icon(Icons.clear_all, size: 16),
+                        label: const Text('Clear Filters'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.brandRed,
+                          side: BorderSide(color: AppColors.brandRed.withValues(alpha: 0.4)),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 16),
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, bodyConstraints) {
@@ -633,57 +743,174 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     bottom: BorderSide(color: AppColors.softBorder),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 56,
                       child: Text(
                         'Image',
                         style: AppTypography.tableHeader,
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       flex: 3,
                       child: Padding(
-                        padding: EdgeInsets.only(right: 16),
-                        child: Text(
-                          'Name',
-                          style: AppTypography.tableHeader,
+                        padding: const EdgeInsets.only(right: 16),
+                        child: InkWell(
+                          onTap: () => setState(() {
+                            _sortBy = _sortBy == 'name_asc' ? 'name_desc' : 'name_asc';
+                          }),
+                          child: Row(
+                            children: [
+                              const Text(
+                                'Name',
+                                style: AppTypography.tableHeader,
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                _sortBy == 'name_asc'
+                                    ? Icons.arrow_upward
+                                    : (_sortBy == 'name_desc' ? Icons.arrow_downward : Icons.swap_vert),
+                                size: 14,
+                                color: _sortBy.startsWith('name')
+                                    ? AppColors.goldenYellow
+                                    : AppColors.mutedText.withValues(alpha: 0.5),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                     Expanded(
                       flex: 2,
                       child: Padding(
-                        padding: EdgeInsets.only(right: 16),
-                        child: Text(
-                          'Category',
-                          style: AppTypography.tableHeader,
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Row(
+                          children: [
+                            Text(
+                              _selectedCategory == 'All' ? 'Category' : 'Category: $_selectedCategory',
+                              style: AppTypography.tableHeader.copyWith(
+                                color: _selectedCategory != 'All' ? AppColors.darkCharcoal : null,
+                                fontWeight: _selectedCategory != 'All' ? FontWeight.w800 : null,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(width: 4),
+                            PopupMenuButton<String>(
+                              tooltip: 'Filter by Category',
+                              initialValue: _selectedCategory,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: Icon(
+                                _selectedCategory != 'All' ? Icons.filter_alt : Icons.filter_alt_outlined,
+                                size: 16,
+                                color: _selectedCategory != 'All' ? AppColors.goldenYellow : AppColors.mutedText,
+                              ),
+                              onSelected: (cat) => setState(() {
+                                _selectedCategory = cat;
+                                _currentPage = 1;
+                              }),
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'All',
+                                  child: Text('All Categories', style: TextStyle(fontWeight: FontWeight.bold)),
+                                ),
+                                const PopupMenuDivider(),
+                                ..._categories.map((c) {
+                                  final name = c['name'] as String;
+                                  final icon = (c['icon_url'] as String?) ?? 'utensils';
+                                  return PopupMenuItem(
+                                    value: name,
+                                    child: Row(
+                                      children: [
+                                        buildCategoryIconWidget(icon, size: 14),
+                                        const SizedBox(width: 8),
+                                        Text(name),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
                     SizedBox(
                       width: 100,
                       child: Padding(
-                        padding: EdgeInsets.only(right: 16),
-                        child: Text(
-                          'Price',
-                          style: AppTypography.tableHeader,
+                        padding: const EdgeInsets.only(right: 16),
+                        child: InkWell(
+                          onTap: () => setState(() {
+                            _sortBy = _sortBy == 'price_asc' ? 'price_desc' : 'price_asc';
+                          }),
+                          child: Row(
+                            children: [
+                              const Text(
+                                'Price',
+                                style: AppTypography.tableHeader,
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                _sortBy == 'price_asc'
+                                    ? Icons.arrow_upward
+                                    : (_sortBy == 'price_desc' ? Icons.arrow_downward : Icons.swap_vert),
+                                size: 14,
+                                color: _sortBy.startsWith('price')
+                                    ? AppColors.goldenYellow
+                                    : AppColors.mutedText.withValues(alpha: 0.5),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                     SizedBox(
                       width: 120,
                       child: Padding(
-                        padding: EdgeInsets.only(right: 16),
-                        child: Text(
-                          'Status',
-                          style: AppTypography.tableHeader,
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Flexible(
+                              child: Text(
+                                'Status',
+                                style: AppTypography.tableHeader,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            PopupMenuButton<String>(
+                              tooltip: 'Filter by Status',
+                              initialValue: _selectedStatus,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              iconSize: 16,
+                              icon: Icon(
+                                _selectedStatus != 'All' ? Icons.filter_alt : Icons.filter_alt_outlined,
+                                size: 16,
+                                color: _selectedStatus != 'All' ? AppColors.goldenYellow : AppColors.mutedText,
+                              ),
+                              onSelected: (st) => setState(() {
+                                _selectedStatus = st;
+                                _currentPage = 1;
+                              }),
+                              itemBuilder: (context) => const [
+                                PopupMenuItem(
+                                  value: 'All',
+                                  child: Text('All Statuses', style: TextStyle(fontWeight: FontWeight.bold)),
+                                ),
+                                PopupMenuDivider(),
+                                PopupMenuItem(value: 'available', child: Text('Available')),
+                                PopupMenuItem(value: 'unavailable', child: Text('Unavailable')),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    SizedBox(
+                    const SizedBox(
                       width: 80,
                       child: Text(
                         'Actions',
@@ -713,7 +940,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                           final isAvailable = food['availability'] == 'available';
                           final isSelected = _selectedFood != null && _selectedFood!['id'] == food['id'];
                           final catName = (food['category_name'] as String?) ?? 'Uncategorized';
-                          final catIcon = catIcons[catName] ?? '🍽️';
+                          final catIcon = catIcons[catName] ?? 'utensils';
                           final catIdx = _categories.indexWhere((c) => c['name'] == catName);
                           final chipColor = _chipColors[(catIdx < 0 ? 0 : catIdx) % _chipColors.length];
 
@@ -783,7 +1010,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Text(catIcon, style: const TextStyle(fontSize: 13)),
+                                                buildCategoryIconWidget(catIcon, size: 13, color: chipColor),
                                                 const SizedBox(width: 5),
                                                 Flexible(
                                                   child: Text(
@@ -1054,8 +1281,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     final catName = (food['category_name'] as String?) ?? 'Uncategorized';
     final catIcon = _categories.firstWhere(
       (c) => c['name'] == catName,
-      orElse: () => {'icon_url': '🍽️'},
-    )['icon_url'] as String? ?? '🍽️';
+      orElse: () => {'icon_url': 'utensils'},
+    )['icon_url'] as String? ?? 'utensils';
 
     return Container(
       decoration: BoxDecoration(
@@ -1203,7 +1430,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(catIcon, style: const TextStyle(fontSize: 13)),
+                          buildCategoryIconWidget(catIcon, size: 13),
                           const SizedBox(width: 5),
                           Text(
                             catName,
@@ -1463,7 +1690,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
-                  initialValue: _editCategoryId,
+                  key: ValueKey('edit_cat_$_editCategoryId'),
+                  initialValue: _categories.any((c) => c['id'] == _editCategoryId) ? _editCategoryId : null,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(
@@ -1476,7 +1704,14 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       .map(
                         (c) => DropdownMenuItem<int>(
                           value: c['id'] as int,
-                          child: Text(c['name'] as String),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              buildCategoryIconWidget(c['icon_url'] as String?, size: 16),
+                              const SizedBox(width: 8),
+                              Text(c['name'] as String),
+                            ],
+                          ),
                         ),
                       )
                       .toList(),
@@ -1706,7 +1941,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
-                  initialValue: _addCategoryId,
+                  key: ValueKey('add_cat_$_addCategoryId'),
+                  initialValue: _categories.any((c) => c['id'] == _addCategoryId) ? _addCategoryId : null,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(
@@ -1719,7 +1955,14 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       .map(
                         (c) => DropdownMenuItem<int>(
                           value: c['id'] as int,
-                          child: Text(c['name'] as String),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              buildCategoryIconWidget(c['icon_url'] as String?, size: 16),
+                              const SizedBox(width: 8),
+                              Text(c['name'] as String),
+                            ],
+                          ),
                         ),
                       )
                       .toList(),
@@ -1889,7 +2132,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
 
   Future<void> _showManageCategoriesDialog() async {
     final repo = FoodRepository();
-    String newCategoryIcon = '🍽️';
+    String newCategoryIcon = 'utensils';
     final TextEditingController categoryController = TextEditingController();
 
     showDialog(
@@ -1898,8 +2141,11 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               title: const Row(
                 children: [
@@ -1919,8 +2165,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                           onTap: () async {
                             final selected = await showDialog<String>(
                               context: context,
-                              builder: (_) => FoodEmojiPickerDialog(
-                                currentEmoji: newCategoryIcon,
+                              builder: (_) => FoodIconPickerDialog(
+                                currentIcon: newCategoryIcon,
                               ),
                             );
                             if (selected != null) {
@@ -1932,18 +2178,15 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceWhite,
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.goldenYellow,
+                                color: const Color(0xFFE2E8F0),
                                 width: 1.5,
                               ),
                             ),
                             alignment: Alignment.center,
-                            child: Text(
-                              newCategoryIcon,
-                              style: const TextStyle(fontSize: 22),
-                            ),
+                            child: buildCategoryIconWidget(newCategoryIcon, size: 22),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -1952,8 +2195,15 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                             controller: categoryController,
                             decoration: InputDecoration(
                               hintText: 'New Category Name',
-                              border: OutlineInputBorder(
+                              filled: true,
+                              fillColor: Colors.white,
+                              enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -1966,6 +2216,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.goldenYellow,
                             foregroundColor: Colors.black,
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -1977,7 +2228,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                 iconUrl: newCategoryIcon,
                               );
                               categoryController.clear();
-                              newCategoryIcon = '🍽️';
+                              newCategoryIcon = 'utensils';
                               if (!mounted) return;
                               _loadData();
                               setDialogState(() {});
@@ -2011,23 +2262,23 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                             itemCount: cats.length,
                             itemBuilder: (context, index) {
                               final cat = cats[index];
-                              final String iconStr = (cat['icon_url'] as String?) ?? '🍽️';
-                              return Card(
+                              final String iconStr = (cat['icon_url'] as String?) ?? 'utensils';
+                              return Container(
                                 margin: const EdgeInsets.only(bottom: 8),
-                                shape: RoundedRectangleBorder(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
                                 ),
                                 child: ListTile(
                                   leading: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
-                                      color: Colors.grey.shade100,
+                                      color: const Color(0xFFF8FAFC),
                                       borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: const Color(0xFFE2E8F0)),
                                     ),
-                                    child: Text(
-                                      iconStr,
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
+                                    child: buildCategoryIconWidget(iconStr, size: 20),
                                   ),
                                   title: Text(
                                     cat['name'],
@@ -2055,8 +2306,11 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                             context: context,
                                             builder: (editCtx) => StatefulBuilder(
                                               builder: (ctx2, setEditState) => AlertDialog(
+                                                backgroundColor: Colors.white,
+                                                surfaceTintColor: Colors.transparent,
                                                 shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(18),
+                                                  borderRadius: BorderRadius.circular(16),
+                                                  side: const BorderSide(color: Color(0xFFE2E8F0)),
                                                 ),
                                                 title: const Text('Edit Category'),
                                                 content: Row(
@@ -2065,8 +2319,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                                       onTap: () async {
                                                         final picked = await showDialog<String>(
                                                           context: editCtx,
-                                                          builder: (_) => FoodEmojiPickerDialog(
-                                                            currentEmoji: editIcon,
+                                                          builder: (_) => FoodIconPickerDialog(
+                                                            currentIcon: editIcon,
                                                           ),
                                                         );
                                                         if (picked != null) {
@@ -2078,25 +2332,32 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                                         width: 48,
                                                         height: 48,
                                                         decoration: BoxDecoration(
-                                                          color: AppColors.surfaceWhite,
+                                                          color: Colors.white,
                                                           borderRadius: BorderRadius.circular(12),
                                                           border: Border.all(
-                                                            color: AppColors.goldenYellow,
+                                                            color: const Color(0xFFE2E8F0),
                                                           ),
                                                         ),
                                                         alignment: Alignment.center,
-                                                        child: Text(
-                                                          editIcon,
-                                                          style: const TextStyle(fontSize: 22),
-                                                        ),
+                                                        child: buildCategoryIconWidget(editIcon, size: 22),
                                                       ),
                                                     ),
                                                     const SizedBox(width: 10),
                                                     Expanded(
                                                       child: TextField(
                                                         controller: editController,
-                                                        decoration: const InputDecoration(
+                                                        decoration: InputDecoration(
                                                           hintText: 'Category Name',
+                                                          filled: true,
+                                                          fillColor: Colors.white,
+                                                          enabledBorder: OutlineInputBorder(
+                                                            borderRadius: BorderRadius.circular(12),
+                                                            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                                                          ),
+                                                          focusedBorder: OutlineInputBorder(
+                                                            borderRadius: BorderRadius.circular(12),
+                                                            borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
@@ -2111,6 +2372,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                                     style: ElevatedButton.styleFrom(
                                                       backgroundColor: AppColors.goldenYellow,
                                                       foregroundColor: Colors.black,
+                                                      elevation: 0,
                                                     ),
                                                     onPressed: () async {
                                                       if (editController.text.trim().isNotEmpty) {
@@ -2143,7 +2405,12 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                           final confirm = await showDialog<bool>(
                                             context: context,
                                             builder: (confirmCtx) => AlertDialog(
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                              backgroundColor: Colors.white,
+                                              surfaceTintColor: Colors.transparent,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(16),
+                                                side: const BorderSide(color: Color(0xFFE2E8F0)),
+                                              ),
                                               title: Row(
                                                 children: [
                                                   Icon(Icons.warning_amber_rounded, color: AppColors.brandRed),

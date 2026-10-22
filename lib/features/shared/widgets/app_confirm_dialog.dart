@@ -57,8 +57,8 @@ class AppConfirmDialog extends StatelessWidget {
       backgroundColor: AppColors.surfaceWhite,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
-        side: const BorderSide(color: AppColors.softBorder, width: 1),
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
       ),
       titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
       contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),

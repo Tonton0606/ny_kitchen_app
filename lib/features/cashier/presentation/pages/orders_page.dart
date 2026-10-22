@@ -92,7 +92,12 @@ class _OrdersPageState extends State<OrdersPage> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
         title: Row(
           children: [
               Container(
@@ -135,7 +140,7 @@ class _OrdersPageState extends State<OrdersPage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.softBorder),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Row(
                 children: [
@@ -181,7 +186,7 @@ class _OrdersPageState extends State<OrdersPage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.softBorder),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -279,7 +284,12 @@ class _OrdersPageState extends State<OrdersPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
         title: Row(
           children: [
             Container(
@@ -310,15 +320,15 @@ class _OrdersPageState extends State<OrdersPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.brandRed.withValues(alpha: 0.05),
+                color: const Color(0xFFFEF2F2),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.2)),
+                border: Border.all(color: const Color(0xFFFECACA)),
               ),
-              child: Row(
+              child: const Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: AppColors.brandRed, size: 20),
-                  const SizedBox(width: 8),
-                  const Expanded(
+                  Icon(Icons.warning_amber_rounded, color: AppColors.brandRed, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
                     child: Text(
                       'Please verify with the customer that this is the correct order to cancel.',
                       style: TextStyle(
@@ -341,13 +351,13 @@ class _OrdersPageState extends State<OrdersPage> {
               'Customer: ${order['customer']}',
               style: const TextStyle(color: AppColors.mutedText, fontSize: 13),
             ),
-            const Divider(height: 1, color: AppColors.softBorder),
+            const Divider(height: 1, color: Color(0xFFE2E8F0)),
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.softBorder),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

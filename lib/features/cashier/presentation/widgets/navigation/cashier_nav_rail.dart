@@ -33,10 +33,11 @@ class _CashierNavRailState extends State<CashierNavRail> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surfaceWhite,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
-          side: const BorderSide(color: AppColors.softBorder, width: 1),
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
         ),
         title: Row(
           children: [

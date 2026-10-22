@@ -342,6 +342,21 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                 Text(formattedDate, style: const TextStyle(fontSize: 12, color: AppColors.mutedText)),
                               ],
                             ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Cashier', style: TextStyle(fontSize: 12, color: AppColors.mutedText)),
+                                Text(
+                                  (tx['cashier_name'] as String?)?.isNotEmpty == true
+                                      ? tx['cashier_name']
+                                      : (tx['cashier_username'] as String?)?.isNotEmpty == true
+                                          ? tx['cashier_username']
+                                          : (tx['user_id'] == 1 ? 'Admin' : 'Cashier'),
+                                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12, color: AppColors.darkCharcoal),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 16),
                             const Divider(height: 1, color: AppColors.softBorder),
                             const SizedBox(height: 12),
@@ -462,6 +477,12 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
           title: const Text('Void Transaction'),
           content: Text('Are you sure you want to void receipt ${tx['receipt_number']}?'),
           actions: [

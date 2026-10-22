@@ -513,12 +513,6 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                             ),
                             DataColumn(
                               label: Text(
-                                'Payment',
-                                style: AppTypography.tableHeader,
-                              ),
-                            ),
-                            DataColumn(
-                              label: Text(
                                 'Total',
                                 style: AppTypography.tableHeader,
                               ),
@@ -565,19 +559,17 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                                 ),
                                 DataCell(
                                   Text(
-                                    'Admin',
+                                    (tx['cashier_name'] as String?)?.isNotEmpty == true
+                                        ? tx['cashier_name']
+                                        : (tx['cashier_username'] as String?)?.isNotEmpty == true
+                                            ? tx['cashier_username']
+                                            : (tx['user_id'] == 1 ? 'Admin' : 'Cashier'),
                                     style: AppTypography.tableCellSecondary,
                                   ),
                                 ),
                                 DataCell(
                                   Text(
                                     '${tx['itemCount'] ?? 0}',
-                                    style: AppTypography.tableCellSecondary,
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    tx['payment_method'] ?? '',
                                     style: AppTypography.tableCellSecondary,
                                   ),
                                 ),

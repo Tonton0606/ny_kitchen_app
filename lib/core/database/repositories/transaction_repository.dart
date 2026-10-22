@@ -90,22 +90,31 @@ class TransactionRepository {
 
   Future<List<Map<String, dynamic>>> getTransactions({String status = 'completed'}) async {
     final db = await _dbHelper.database;
-    return await db.query(
-      'transactions',
-      where: 'status = ?',
-      whereArgs: [status],
-      orderBy: 'created_at DESC',
-    );
+    return await db.rawQuery('''
+      SELECT 
+        t.*, 
+        u.full_name as cashier_name, 
+        u.username as cashier_username, 
+        u.role as cashier_role
+      FROM transactions t
+      LEFT JOIN users u ON t.user_id = u.id
+      WHERE t.status = ?
+      ORDER BY t.created_at DESC
+    ''', [status]);
   }
 
   Future<List<Map<String, dynamic>>> getAllTransactions() async {
     final db = await _dbHelper.database;
-    return await db.query(
-      'transactions',
-      where: 'status != ?',
-      whereArgs: ['Preparing'],
-      orderBy: 'created_at DESC',
-    );
+    return await db.rawQuery('''
+      SELECT 
+        t.*, 
+        u.full_name as cashier_name, 
+        u.username as cashier_username, 
+        u.role as cashier_role
+      FROM transactions t
+      LEFT JOIN users u ON t.user_id = u.id
+      ORDER BY t.created_at DESC
+    ''');
   }
 
   Future<List<Map<String, dynamic>>> getTransactionItems(int transactionId) async {
@@ -171,12 +180,17 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     // Get transactions that are currently active (e.g. Preparing)
     // Served transactions are considered completed and will appear in history.
-    return await db.query(
-      'transactions',
-      where: 'status IN (?, ?)',
-      whereArgs: ['Preparing', 'Served'],
-      orderBy: 'created_at ASC',
-    );
+    return await db.rawQuery('''
+      SELECT 
+        t.*, 
+        u.full_name as cashier_name, 
+        u.username as cashier_username, 
+        u.role as cashier_role
+      FROM transactions t
+      LEFT JOIN users u ON t.user_id = u.id
+      WHERE t.status IN (?, ?)
+      ORDER BY t.created_at ASC
+    ''', ['Preparing', 'Served']);
   }
 
   Future<List<Map<String, dynamic>>> getTopSellingFoods({int limit = 5}) async {

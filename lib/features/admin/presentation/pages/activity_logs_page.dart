@@ -23,11 +23,18 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
 
   int _currentPage = 1;
   static const int _pageSize = 10;
+  final ScrollController _verticalScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadLogs();
+  }
+
+  @override
+  void dispose() {
+    _verticalScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadLogs() async {
@@ -282,8 +289,10 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                 : LayoutBuilder(
                                     builder: (context, constraints) {
                                       return Scrollbar(
+                                        controller: _verticalScrollController,
                                         thumbVisibility: true,
                                         child: SingleChildScrollView(
+                                          controller: _verticalScrollController,
                                           scrollDirection: Axis.vertical,
                                           child: SingleChildScrollView(
                                             scrollDirection: Axis.horizontal,
