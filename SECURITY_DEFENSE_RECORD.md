@@ -513,3 +513,42 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Request user permission before running `git push`.
 
+## Supabase users upload constraint follow-up — 2026-10-23 (Asia/Manila)
+
+Session owner (self-reported): Ralston Villamin
+
+Rubric / risk / acceptance-test IDs: R08, R10; SEC-02; AT10. No rubric score assigned.
+
+Evidence received:
+- User screenshot shows the app online with `Cloud sync incomplete (upload: users (23502))`.
+- A read-only Supabase schema query shows seven required columns on `public.users`: `id`, `full_name`, `username`, `password_hash`, `role`, `status`, and `created_at`.
+- This is a PostgreSQL not-null constraint error, distinct from the earlier `42501` RLS rejection. The app supplies the other listed profile fields and deliberately omits `password_hash`, identifying it as the likely failing column.
+
+Findings and changes:
+- `SyncService._syncToSupabase` omits `password_hash` and `face_encoding` before uploading `users`, by design. Local SQLite requires `password_hash`; whether the deployed Supabase table does too must be confirmed from schema metadata.
+- The first sync may have updated existing cloud users while a later newly created or not-yet-present user requires an insert and fails. This is a plausible explanation for “synced at first,” not a verified cloud history.
+- User pulls now request only profile fields; cloud password hashes, biometrics, login counters, and local password-change state are not downloaded.
+- Existing local auth state is preserved during profile merges. A profile imported to a device without a local account gets a random local-only password hash and must be password-reset by an Admin on that device.
+- Sanitized sync diagnostics can include only the required column identifier for a `23502` error; they never include the failing row or full server message.
+- Added `docs/security/supabase_users_sync_diagnostic.sql`, a read-only query against `information_schema.columns`.
+- Prepared `docs/security/supabase_users_profile_sync_migration.sql` to make the cloud profile's `password_hash` nullable. It is not applied and does not clear any existing cloud values.
+
+Files changed:
+- `lib/core/services/sync_service.dart`
+- `docs/security/supabase_users_sync_diagnostic.sql`
+- `docs/security/supabase_users_profile_sync_migration.sql`
+- `docs/SUPABASE_ARCHITECTURE.md`
+- `AI_SESSION_HANDOFF.md`, `PROJECT_STATE.md`, `TODO.md`, `CHANGELOG.md`, and this record
+
+Checks actually run and actual results:
+- No Supabase request, production sync, or database write was performed.
+- No Flutter tests were run.
+- `dart analyze lib/core/services/sync_service.dart` was attempted before the final profile-only pull change; it produced no output for about 90 seconds and was interrupted. The final code was not analyzed; no analyzer pass is claimed.
+
+Unverified items / remaining risks:
+- The schema confirms `password_hash` is required. The proposed nullable-column migration has not been applied.
+- Existing cloud `password_hash` values, if any, remain untouched. Review their count and local backups before deciding whether to clear them.
+- A newly imported account requires a local Admin password reset on that device; cross-device user-ID conflicts remain part of the broader sync conflict risk.
+- A successful upload/download cycle has not been verified.
+
+Next concrete step: Apply the nullable `password_hash` migration in a development project, then build the updated client and sync synthetic data. Confirm a profile-only account pull and Admin password reset on another device before applying the migration to Production. Do not share credentials, user rows, or secrets.

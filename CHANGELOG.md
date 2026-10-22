@@ -29,6 +29,12 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 - Environment configuration can come from process variables, the current working directory `.env`, or a `.env` beside the desktop executable. Automatic mode shows its current status in the app.
 - Live Supabase schema/RLS reachability and mobile credential provisioning remain unverified; no test suite or live cloud request was run for this change.
 
+### Fixed — 2026-10-23
+
+- Supabase sync status may now identify a not-null column by name for SQLSTATE `23502`, while keeping the failing row and other server details out of user-visible messages.
+- User sync now downloads only profile columns, preserves existing device-local auth state, and creates an unguessable local-only hash for a newly imported account; an Admin must reset that account's password on each device.
+- Added read-only schema diagnostics and a proposed nullability migration. Supabase confirmed `public.users.password_hash` is NOT NULL; migration application and live sync remain pending.
+
 ### Documentation — 2026-10-20
 
 - Read the supplied security rubric without modifying it; created `docs/SECURITY_IMPLEMENTATION_PLAN.md` with all 20 criteria, risk ratings, controls, acceptance tests, tool decisions, privacy/recovery planning and a defense script.

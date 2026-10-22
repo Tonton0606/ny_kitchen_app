@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../database/database_helper.dart';
+import '../utils/security_utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as path;
 import 'backend_sync_service.dart';
@@ -70,8 +71,18 @@ class SyncService {
   }
 
   String _safeErrorCode(Object error) {
-    final match = RegExp(r'\b[0-9A-Z]{5}\b').firstMatch(error.toString());
-    return match?.group(0) ?? error.runtimeType.toString();
+    final errorText = error.toString();
+    final code = RegExp(r'\b[0-9A-Z]{5}\b').firstMatch(errorText)?.group(0);
+    if (code == '23502') {
+      // A not-null error may safely expose the column identifier, never the
+      // database row or the rest of the server error (which can contain data).
+      final column = RegExp(
+        r'null value in column "([A-Za-z_][A-Za-z0-9_]*)"',
+        caseSensitive: false,
+      ).firstMatch(errorText)?.group(1);
+      if (column != null) return '$code ($column required)';
+    }
+    return code ?? error.runtimeType.toString();
   }
 
   /// Loads saved sync mode from app_settings and starts timer if set to automatic
@@ -152,16 +163,35 @@ class SyncService {
     return sanitized;
   }
 
-  /// Merges pulled cloud user record with existing local record, preserving local biometric face_encoding, password_hash, and lockout counters.
+  /// Merges a cloud user profile without importing credentials or biometrics.
+  /// Existing users keep device-local auth state; newly imported profiles get
+  /// a random local-only hash and require an Admin password reset on this device.
   static Map<String, dynamic> mergePulledUserRecord(
     Map<String, dynamic> cloudRecord,
     Map<String, dynamic>? existingLocal,
   ) {
     final merged = Map<String, dynamic>.from(cloudRecord);
+    // Cloud sync carries user profiles only. Never accept cloud credentials or
+    // biometric values, including legacy values created by older app versions.
+    merged.remove('password_hash');
+    merged.remove('face_encoding');
     if (existingLocal != null) {
       merged['face_encoding'] = existingLocal['face_encoding'];
-      merged['failed_login_count'] = merged['failed_login_count'] ?? existingLocal['failed_login_count'];
-      merged['password_hash'] = merged['password_hash'] ?? existingLocal['password_hash'];
+      merged['failed_login_count'] = existingLocal['failed_login_count'];
+      merged['password_hash'] = existingLocal['password_hash'];
+      merged['last_login'] = existingLocal['last_login'];
+      merged['must_change_password'] = existingLocal['must_change_password'];
+    } else {
+      // A profile pulled to a new device has no local credential yet. Store an
+      // unguessable device-only hash so the account cannot log in until an
+      // administrator sets a local password through Account Management.
+      merged['password_hash'] = SecurityUtils.hashPassword(
+        SecurityUtils.generateSalt(32),
+      );
+      merged['face_encoding'] = null;
+      merged['failed_login_count'] = 0;
+      merged['last_login'] = null;
+      merged['must_change_password'] = 1;
     }
     return merged;
   }
@@ -336,7 +366,11 @@ class SyncService {
 
       for (String table in _tables) {
         try {
-          final cloudData = await client.from(table).select();
+          final cloudData = table == 'users'
+              ? await client
+                  .from(table)
+                  .select('id, full_name, username, role, status, created_at')
+              : await client.from(table).select();
 
           if (cloudData.isNotEmpty) {
             for (var record in cloudData) {
@@ -370,11 +404,12 @@ class SyncService {
               }
               if (table == 'users') {
                 final existing = await db.query('users', where: 'id = ?', whereArgs: [record['id']]);
-                if (existing.isNotEmpty) {
-                  final merged = mergePulledUserRecord(record, existing.first);
-                  record.clear();
-                  record.addAll(merged);
-                }
+                final merged = mergePulledUserRecord(
+                  record,
+                  existing.isEmpty ? null : existing.first,
+                );
+                record.clear();
+                record.addAll(merged);
               }
 
               await db.insert(

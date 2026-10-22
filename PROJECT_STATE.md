@@ -3,6 +3,8 @@
 
 > 2026-10-22 update: Rubric remains mapped in `docs/SECURITY_IMPLEMENTATION_PLAN.md`. User screenshots confirm RLS is enabled, all seven device-secret policies are PERMISSIVE, and anon/authenticated table grants are present. The owner privately found and changed a local/device-secret mismatch, but reports sync still fails. No successful sync is claimed; capture the sanitized table/error status after a manual attempt.
 
+> 2026-10-23 update: The latest screenshot reports `Cloud sync incomplete (upload: users (23502))`. Supabase schema metadata confirms `public.users.password_hash` is NOT NULL; the client intentionally omits it. Code now selects profile columns only, preserves existing local auth state, and creates a random local-only hash for newly imported profiles. A reviewed nullability migration is prepared but not applied; live sync remains unverified.
+
 > This file must be updated after every approved work session.
 > Do not claim features are complete unless they have been implemented and verified.
 > Authority: `PROJECT_BLUEPRINT.md` → `RULES.md` → `AI_DEVELOPMENT_RULES.md`
@@ -15,8 +17,8 @@
 |---|---|
 | **Project Name** | N.Y Kitchen Secure Order and Sales Management System |
 | **Current Phase** | Security defense preparation and cloud synchronization repair |
-| **Current Status** | Flutter/SQLite retained; Supabase initialization succeeds, but owner still sees Sync error after changing the local device-secret setting; fresh failure code/table not captured |
-| **Last Updated** | 2026-10-22 |
+| **Current Status** | Flutter/SQLite retained; `users.password_hash` cloud nullability migration is prepared but pending application; live Supabase sync remains unverified |
+| **Last Updated** | 2026-10-23 |
 | **Updated By** | Ralston Villamin session (self-reported) |
 
 ---

@@ -108,6 +108,14 @@ A fixed shared secret distributed with a Flutter client is extractable and is no
 
 The read-only diagnostic reports boolean indicators for whether conditions exist and reference `check_device_secret` / `request.headers`, without displaying policy expressions or any secret. It also reports policy mode and anon/authenticated table grants. Do not share the secret, function body, or raw policy expression.
 
+## Users upload constraint report — 2026-10-23
+
+A user-provided screenshot reports `Cloud sync incomplete (upload: users (23502))`. PostgreSQL SQLSTATE `23502` indicates a not-null constraint violation. A read-only schema query confirms `public.users.password_hash` is `NOT NULL`; `created_at` is also required and is included in local user payloads. The client deliberately excludes password hashes and biometrics from upload. Existing cloud rows may have accepted earlier upserts while a new local user row now fails on insert; that sequence is plausible, not verified.
+
+The app now selects only profile columns when pulling users, preserves credentials and biometrics on existing local rows, and assigns an unguessable device-local password hash to a newly imported profile. An Admin must reset that account's password on each device before the user can log in there. The proposed SQL in `docs/security/supabase_users_profile_sync_migration.sql` makes the cloud profile's `password_hash` nullable; it does not clear existing cloud values. Apply it to a development project first and review local backups and any legacy cloud hashes before production.
+
+The client preserves existing local password hashes, face encodings, failed-login counters, last-login times, and password-change flags when merging a cloud user profile. If Supabase includes a not-null column name in its `23502` message, the app may display that identifier without exposing the failing row.
+
 Do not resolve this by disabling RLS or granting unrestricted `anon` access. The Ubuntu API is a separate, one-way sales replication path and does not currently replace this multi-table Supabase sync. Secure multi-table sync needs an explicit identity and authorization design (for example, Supabase Auth sessions with least-privilege policies, or reviewed authenticated backend endpoints). Run the read-only query in `docs/security/supabase_rls_diagnostics.sql` and review its output before writing project-specific policies. The query omits policy expressions and business data.
 
 ## Data Ownership

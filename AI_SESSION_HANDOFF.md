@@ -1,6 +1,6 @@
 # N.Y Kitchen — mandatory AI handoff and security plan
 
-Last updated: October 22, 2026, Asia/Manila.
+Last updated: October 23, 2026, Asia/Manila.
 Record owner for this handoff creation: **Ralston Villamin (self-reported in this conversation)**.
 
 This file is the starting guide for any AI continuing the project. Read it completely. It summarizes approved decisions and points to detailed evidence. It is not proof that security requirements have passed. Current user instructions and inspected source take precedence over stale historical summaries; record discrepancies instead of silently inventing resolutions.
@@ -120,6 +120,8 @@ See `docs/security/evidence/2026-10-defense/backend_verification.md` for command
 On 2026-10-22, the manual/automatic cloud sync paths were updated to report table failures, avoid an unnecessary Supabase SELECT response after upsert, serialize overlapping sync work, and expose automatic-mode status. No tests, app launch, or live cloud request was run for this repair. The current code is **Implemented—not verified**; see the latest entry in `SECURITY_DEFENSE_RECORD.md`.
 
 Follow-up: the owner privately changed a local device-secret mismatch, but still sees a Sync error. The latest Windows log shows Supabase initialization and repeated `RadioListTile` Material assertions, but no fresh sync failure code/table. The settings warning was addressed, and the top-bar manual action now shows the sanitized sync status. Live sync remains **unverified**; test only with synthetic data in a development project.
+
+On 2026-10-23, the owner supplied a fresh `users (23502)` upload error and read-only schema output. `public.users.password_hash` is required, while the client deliberately omits it; `created_at` is also required and is sent. The Flutter pull path now requests profile columns only, preserves existing device-local auth state, and generates an unguessable local-only password hash for imported profiles. Admin must reset an imported account's password on each device. A nullability migration is prepared at `docs/security/supabase_users_profile_sync_migration.sql` but has not been applied. No live sync or database write is verified; apply and validate in development before Production, and review any legacy cloud hashes separately.
 
 Not yet demonstrated: Ubuntu deployment, trusted HTTPS from Flutter, real-device offline/reconnect round trip, server backup/restore, rotation/revocation on the VM, Android provisioning, comprehensive dependency audit, or a complete rubric pass.
 

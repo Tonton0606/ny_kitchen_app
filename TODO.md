@@ -368,6 +368,9 @@
 - [ ] Confirm development/production project separation and apply reviewed RLS policies.
 - [ ] Configure deployment environment variables without embedding client secrets.
 - [ ] Document deployment steps in `docs/SUPABASE_DEPLOYMENT.md`
+- [x] Inspect required columns for `public.users` using `docs/security/supabase_users_sync_diagnostic.sql`; confirmed `password_hash` is NOT NULL.
+- [ ] Apply and verify `docs/security/supabase_users_profile_sync_migration.sql` in a development project before Production; review whether old cloud password hashes need cleanup after confirming local backups.
+- [ ] Verify new-device account provisioning: cloud profiles do not transfer passwords; an Admin must reset each imported account's local password on that device.
 
 ---
 
