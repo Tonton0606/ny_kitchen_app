@@ -160,5 +160,5 @@ Next concrete step:
 No need to invent the AI model name, team job titles, identity validation, or a score. If the current owner is unknown, ask instead of attributing work to the last recorded person.
 
 ## 10. Immediate continuation
-
-Ask the session owner's name, read the required files, and inspect the working tree. If Ubuntu is available, follow the deployment guide and capture real HTTPS/offline-reconnect evidence. If it is not ready, continue authorized local security work, starting with repository authorization and its negative tests. Do not perform a full web conversion or claim that backend preparation completes the rubric.
+ 
+Ask the session owner's name, read the required files, inspect the working tree, and immediately run `git fetch origin main` to check for remote commits. If incoming commits exist, pull and merge them, resolve any conflicts (preserving both collaborators' defense records chronologically), run verification tests, commit the merge, and push. Then proceed with the authorized task, committing and pushing upon completion. If Ubuntu is available, follow the deployment guide and capture real HTTPS/offline-reconnect evidence. If it is not ready, continue authorized local security work, starting with repository authorization and its negative tests. Do not perform a full web conversion or claim that backend preparation completes the rubric.

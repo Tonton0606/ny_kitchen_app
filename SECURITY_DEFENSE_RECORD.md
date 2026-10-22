@@ -696,5 +696,29 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Stage changes, commit cleanly, and push to origin/main if approved.
 
+## Session Policy Formalization: Mandatory Remote Pull, Merge, and Push — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T05:10:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Formalize standard session entry and exit protocol across all AI entry points: check for remote commits (`git fetch origin main`), pull and merge (resolving any merge conflicts cleanly), verify tests, and commit then push.
+Rubric / risk / acceptance-test IDs: Governance & Team Collaboration / AT10.
+Files changed:
+- `AGENTS.md`
+- `AI_SESSION_HANDOFF.md`
+- `AI_DEVELOPMENT_RULES.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Policy added:
+- Explicit step 6 added to `AGENTS.md`: every AI session must immediately check for remote updates upon collaborator identification. If incoming changes exist, pull and merge them, preserving all collaborators' historical records.
+- Completed tasks must be tested, committed cleanly, and pushed to `origin/main`.
+Checks actually run and actual results:
+- `git fetch origin main`: Verified local is currently up to date with `origin/main`.
+Evidence paths:
+- `AGENTS.md`
+- `AI_SESSION_HANDOFF.md`
+- `AI_DEVELOPMENT_RULES.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Commit and push session entry rules to `origin/main`.
+
+
 
 
