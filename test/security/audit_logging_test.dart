@@ -103,6 +103,14 @@ void main() {
             )
           ''');
 
+          await db.execute('''
+            CREATE TABLE app_settings (
+              key TEXT PRIMARY KEY,
+              value TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            )
+          ''');
+
           // Seed user
           await db.insert('users', {
             'full_name': 'Admin User',

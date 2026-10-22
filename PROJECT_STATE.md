@@ -5,6 +5,8 @@
 
 > 2026-10-23 update: The latest screenshot reports `Cloud sync incomplete (upload: users (23502))`. Supabase schema metadata confirms `public.users.password_hash` is NOT NULL; the client intentionally omits it. Code now selects profile columns only, preserves existing local auth state, and creates a random local-only hash for newly imported profiles. A reviewed nullability migration is prepared but not applied; live sync remains unverified.
 
+> 2026-10-23 update: Two cashier-device screenshots show different sales sharing local transaction/order ID `#1`; amounts, receipts, and dashboard totals differ while the same `#3` appears on both. Local `AUTOINCREMENT` IDs are independent, but Supabase upserts by `id`, so a row can overwrite another device's sale. Code now generates installation-scoped 63-bit sale/item IDs, unique receipt suffixes, and repairs legacy same-ID/different-sale collisions while the local copy remains. This change is unverified; first confirm the Supabase ID columns are `bigint` in development and repeat the two-device test.
+
 > This file must be updated after every approved work session.
 > Do not claim features are complete unless they have been implemented and verified.
 > Authority: `PROJECT_BLUEPRINT.md` → `RULES.md` → `AI_DEVELOPMENT_RULES.md`
@@ -17,7 +19,7 @@
 |---|---|
 | **Project Name** | N.Y Kitchen Secure Order and Sales Management System |
 | **Current Phase** | Security defense preparation and cloud synchronization repair |
-| **Current Status** | Flutter/SQLite retained; `users.password_hash` cloud nullability migration is prepared but pending application; live Supabase sync remains unverified |
+| **Current Status** | Flutter/SQLite retained; user-profile migration pending; transaction ID collision mitigation implemented but not runtime-verified; live Supabase sync remains unverified |
 | **Last Updated** | 2026-10-23 |
 | **Updated By** | Ralston Villamin session (self-reported) |
 

@@ -116,6 +116,12 @@ The app now selects only profile columns when pulling users, preserves credentia
 
 The client preserves existing local password hashes, face encodings, failed-login counters, last-login times, and password-change flags when merging a cloud user profile. If Supabase includes a not-null column name in its `23502` message, the app may display that identifier without exposing the failing row.
 
+## Cross-device sale ID collisions — 2026-10-23
+
+The cashier screenshots show two devices with different sales under the same local order/transaction number. SQLite `AUTOINCREMENT` is local to each installation, while Supabase upserts by `id`; therefore one device can replace another device's sale. New sales and line items now receive installation-scoped 63-bit IDs, and receipts include the sale ID suffix. Before syncing legacy data, the client checks same-ID transactions against their receipt and sale fields and rekeys a conflicting local sale plus its items, preserving both rows when the local copy still exists.
+
+Before deploying this change, run `docs/security/supabase_transaction_id_diagnostic.sql` in a development project and confirm `transactions.id`, `transaction_items.id`, and `transaction_items.transaction_id` are `bigint`. Recovery cannot restore rows already lost from every local device or backup. No successful two-device sync is claimed yet.
+
 Do not resolve this by disabling RLS or granting unrestricted `anon` access. The Ubuntu API is a separate, one-way sales replication path and does not currently replace this multi-table Supabase sync. Secure multi-table sync needs an explicit identity and authorization design (for example, Supabase Auth sessions with least-privilege policies, or reviewed authenticated backend endpoints). Run the read-only query in `docs/security/supabase_rls_diagnostics.sql` and review its output before writing project-specific policies. The query omits policy expressions and business data.
 
 ## Data Ownership

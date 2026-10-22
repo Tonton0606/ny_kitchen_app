@@ -89,6 +89,14 @@ void main() {
                 )
               ''');
               
+              await db.execute('''
+                CREATE TABLE app_settings (
+                  key TEXT PRIMARY KEY,
+                  value TEXT NOT NULL,
+                  updated_at TEXT NOT NULL
+                )
+              ''');
+              
               await db.insert('users', {
                 'id': 1,
                 'full_name': 'Test Cashier',
