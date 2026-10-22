@@ -819,4 +819,23 @@ Evidence paths:
 - `test/security/repository_authorization_test.dart`
 - `SECURITY_DEFENSE_RECORD.md`
 
+## Cashier Order Summary Indicator Simplification — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T06:17:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Remove redundant automatic indicators from the cashier cart sidebar panel:
+1. Removed `Dine In Only` pill badge from cart header; simplified to `Live Terminal Cart` title.
+2. Removed static `Cash Payment Only` box situated above the checkout action buttons, creating a cleaner, more direct hierarchy to `Place Order`.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles, visual hierarchy, ergonomics).
+Files changed:
+- `lib/features/cashier/presentation/widgets/order_summary_panel.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/features/cashier/presentation/widgets/order_summary_panel.dart`: 0 errors.
+- `flutter test test/security/`: 55/55 passed (100% pass rate).
+Evidence paths:
+- `lib/features/cashier/presentation/widgets/order_summary_panel.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+
+
 

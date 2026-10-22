@@ -79,30 +79,13 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
                         ],
                       ),
                       const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-                            ),
-                            child: const Text(
-                              'Dine In Only',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.darkCharcoal,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            'Live Terminal Cart',
-                            style: TextStyle(fontSize: 11, color: AppColors.mutedBrown),
-                          ),
-                        ],
+                      const Text(
+                        'Live Terminal Cart',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.mutedBrown,
+                        ),
                       ),
                     ],
                   ),
@@ -200,34 +183,6 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
 
                 // Total Amount
                 _buildSummaryRow('Total Amount', total, bold: true, large: true),
-                const SizedBox(height: 16),
-
-                // Payment Method (Cash Only)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(LucideIcons.banknote, size: 18, color: AppColors.darkCharcoal),
-                      SizedBox(width: 8),
-                      Text(
-                        'Cash Payment Only',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkCharcoal,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 16),
 
                 // Actions: Void + Place Order
