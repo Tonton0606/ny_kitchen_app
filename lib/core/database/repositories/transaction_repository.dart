@@ -244,8 +244,8 @@ class TransactionRepository {
 
   Future<List<Map<String, dynamic>>> getActiveTransactions() async {
     final db = await _dbHelper.database;
-    // Get transactions that are currently active (e.g. Preparing)
-    // Served transactions are considered completed and will appear in history.
+    // Active orders include currently 'Preparing' orders plus today's recently 'Served' orders.
+    // Historical served orders belong to transaction history.
     return await db.rawQuery('''
       SELECT 
         t.*, 
@@ -254,9 +254,10 @@ class TransactionRepository {
         u.role as cashier_role
       FROM transactions t
       LEFT JOIN users u ON t.user_id = u.id
-      WHERE t.status IN (?, ?)
+      WHERE t.status = 'Preparing'
+         OR (t.status = 'Served' AND date(t.created_at) = date('now', 'localtime'))
       ORDER BY t.created_at ASC
-    ''', ['Preparing', 'Served']);
+    ''');
   }
 
   Future<List<Map<String, dynamic>>> getTopSellingFoods({int limit = 5}) async {

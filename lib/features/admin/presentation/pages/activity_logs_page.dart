@@ -343,7 +343,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                                   ),
                                                   DataColumn(
                                                     label: Text(
-                                                      'IP Address',
+                                                      'Station',
                                                       style: AppTypography.tableHeader,
                                                     ),
                                                   ),
@@ -457,10 +457,11 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                                             borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                                                           ),
                                                           child: const Text(
-                                                            '127.0.0.1',
+                                                            'POS-01',
                                                             style: TextStyle(
                                                               fontFamily: 'monospace',
                                                               fontSize: 12,
+                                                              fontWeight: FontWeight.w600,
                                                               color: AppColors.mutedSlate,
                                                             ),
                                                           ),
