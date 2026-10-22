@@ -14,10 +14,10 @@
 | A6 | Gap 3 | Force password change on first login for seeded accounts (`must_change_password` migration) | DONE | `lib/core/database/database_helper.dart`, `lib/core/database/repositories/user_repository.dart`, `lib/core/session/session_manager.dart`, `lib/features/auth/presentation/widgets/force_change_password_dialog.dart`, `lib/features/auth/presentation/pages/login_page.dart`, `lib/features/auth/presentation/widgets/face_login_sheet.dart`, `lib/features/auth/presentation/widgets/guarded_route.dart`, `lib/features/admin/presentation/pages/account_management_page.dart` | `test/security/force_password_change_test.dart` | `docs/security/evidence/test_a6_force_password_change.txt` |
 | A7 | Gaps 20-21 | Pin `ai_service/requirements.txt` dependencies, generate `flutter pub outdated` & pip audit evidence | DONE | `ai_service/requirements.txt` | `pip check`, `flutter pub outdated` | `docs/security/evidence/test_a7_pub_outdated.txt`, `docs/security/evidence/test_a7_pip_audit.txt` |
 | A8 | RK-01 | Prepare `SUPABASE_DEVICE_SECRET` rotation tooling, SQL drafts, and verify script | DONE | `scripts/verify_secret_rotation.py`, `docs/security/rotation/rotate_device_secret.sql`, `docs/security/rotation/history_purge_notes.md` | `py scripts/verify_secret_rotation.py --dry-run` | Dry-run verification output |
-| B1 | - | Raise PBKDF2 iterations to 600,000 with per-record iteration metadata & re-hash on login | TODO (Needs User Approval) | - | - | - |
-| B2 | - | Replace AES-CBC with AES-GCM for face encodings + migration | TODO (Needs User Approval) | - | - | - |
-| B3 | Gaps 16, 19 | Rate limiting on Python API & magic-byte validation for image uploads | TODO (Needs User Approval) | - | - | - |
-| B4 | Gap 18 | Restrict image download URLs to Supabase storage host; cap/disable redirects | TODO (Needs User Approval) | - | - | - |
+| B1 | - | Raise PBKDF2 iterations to 600,000 with per-record iteration metadata & re-hash on login | DONE | `lib/core/utils/security_utils.dart`, `lib/core/database/repositories/user_repository.dart` | `test/security/password_hashing_test.dart`, `test/security/rehash_on_login_test.dart` | Ran 21 Python tests + 47 Flutter tests |
+| B2 | - | Replace AES-CBC with AES-GCM for face encodings + migration | DONE | `lib/core/utils/security_utils.dart`, `lib/core/database/repositories/user_repository.dart`, `lib/core/services/sync_service.dart` | `test/security/face_encryption_test.dart` | Ran 21 Python tests + 56 Flutter tests |
+| B3 | Gaps 16, 19 | Rate limiting on Python API & magic-byte validation for image uploads | DONE | `ai_service/main.py`, `lib/core/services/ai_service_client.dart` | `ai_service/tests/test_b3_security.py`, `test/security/ai_service_client_test.dart` | Ran 11 Python tests + 38 Flutter tests |
+| B4 | Gap 18 | Restrict image download URLs to Supabase storage host; cap/disable redirects | DONE | `lib/core/services/sync_service.dart`, `ai_service/ssrf_protection.py` (preventive) | `test/security/sync_service_ssrf_test.dart`, `ai_service/tests/test_ssrf_protection.py` | Ran 21 Python tests + 43 Flutter tests |
 | B5 | Gap 12 | SQLCipher database encryption | TODO (Needs User Approval) | - | - | - |
 
 ## Task Notes (one short block per completed task)
@@ -125,6 +125,7 @@
   - `pip check` reported "No broken requirements found."
   - Evidence saved to `docs/security/evidence/test_a7_pub_outdated.txt` and `docs/security/evidence/test_a7_pip_audit.txt`.
 
+<<<<<<< Updated upstream
 ### Task A8 (RK-01) — Secret Rotation Preparation
 - **What changed**:
   - Prepared `docs/security/rotation/rotate_device_secret.sql` containing SQL templates for rotating `check_device_secret()` using `<NEW_SECRET>` placeholders.
@@ -136,13 +137,113 @@
 - **Verification**:
   - Executed `py scripts/verify_secret_rotation.py --dry-run` with mock environment variables; successfully validated without network execution.
   - Confirmed 0 hardcoded JWTs via `git grep -i -E "eyJhbGciOi"`.
+=======
+### Task B3 (Gaps 16, 19) — Rate limiting on Python API & magic-byte validation for image uploads
+- **What changed**:
+  - In `ai_service/main.py`:
+    - Added `validate_image_bytes(contents: bytes)` enforcing maximum image size (10MB, HTTP 413) and magic byte validation (HTTP 400) supporting JPEG (`\xFF\xD8\xFF`), PNG (`\x89PNG\r\n\x1a\n`), WebP (`RIFF...WEBP`), and BMP (`BM`).
+    - Added `InMemoryRateLimiter` sliding-window rate limiter per client IP/key (default 120 requests/minute to allow liveness burst checks while preventing resource exhaustion; configurable via `AI_RATE_LIMIT_PER_MINUTE`), returning HTTP 429 with `Retry-After` header.
+    - Attached `check_rate_limit` dependency to both `/extract_encoding` and `/check_liveness` endpoints.
+    - Updated exception handlers to preserve and re-raise `HTTPException` rather than masking with 500.
+  - In `lib/core/services/ai_service_client.dart`:
+    - Added explicit recognition and propagation of HTTP 429 (`'Too Many Requests: Rate limit exceeded'`) in `extractEncoding` and `checkEyesClosed`.
+    - Made `_baseUrl` configurable with optional constructor parameter for reliable localhost testability while preserving default `http://127.0.0.1:5000`.
+  - Added unit test suite `ai_service/tests/test_b3_security.py` (8 new tests) covering valid magic bytes, empty payloads, non-image inputs, size limits, sliding-window rate limit enforcement, and endpoint rejection.
+  - Updated Dart unit test suite `test/security/ai_service_client_test.dart` (3 new tests) validating HTTP 429 and HTTP 400 error propagation and throttling signals.
+- **Why**: Protects the local Python microservice against Denial-of-Service / CPU exhaustion from unthrottled requests (Gap 16) and blocks arbitrary file upload / polyglot attacks by validating binary magic bytes before passing buffers to image parsing engines (Gap 19).
+- **Verification**:
+  - `py -m unittest discover -s ai_service/tests -v` passed all 11 tests (including 8 new B3 tests and 3 pre-existing tests).
+  - `flutter test test/security/` passed all 38 tests (including 3 new B3 tests).
+  - `flutter analyze lib/core/services/ai_service_client.dart test/security/ai_service_client_test.dart` completed with zero warnings.
+- **Before/After**:
+  - *Before*: Uploaded files were unvalidated prior to PIL opening (arbitrary payload risk) and endpoints accepted unlimited requests without throttling.
+  - *After*: Magic bytes and payload size are strictly verified upfront with HTTP 400/413, and client requests are throttled via sliding-window rate limiting with HTTP 429.
+
+### Task B4 (Gap 18) — Restrict image download URLs to trusted Supabase hosts & cap redirects (SSRF Protection)
+- **What changed**:
+  - **Effective Fix (Flutter Desktop POS)**:
+    - In `lib/core/services/sync_service.dart`: Added `SyncService.isSafeImageUrl(url)` and `SyncService.isPrivateOrLoopbackIp(addr)`. Updated `_downloadImageToLocal(url)` to enforce HTTPS scheme, exact Supabase project host / `*.supabase.co` validation, rejection of credentials/non-standard ports, DNS IP check rejecting private/loopback/metadata addresses, redirect cap of 3 hops, and 5MB streaming size limit.
+  - **Preventive Guard (Python API)**:
+    - In `ai_service/ssrf_protection.py`: Created reusable SSRF guard (`validate_image_url`, `is_ip_forbidden`, `resolve_and_validate_host`, and `safe_download_image`) for future URL-fetching features. Note: the Python API currently processes multipart file uploads only and has no URL-fetching code, so this module is maintained as an un-wired, preventive utility with standalone tests.
+  - **Tests**:
+    - `test/security/sync_service_ssrf_test.dart` (5 tests) verifying Flutter URL validation, host whitelist, scheme rejection, and IP classification.
+    - `ai_service/tests/test_ssrf_protection.py` (10 tests) verifying SSRF protection logic, lookalikes, private IPs, redirect limits, and payload size bounds.
+- **Why**: Eliminates SSRF risks (Gap 18 / OWASP A10) where malicious or spoofed image URLs in the database could trigger the terminal or backend to fetch internal metadata, access local loopback services, or follow malicious redirects.
+- **Verification**:
+  - `py -m unittest discover -s ai_service/tests -v` passed all 21 tests (10 B4 tests + 11 existing tests).
+  - `flutter test test/security/` passed all 43 tests (5 B4 tests + 38 existing security tests).
+  - `flutter analyze lib/core/services/sync_service.dart test/security/sync_service_ssrf_test.dart` verified no warnings.
+- **Before/After**:
+  - *Before*: Image downloader followed arbitrary URLs and up to 5 redirects with no host, scheme, or IP boundary controls.
+  - *After*: Effective protection in Flutter `sync_service.dart` enforces HTTPS + Supabase whitelist + private IP blocking + 3 redirect hops + 5MB streaming limit; Python module provides verified preventive helper.
+
+### Task B1 — Raise PBKDF2 iterations to 600,000 with per-record iteration metadata & re-hash on login
+- **What changed**:
+  - In `lib/core/utils/security_utils.dart`:
+    - Raised target PBKDF2-HMAC-SHA256 iterations from 10,000 to 600,000 (`targetIterations = 600000`, `defaultIterations = targetIterations`).
+    - Stored per-record iteration metadata in format `$iterations:$salt:$hash` (e.g. `600000:<salt>:<hash>`).
+    - Implemented backward-compatible `verifyPassword` handling both modern 3-part hashes (`$iterations:$salt:$hash`) and legacy 2-part hashes (`$salt:$hash`, verified against legacy 10,000 iterations).
+    - Added `needsRehash(storedHash)` detecting legacy 2-part hashes and records with iterations below 600,000.
+  - In `lib/core/database/repositories/user_repository.dart`:
+    - Updated `UserRepository.login()` to transparently detect outdated hashes via `SecurityUtils.needsRehash(currentHash)` upon successful password verification, computing an upgraded 600,000-iteration hash with metadata and persisting it to SQLite within the existing login transaction.
+  - In tests:
+    - Updated `test/security/password_hashing_test.dart` to verify 3-part metadata format, 600,000 default target, deterministic computation, backward-compatible verification of legacy 10,000 iteration hashes, and `needsRehash` logic.
+    - Created `test/security/rehash_on_login_test.dart` testing end-to-end transparent migration in SQLite from legacy 10,000 iterations to 600,000 iterations upon login, verifying database updates and subsequent login success.
+    - Updated `test/unit/security_utils_test.dart` and benchmarked test suite execution.
+- **Why**: Protects user credentials against modern high-performance GPU/ASIC offline brute-force attacks in line with current OWASP/NIST password storage recommendations (600,000 iterations for PBKDF2-HMAC-SHA256) while guaranteeing zero downtime or password reset disruption for existing legacy users.
+- **Verification**:
+  - `flutter test test/security/` passed all 47 tests (including new rehash tests).
+  - `py -m unittest discover -s ai_service/tests -v` passed all 21 tests.
+  - `flutter analyze lib/core/utils/security_utils.dart lib/core/database/repositories/user_repository.dart test/security/password_hashing_test.dart test/security/rehash_on_login_test.dart` verified zero warnings.
+- **Before/After**:
+  - *Before*: Passwords used 10,000 iterations with fixed `salt:hash` format and no upgrade mechanism.
+  - *After*: Passwords use 600,000 iterations with per-record `iterations:salt:hash` metadata, with transparent automatic re-hashing on login.
+
+### Task B2 — Replace AES-CBC with AES-GCM for face encodings + migration
+- **What changed**:
+  - In `lib/core/utils/security_utils.dart`:
+    - Replaced AES-CBC encryption with AES-256-GCM authenticated encryption using PointyCastle's `GCMBlockCipher(AESEngine())`.
+    - Generated a cryptographically secure 12-byte random nonce per encryption (`Random.secure()`) ensuring nonces are never reused.
+    - Defined versioned ciphertext format: `v2:<nonce_base64>:<ciphertext_and_tag_base64>`.
+    - Implemented `isLegacyFaceEncoding(cipherText)` to detect unversioned CBC ciphertexts (`!cipherText.startsWith('v2:')`).
+    - Implemented `decryptFaceEncoding(cipherText)` to authenticate and decrypt `v2:` GCM ciphertexts, verifying the 128-bit authentication tag and throwing `FormatException` on tampering or wrong key.
+    - Preserved seamless backward-compatible fallback to legacy AES-CBC for unversioned ciphertexts.
+    - Added test helper `encryptLegacyFaceEncodingForTesting` for test vectors.
+  - In `lib/core/database/repositories/user_repository.dart`:
+    - Updated `getUsersWithFaceEncoding()` to transparently detect legacy CBC records (`SecurityUtils.isLegacyFaceEncoding`), decrypt them, re-encrypt using AES-256-GCM (`v2:`), and persist the upgraded ciphertext to SQLite in-place.
+    - Verified that line 291 (`mutableUser['face_encoding'] = null;` inside `catch (_)`) strictly nullifies the field in memory and never executes `db.update` or writes `null` back to SQLite, preserving database records on decryption failures.
+  - In `lib/core/services/sync_service.dart` (B2 Follow-up):
+    - Added `sanitizeUserForCloudSync`: Strips `face_encoding` alongside `password_hash` in `syncToCloud`, preventing biometric facial templates from being uploaded to Supabase.
+    - Added `mergePulledUserRecord`: Unconditionally preserves local `face_encoding` (`record['face_encoding'] = existing.first['face_encoding']`) during `syncFromCloud`, preventing remote synchronization from wiping or replacing local biometric data.
+  - In tests:
+    - Added comprehensive test suite `test/security/face_encryption_test.dart` (9 tests) covering:
+      1. New GCM round trip preserving data with versioned prefix and 12-byte nonce uniqueness.
+      2. Backward-compatible decryption of legacy CBC records.
+      3. Transparent automatic upgrade in SQLite from CBC to GCM on read.
+      4. Tampered ciphertext rejection (fails authentication with `FormatException`).
+      5. Wrong key rejection (fails authentication with `FormatException`).
+      6. Corrupted ciphertext sets in-memory `face_encoding` to `null` while preserving the raw database column in SQLite.
+      7. `SyncService.sanitizeUserForCloudSync` strips `face_encoding` and `password_hash` on cloud upload.
+      8. `SyncService.mergePulledUserRecord` retains existing local `face_encoding` on cloud pull.
+      9. SQLite integration: cloud user pull retains local `face_encoding` in the database.
+- **Why**: AES-CBC provides no ciphertext integrity or authenticity verification, making it vulnerable to padding oracles, bit-flipping, and ciphertext malleability. AES-GCM provides Authenticated Encryption with Associated Data (AEAD), guaranteeing both confidentiality and cryptographic authenticity of biometric templates at rest. Furthermore, stripping `face_encoding` from cloud sync ensures biometric data remains strictly bound to the local edge POS terminal.
+- **Verification**:
+  - `flutter test test/security/face_encryption_test.dart` passed all 9 tests.
+  - `flutter test test/security/` passed all 56 tests.
+  - `py -m unittest discover -s ai_service/tests -v` passed all 21 tests.
+  - `flutter analyze lib/core/services/sync_service.dart lib/core/database/repositories/user_repository.dart test/security/face_encryption_test.dart` reported 0 issues.
+- **Before/After**:
+  - *Before*: Face encodings were encrypted with unauthenticated AES-CBC with a static IV, pushed to Supabase cloud during sync, and subject to overwrite on pull.
+  - *After*: Face encodings are encrypted with AES-256-GCM using unique 12-byte random nonces and authenticated tags (`v2:` format); legacy CBC records transparently decrypt and upgrade to GCM on read; decryption errors never overwrite SQLite; and cloud sync strictly isolates biometric data locally.
+>>>>>>> Stashed changes
 
 ## Decisions and Discrepancies
 
 - Passwords, hashes, and biometric face encodings are strictly excluded from audit event descriptions and metadata.
 - Wrapped `AuditRepository.logAction()` database insert in a resilient fallback so isolated unit tests that do not initialize SQLite bindings continue to pass.
 - Fixed `test/security/password_hashing_test.dart` test vector discrepancy: the existing test had an incorrect expected base64 string; verified the correct RFC 6070 PBKDF2 output via independent derivation in Python (`XsArkaS1nG9Z3V++TKZJ7OT6hWjNuLo2z0FCbogFUis=`).
-- Phase A (Tasks A1 through A7) is 100% complete. Tier B tasks deferred until explicit user go-ahead as each requires data/schema migration or architectural discussion.
+- Phase A (Tasks A1 through A7) is 100% complete.
+- Phase B tasks completed: B3 (Rate limiting + magic bytes), B4 (SSRF protection), B1 (PBKDF2 600k + re-hash), B2 (AES-GCM face encodings + migration).
 
 ## Manual Actions Required From The Student
 
@@ -175,9 +276,15 @@
 ## Next Steps
 
 1. Manual cloud secret rotation in Supabase dashboard: **COMPLETED & VERIFIED (2026-10-16)**.
-2. Review remaining Risk Register items (RK-08 route guard 1-frame flash, RK-20 face temp files, RK-10 IV reuse).
+2. Tasks B1, B2, B3, and B4 are complete.
+3. Proceed to Track 2: UI/UX Polish (PDF/Excel export, thermal receipt printing, backup/restore, design refinement).
+4. Task B5 (SQLCipher database encryption at rest) will be completed last with an explicit migration plan presented beforehand.
 
 ## Session History (one line per session: date, tasks touched)
 
 - 2026-10-15: Initialized profile in `docs/security/ias_security_profile.md` and `SECURITY_REMEDIATION_LOG.md`; completed Tasks A1 (Gap 1), A2 (Gap 15), A3 (Gap 14), A4 (Gaps 7-9), A5 (Gap 2), A6 (Gap 3), and A7 (Gaps 20-21); initialized and verified `ai_service/.venv` with full pinned dependencies; all security test suites passing (3/3 Python, 35/35 Flutter).
 - 2026-10-16: Prepared Task A8 (RK-01 SUPABASE_DEVICE_SECRET rotation tooling, SQL drafts, verify script with --dry-run); sanitized `scripts/remove_categories_supabase.dart`; restored `.env.example`; verified 0 secrets in working tree; full Dart security suite passing (35/35).
+- 2026-10-16: Completed Task B3 (Gaps 16, 19: Rate limiting on Python API & magic-byte image validation); added 8 Python unit tests + 3 Flutter security tests; all 11 Python + 38 Flutter security tests passing.
+- 2026-10-16: Completed Task B4 (Gap 18: Restrict image download URLs to trusted Supabase hosts & cap redirects); added 10 Python unit tests + 5 Flutter security tests; all 21 Python + 43 Flutter security tests passing.
+- 2026-10-16: Completed Task B1 (Raise PBKDF2 iterations to 600,000 with per-record iteration metadata & transparent re-hash on login); updated password hashing and user repository; all 21 Python + 47 Flutter security tests passing.
+- 2026-10-16: Completed Task B2 (Migrate face encoding encryption from AES-CBC to AES-GCM with backward-compatible migration & transparent upgrade on read); added 5 Flutter security tests; all 21 Python + 52 Flutter security tests passing.

@@ -19,7 +19,12 @@ void main() {
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    SecurityUtils.defaultIterations = 1000;
     FlutterSecureStorage.setMockInitialValues({});
+  });
+
+  tearDownAll(() {
+    SecurityUtils.defaultIterations = SecurityUtils.targetIterations;
   });
 
   setUp(() async {

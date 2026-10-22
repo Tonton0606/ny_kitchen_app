@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:async';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -6,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as path;
 import 'backend_sync_service.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SyncService {
   // Selected once at startup. A failed backend setup must not fall back to cloud.
@@ -47,6 +49,28 @@ class SyncService {
 
   void stopAutomaticSync() {
     _syncTimer?.cancel();
+  }
+
+  /// Strips sensitive credentials (password_hash and biometric face_encoding) before syncing to cloud.
+  static Map<String, dynamic> sanitizeUserForCloudSync(Map<String, dynamic> record) {
+    final sanitized = Map<String, dynamic>.from(record);
+    sanitized.remove('password_hash');
+    sanitized.remove('face_encoding');
+    return sanitized;
+  }
+
+  /// Merges pulled cloud user record with existing local record, preserving local biometric face_encoding, password_hash, and lockout counters.
+  static Map<String, dynamic> mergePulledUserRecord(
+    Map<String, dynamic> cloudRecord,
+    Map<String, dynamic>? existingLocal,
+  ) {
+    final merged = Map<String, dynamic>.from(cloudRecord);
+    if (existingLocal != null) {
+      merged['face_encoding'] = existingLocal['face_encoding'];
+      merged['failed_login_count'] = merged['failed_login_count'] ?? existingLocal['failed_login_count'];
+      merged['password_hash'] = merged['password_hash'] ?? existingLocal['password_hash'];
+    }
+    return merged;
   }
 
   /// Uploads a local image file to Supabase Storage and returns the public URL
@@ -135,7 +159,7 @@ class SyncService {
               }
               if (table == 'users') {
                 mutableRecord.remove('password_hash'); // Do NOT sync password_hash to cloud
-                // face_encoding might be missing in older cloud schema, but we attempt to push it.
+                mutableRecord.remove('face_encoding'); // Do NOT sync face_encoding to cloud (biometrics remain local)
               }
               if (table == 'food_categories') {
                 mutableRecord.remove('updated_at');
@@ -213,9 +237,9 @@ class SyncService {
               if (table == 'users') {
                 final existing = await db.query('users', where: 'id = ?', whereArgs: [record['id']]);
                 if (existing.isNotEmpty) {
-                  record['face_encoding'] = record['face_encoding'] ?? existing.first['face_encoding'];
-                  record['failed_login_count'] = record['failed_login_count'] ?? existing.first['failed_login_count'];
-                  record['password_hash'] = record['password_hash'] ?? existing.first['password_hash'];
+                  final merged = mergePulledUserRecord(record, existing.first);
+                  record.clear();
+                  record.addAll(merged);
                 }
               }
 
@@ -256,9 +280,67 @@ class SyncService {
     return null;
   }
 
+  /// Validates whether an IP address belongs to private, loopback, link-local, or metadata ranges.
+  static bool isPrivateOrLoopbackIp(InternetAddress addr) {
+    if (addr.isLoopback || addr.isLinkLocal || addr.isMulticast) return true;
+    final raw = addr.rawAddress;
+    if (addr.type == InternetAddressType.IPv4 && raw.length == 4) {
+      if (raw[0] == 10) return true;
+      if (raw[0] == 172 && raw[1] >= 16 && raw[1] <= 31) return true;
+      if (raw[0] == 192 && raw[1] == 168) return true;
+      if (raw[0] == 127) return true;
+      if (raw[0] == 169 && raw[1] == 254) return true;
+    } else if (addr.type == InternetAddressType.IPv6 && raw.length == 16) {
+      if ((raw[0] & 0xfe) == 0xfc) return true;
+    }
+    return false;
+  }
+
+  /// SSRF Protection: Ensures URL is HTTPS, targets only authorized Supabase hosts,
+  /// contains no credentials, and uses only the standard HTTPS port (Gap 18).
+  static bool isSafeImageUrl(String url, {String? trustedSupabaseUrl}) {
+    if (url.isEmpty) return false;
+    final uri = Uri.tryParse(url.trim());
+    if (uri == null) return false;
+    if (uri.scheme.toLowerCase() != 'https') return false;
+    if (uri.userInfo.isNotEmpty) return false;
+    if (uri.hasPort && uri.port != 443) return false;
+    final host = uri.host.toLowerCase();
+    if (host.isEmpty) return false;
+
+    final configuredSupabase = trustedSupabaseUrl ??
+        (dotenv.isInitialized ? (dotenv.maybeGet('SUPABASE_URL') ?? dotenv.env['SUPABASE_URL']) : null);
+    final trustedHost = configuredSupabase != null ? Uri.tryParse(configuredSupabase)?.host.toLowerCase() : null;
+
+    bool isAllowed = false;
+    if (trustedHost != null && trustedHost.isNotEmpty && host == trustedHost) {
+      isAllowed = true;
+    } else if (host == 'supabase.co' || (host.endsWith('.supabase.co') && !host.startsWith('.'))) {
+      isAllowed = true;
+    }
+    return isAllowed;
+  }
+
   Future<String?> _downloadImageToLocal(String url) async {
     try {
       if (!url.startsWith('http')) return url;
+
+      // SSRF validation: scheme, host, credentials, and port
+      if (!isSafeImageUrl(url)) {
+        return null;
+      }
+
+      final uri = Uri.parse(url);
+
+      // SSRF validation: verify DNS does not resolve to loopback/private/metadata IP
+      try {
+        final addresses = await InternetAddress.lookup(uri.host);
+        if (addresses.isEmpty || addresses.any(isPrivateOrLoopbackIp)) {
+          return null;
+        }
+      } catch (_) {
+        return null;
+      }
 
       final directory = await getApplicationDocumentsDirectory();
       final filename = url.split('/').last.split('?').first;
@@ -274,22 +356,31 @@ class SyncService {
       final client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 10);
 
-      final request = await client.getUrl(Uri.parse(url));
+      final request = await client.getUrl(uri);
       request.followRedirects = true;
-      request.maxRedirects = 5;
+      request.maxRedirects = 3;
 
       final response = await request.close();
       if (response.statusCode == 200) {
-        final bytes = await response.fold<List<int>>([], (acc, data) => acc..addAll(data));
+        const maxSizeBytes = 5 * 1024 * 1024; // 5 MB
+        if (response.contentLength > maxSizeBytes) {
+          return null;
+        }
+
+        final bytes = <int>[];
+        await for (final chunk in response) {
+          bytes.addAll(chunk);
+          if (bytes.length > maxSizeBytes) {
+            return null;
+          }
+        }
+
         if (bytes.isNotEmpty) {
           await file.writeAsBytes(bytes);
-          print('Cached image locally: $localPath');
           return localPath;
         }
       }
-    } catch (e) {
-      print('Failed to download image $url: $e');
-    }
+    } catch (_) {}
     return null;
   }
 }
