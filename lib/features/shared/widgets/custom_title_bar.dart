@@ -130,25 +130,22 @@ class _WindowButtonState extends State<_WindowButton> {
       iconColor = AppColors.darkCharcoal;
     }
 
-    return Tooltip(
-      message: widget.tooltip,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: widget.onPressed,
-          child: AnimatedContainer(
-            duration: AppDesignTokens.motionFast,
-            width: 46,
-            height: 40,
-            alignment: Alignment.center,
-            color: bgColor,
-            child: Icon(
-              widget.icon,
-              size: 16,
-              color: iconColor,
-            ),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onPressed,
+        child: AnimatedContainer(
+          duration: AppDesignTokens.motionFast,
+          width: 46,
+          height: 40,
+          alignment: Alignment.center,
+          color: bgColor,
+          child: Icon(
+            widget.icon,
+            size: 16,
+            color: iconColor,
           ),
         ),
       ),
