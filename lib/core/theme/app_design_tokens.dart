@@ -37,9 +37,25 @@ class AppDesignTokens extends ThemeExtension<AppDesignTokens> {
 
   // Corner Radii Tokens
   static const double radius8 = 8.0;   // inputs, chips, buttons
-  static const double radius12 = 12.0; // cards, dialogs, modals
+  static const double radius12 = 12.0; // action tiles, buttons, form fields
+  static const double radius16 = 16.0; // primary cards, panels, dialogs
+  static const double radius20 = 20.0; // filter pills, segmented controls
+  static const double radius24 = 24.0; // badges, status chips
   static final BorderRadius borderRadius8 = BorderRadius.circular(radius8);
   static final BorderRadius borderRadius12 = BorderRadius.circular(radius12);
+  static final BorderRadius borderRadius16 = BorderRadius.circular(radius16);
+  static final BorderRadius borderRadius20 = BorderRadius.circular(radius20);
+  static final BorderRadius borderRadius24 = BorderRadius.circular(radius24);
+
+  // Modern Flat-Tactile Surface Decorators
+  static const Border cardHairlineBorder = Border.fromBorderSide(
+    BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+  );
+  static const BoxShadow cardSubtleShadow = BoxShadow(
+    color: Color(0x08000000), // 3% ambient black
+    blurRadius: 10,
+    offset: Offset(0, 2),
+  );
 
   // Touch Target Tokens
   static const double minTouchTarget = 48.0;
@@ -216,6 +232,41 @@ class AppTypography {
       fontFeatures: const [FontFeature.tabularFigures()],
     );
   }
+
+  // System UI Principles Typography Scale
+  static const TextStyle overline = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.8,
+    color: AppColors.mutedText,
+  );
+
+  static const TextStyle heroMetric = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.5,
+    color: AppColors.darkCharcoal,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
+  static const TextStyle cardTitle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.darkCharcoal,
+  );
+
+  static const TextStyle cardSubtitle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    color: AppColors.mutedText,
+  );
+
+  static const TextStyle tabularFigure = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    color: AppColors.darkCharcoal,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
 
   // Admin & POS Standardized Typography Scale
   static const TextStyle pageTitle = TextStyle(
