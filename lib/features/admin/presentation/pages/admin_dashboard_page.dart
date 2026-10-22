@@ -7,10 +7,7 @@ import '../../../../../core/utils/responsive.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/database/repositories/transaction_repository.dart';
-import '../../../../../core/database/repositories/audit_repository.dart';
 import '../../../shared/widgets/status_badge.dart';
-import '../../../shared/widgets/food_image.dart';
-import '../../../cashier/presentation/pages/cashier_shell.dart';
 import '../shared/widgets/sales_chart.dart';
 import '../../../../../core/services/sync_service.dart';
 
@@ -31,10 +28,8 @@ class AdminDashboardPage extends StatefulWidget {
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   final TransactionRepository _txRepo = TransactionRepository();
-  final AuditRepository _auditRepo = AuditRepository();
   List<Map<String, dynamic>> _recentTransactions = [];
   List<Map<String, dynamic>> _topSellingFoods = [];
-  List<Map<String, dynamic>> _recentLogs = [];
 
   String _selectedPeriod = 'Today'; // 'Today', 'Week', 'Month'
   double _periodRevenue = 0;
@@ -145,7 +140,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
 
     final chartData = hourlyRev.entries.map((e) {
-      final hourStr = '${e.key > 12 ? e.key - 12 : e.key}:00 ${e.key >= 12 ? 'PM' : 'AM'}';
+      final hourStr = '${e.key > 12 ? e.key - 12 : e.key} ${e.key >= 12 ? 'PM' : 'AM'}';
       return {'hour': hourStr, 'amount': e.value};
     }).toList();
 
@@ -182,7 +177,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         : 'No sales recorded today';
 
     final topFoods = await _txRepo.getTopSellingFoods(limit: 5);
-    final logs = await _auditRepo.getLogs();
 
     if (mounted) {
       setState(() {
@@ -198,17 +192,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _activeCashiersCount = cashierCount;
         _cashiersSubtitle = cashierSub;
         _topSellingFoods = topFoods;
-        _recentLogs = logs.take(4).toList();
         _isLoading = false;
       });
     }
   }
 
-  void _openPos() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const CashierShell()),
-    );
+  static final NumberFormat _currencyFormat = NumberFormat.currency(
+    symbol: '₱',
+    decimalDigits: 2,
+  );
+
+  String _formatCurrency(num amount) => _currencyFormat.format(amount);
+
+  String _getDateLineText() {
+    final now = DateTime.now();
+    if (_selectedPeriod == 'Today') {
+      return DateFormat('EEEE, MMMM d, yyyy').format(now).toUpperCase();
+    } else if (_selectedPeriod == 'Week') {
+      final start = now.subtract(const Duration(days: 7));
+      return '${DateFormat('MMM d').format(start)} - ${DateFormat('MMM d, yyyy').format(now)}'.toUpperCase();
+    } else {
+      return DateFormat('MMMM yyyy').format(now).toUpperCase();
+    }
   }
 
   @override
@@ -228,42 +233,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  _selectedPeriod == 'Today'
-                      ? 'Today \u2022 ${DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now())}'
-                      : 'Viewing ${_selectedPeriod.toLowerCase()} statistics',
-                  style: AppTypography.pageSubtitle,
+                  _getDateLineText(),
+                  style: AppTypography.label,
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildCleanPeriodSelector(),
-                    if (widget.onSettingsTap != null) ...[
-                      const SizedBox(width: AppDesignTokens.space8),
-                      IconButton(
-                        icon: const Icon(LucideIcons.sliders_horizontal, size: 18),
-                        tooltip: 'User Settings',
-                        color: AppColors.darkCharcoal,
-                        onPressed: widget.onSettingsTap,
-                      ),
-                    ],
-                  ],
-                ),
+                _buildCleanPeriodSelector(),
               ],
             ),
             const SizedBox(height: AppDesignTokens.space24),
 
-            // Hierarchical KPI Hero Section
-            _buildKpiMetricsSection(context),
-            const SizedBox(height: AppDesignTokens.space24),
-
-            // Main Content Layout
+            // Main Content Layout: Two independent columns starting at the same top edge
             if (isMobile) ...[
+              _buildHeroRevenueCard(),
+              const SizedBox(height: AppDesignTokens.space24),
+              _buildSecondaryMetricsPanel(),
+              const SizedBox(height: AppDesignTokens.space24),
+              _buildQuickActionsStrip(context),
+              const SizedBox(height: AppDesignTokens.space24),
               _buildSectionCard(
                 context,
                 'Sales Trend',
                 _isLoading
-                    ? const SizedBox(height: 250, child: Center(child: CircularProgressIndicator()))
-                    : SalesChart(data: _hourlyData, onOpenPos: _openPos),
+                    ? const SizedBox(height: 160, child: Center(child: CircularProgressIndicator()))
+                    : SalesChart(data: _hourlyData),
               ),
               const SizedBox(height: AppDesignTokens.space24),
               _buildSectionCard(
@@ -273,36 +264,30 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 subtitle: _selectedPeriod == 'Today' ? 'Today\'s orders' : '$_selectedPeriod orders',
               ),
               const SizedBox(height: AppDesignTokens.space24),
-              _buildQuickActionsCard(context),
-              const SizedBox(height: AppDesignTokens.space24),
               _buildSectionCard(
                 context,
-                'Top Selling Foods (All time)',
+                'Top Selling Foods',
                 _buildTopSellingList(context),
                 subtitle: 'Top 5 items, all time',
-              ),
-              const SizedBox(height: AppDesignTokens.space24),
-              _buildSectionCard(
-                context,
-                'Recent Activities',
-                _buildRecentActivitiesList(context),
               ),
             ] else ...[
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left Column: Analytics & Transactions
+                  // Left Column (wider, flex 5): Hero Revenue, Sales Trend, Recent Transactions
                   Expanded(
                     flex: 5,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        _buildHeroRevenueCard(),
+                        const SizedBox(height: AppDesignTokens.space24),
                         _buildSectionCard(
                           context,
                           'Sales Trend',
                           _isLoading
-                              ? const SizedBox(height: 250, child: Center(child: CircularProgressIndicator()))
-                              : SalesChart(data: _hourlyData, onOpenPos: _openPos),
+                              ? const SizedBox(height: 160, child: Center(child: CircularProgressIndicator()))
+                              : SalesChart(data: _hourlyData),
                         ),
                         const SizedBox(height: AppDesignTokens.space24),
                         _buildSectionCard(
@@ -315,26 +300,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ),
                   ),
                   const SizedBox(width: AppDesignTokens.space24),
-
-                  // Right Column: Operational Shortcuts & Feeds
+                  // Right Column (flex 4): Stats list, Quick Actions strip, Top Selling Foods
                   Expanded(
-                    flex: 3,
+                    flex: 4,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildQuickActionsCard(context),
+                        _buildSecondaryMetricsPanel(),
+                        const SizedBox(height: AppDesignTokens.space24),
+                        _buildQuickActionsStrip(context),
                         const SizedBox(height: AppDesignTokens.space24),
                         _buildSectionCard(
                           context,
-                          'Top Selling Foods (All time)',
+                          'Top Selling Foods',
                           _buildTopSellingList(context),
                           subtitle: 'Top 5 items, all time',
-                        ),
-                        const SizedBox(height: AppDesignTokens.space24),
-                        _buildSectionCard(
-                          context,
-                          'Recent Activities',
-                          _buildRecentActivitiesList(context),
                         ),
                       ],
                     ),
@@ -378,61 +358,25 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
       child: AnimatedContainer(
         duration: AppDesignTokens.motionFast,
-        padding: const EdgeInsets.symmetric(horizontal: AppDesignTokens.space12, vertical: AppDesignTokens.space4 + 2),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDesignTokens.space12,
+          vertical: AppDesignTokens.space4 + 2,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.goldenYellow : Colors.transparent,
           borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: AppColors.darkCharcoal,
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-          ),
+          style: isSelected
+              ? AppTypography.buttonSmall.copyWith(fontWeight: FontWeight.w800)
+              : AppTypography.buttonSmall,
         ),
       ),
     );
   }
 
-  Widget _buildKpiMetricsSection(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 768) {
-          // Mobile stack: Hero card first, then quiet secondary panel below
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeroRevenueCard(),
-              const SizedBox(height: AppDesignTokens.space16),
-              _buildSecondaryMetricsPanel(),
-            ],
-          );
-        } else {
-          // Desktop & Tablet: Revenue as visually dominant anchor (flex 5), 3 quiet secondary metrics beside it (flex 4)
-          // Both panels share IntrinsicHeight with aligned top and bottom edges and no extra outlined boxes
-          return IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: _buildHeroRevenueCard(),
-                ),
-                const SizedBox(width: AppDesignTokens.space24),
-                Expanded(
-                  flex: 4,
-                  child: _buildSecondaryMetricsPanel(),
-                ),
-              ],
-            ),
-          );
-        }
-      },
-    );
-  }
-
-  /// Visually Dominant Hero KPI Card for Revenue (42px tabular figures, flat white, no border outline)
+  /// Hero KPI Card for Revenue (Figure role, no border outline, Total Orders removed)
   Widget _buildHeroRevenueCard() {
     return Container(
       decoration: BoxDecoration(
@@ -442,24 +386,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       padding: const EdgeInsets.all(AppDesignTokens.space24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             '$_selectedPeriod\'S REVENUE'.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.6,
-              color: AppColors.mutedBrown,
-            ),
+            style: AppTypography.label,
           ),
-          const SizedBox(height: AppDesignTokens.space12),
+          const SizedBox(height: AppDesignTokens.space8),
           AnimatedSwitcher(
             duration: AppDesignTokens.motionMedium,
             child: Text(
-              '₱${_periodRevenue.toStringAsFixed(2)}',
+              _formatCurrency(_periodRevenue),
               key: ValueKey<double>(_periodRevenue),
-              style: AppTypography.kpiHeroDominant,
+              style: AppTypography.figureHero,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -468,13 +406,31 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           _buildDeltaOrSubtitle(
             deltaText: _revenueDeltaText,
             isDeltaPositive: _revenueDeltaPositive,
+            isHero: true,
+          ),
+          const SizedBox(height: AppDesignTokens.space16),
+          const Divider(height: 1, color: AppColors.softBorder),
+          const SizedBox(height: AppDesignTokens.space12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'AVERAGE ORDER',
+                style: AppTypography.label,
+              ),
+              const SizedBox(height: AppDesignTokens.space4),
+              Text(
+                _formatCurrency(_periodOrders > 0 ? (_periodRevenue / _periodOrders) : 0.0),
+                style: AppTypography.figure,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  /// Quiet secondary metrics panel rendering 3 metrics as a clean stacked list (no 3 extra outlined boxes)
+  /// Quiet secondary metrics panel rendering 3 metrics as a clean stacked list (omits subtext when nothing to compare)
   Widget _buildSecondaryMetricsPanel() {
     return Container(
       decoration: BoxDecoration(
@@ -486,19 +442,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         vertical: AppDesignTokens.space16,
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildQuietMetricRow(
             label: '$_selectedPeriod\'S ORDERS',
             value: '$_periodOrders',
-            deltaText: _ordersDeltaText,
+            deltaText: _ordersDeltaText == 'No previous data' ? null : _ordersDeltaText,
             isDeltaPositive: _ordersDeltaPositive,
           ),
           const Divider(height: 1, color: AppColors.softBorder),
           _buildQuietMetricRow(
             label: 'MONTHLY REVENUE',
-            value: '₱${_monthlyRevenue.toStringAsFixed(2)}',
+            value: _formatCurrency(_monthlyRevenue),
             subtitle: 'Month-to-date',
           ),
           const Divider(height: 1, color: AppColors.softBorder),
@@ -519,6 +474,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     bool isDeltaPositive = true,
     String? subtitle,
   }) {
+    final hasSubtext = (deltaText != null && deltaText.isNotEmpty) || (subtitle != null && subtitle.isNotEmpty);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppDesignTokens.space8),
       child: Row(
@@ -531,29 +487,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             children: [
               Text(
                 label.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                  color: AppColors.mutedBrown,
+                style: AppTypography.label,
+              ),
+              if (hasSubtext) ...[
+                const SizedBox(height: 2),
+                _buildDeltaOrSubtitle(
+                  deltaText: deltaText,
+                  isDeltaPositive: isDeltaPositive,
+                  fallbackSubtitle: subtitle,
+                  isHero: false,
                 ),
-              ),
-              const SizedBox(height: 2),
-              _buildDeltaOrSubtitle(
-                deltaText: deltaText,
-                isDeltaPositive: isDeltaPositive,
-                fallbackSubtitle: subtitle,
-              ),
+              ],
             ],
           ),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.darkCharcoal,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
+            style: AppTypography.figure,
           ),
         ],
       ),
@@ -564,16 +513,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     String? deltaText,
     bool isDeltaPositive = true,
     String? fallbackSubtitle,
+    bool isHero = false,
   }) {
     if (deltaText != null) {
       if (deltaText == 'No previous data') {
+        if (!isHero) return const SizedBox.shrink();
         return const Text(
           'No previous data',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: AppColors.mutedBrown,
-          ),
+          style: AppTypography.label12,
         );
       }
       final color = isDeltaPositive ? AppColors.forest : AppColors.brandRed;
@@ -588,25 +535,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           const SizedBox(width: AppDesignTokens.space4),
           Text(
             deltaText,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+            style: AppTypography.label12.copyWith(
               color: color,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
       );
     }
-    return Text(
-      fallbackSubtitle ?? '',
-      style: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: AppColors.mutedBrown,
-      ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
+    if (fallbackSubtitle != null && fallbackSubtitle.isNotEmpty) {
+      return Text(
+        fallbackSubtitle,
+        style: AppTypography.label12,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   Widget _buildSectionCard(BuildContext context, String title, Widget content, {String? subtitle}) {
@@ -628,17 +573,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   children: [
                     Text(
                       title,
-                      style: AppTypography.sectionTitle,
+                      style: AppTypography.heading,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.mutedBrown,
-                        ),
+                        style: AppTypography.label12,
                       ),
                     ],
                   ],
@@ -653,29 +595,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: const Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkCharcoal,
-                    ),
-                  ),
-                )
-              else if (title.startsWith('Recent Activities'))
-                TextButton(
-                  onPressed: () => widget.onNavigate?.call(4),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: AppDesignTokens.space12),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: const Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkCharcoal,
-                    ),
+                    'View all',
+                    style: AppTypography.button,
                   ),
                 ),
             ],
@@ -690,50 +611,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Widget _buildRecentTransactionsTable(BuildContext context) {
     if (_recentTransactions.isEmpty) {
       return Container(
-        height: 220,
+        height: 160,
         alignment: Alignment.center,
-        child: Column(
+        child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(LucideIcons.receipt, size: 36, color: AppColors.mutedBrown),
-            const SizedBox(height: AppDesignTokens.space8),
+            Icon(LucideIcons.receipt, size: 36, color: AppColors.mutedBrown),
+            SizedBox(height: AppDesignTokens.space8),
             Text(
-              'No ${_selectedPeriod.toLowerCase()} transactions',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppColors.darkCharcoal,
-              ),
+              'No transactions for this period',
+              style: AppTypography.heading,
             ),
-            const SizedBox(height: AppDesignTokens.space4),
-            const Text(
+            SizedBox(height: AppDesignTokens.space4),
+            Text(
               'Completed orders will appear here automatically.',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.mutedBrown,
-              ),
-            ),
-            const SizedBox(height: AppDesignTokens.space12),
-            FilledButton.icon(
-              onPressed: _openPos,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.goldenYellow,
-                foregroundColor: AppColors.darkCharcoal,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDesignTokens.space16,
-                  vertical: AppDesignTokens.space8,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-                ),
-              ),
-              icon: const Icon(LucideIcons.shopping_bag, size: 15),
-              label: const Text(
-                'Open POS',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-              ),
+              style: AppTypography.label12,
             ),
           ],
         ),
@@ -752,16 +645,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               headingRowHeight: 38,
               dataRowMinHeight: 46,
               dataRowMaxHeight: 46,
-              headingTextStyle: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.mutedBrown,
-              ),
-              dataTextStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: AppColors.darkCharcoal,
-              ),
+              headingTextStyle: AppTypography.label12,
+              dataTextStyle: AppTypography.body,
               columns: const [
                 DataColumn(label: Text('Order / Receipt')),
                 DataColumn(label: Text('Time')),
@@ -787,35 +672,34 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                 final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
                 final timeStr = DateFormat('h:mm a').format(parsedDate);
-                final orderLabel = tx['order_number'] != null
-                    ? '#${tx['order_number']} (${tx['receipt_number']})'
-                    : (tx['receipt_number'] ?? '');
+                final orderNum = tx['order_number'] != null ? '#${tx['order_number']}' : '';
+                final receiptNum = tx['receipt_number'] as String? ?? '';
 
                 return DataRow(cells: [
-                  DataCell(Text(
-                    orderLabel,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.darkCharcoal,
+                  DataCell(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          orderNum.isNotEmpty ? orderNum : receiptNum,
+                          style: AppTypography.heading,
+                        ),
+                        if (orderNum.isNotEmpty && receiptNum.isNotEmpty)
+                          Text(
+                            receiptNum,
+                            style: AppTypography.label12,
+                          ),
+                      ],
                     ),
-                  )),
+                  ),
                   DataCell(Text(
                     timeStr,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.mutedBrown,
-                    ),
+                    style: AppTypography.bodyMuted,
                   )),
                   DataCell(Text(
-                    '₱${_parseAmount(tx['total_amount']).toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.darkCharcoal,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
+                    _formatCurrency(_parseAmount(tx['total_amount'])),
+                    style: AppTypography.figureSmall,
                   )),
                   DataCell(StatusBadge(text: status, color: badgeColor)),
                 ]);
@@ -835,7 +719,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         child: Center(
           child: Text(
             'No sales data recorded yet.',
-            style: TextStyle(color: AppColors.mutedBrown, fontSize: 13),
+            style: AppTypography.bodyMuted,
           ),
         ),
       );
@@ -847,71 +731,48 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
       itemBuilder: (context, index) {
         final item = _topSellingFoods[index];
-        final imagePath = item['image_path'] as String? ?? '';
+        final rawName = item['name'] as String? ?? 'Unknown Item';
+        final displayName = rawName.trim();
+
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: AppDesignTokens.space8),
           child: Row(
             children: [
-              if (imagePath.isNotEmpty)
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-                    child: FoodImage(food: item, height: 40),
-                  ),
-                )
-              else
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.goldenYellow,
-                    borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                        color: AppColors.darkCharcoal,
-                      ),
-                    ),
-                  ),
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: AppColors.goldenYellow,
+                  borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                 ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${index + 1}',
+                  style: AppTypography.figureSmall,
+                ),
+              ),
               const SizedBox(width: AppDesignTokens.space12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item['name'] ?? 'Unknown Item',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: AppColors.darkCharcoal,
-                      ),
+                      displayName,
+                      style: AppTypography.body,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${item['sold']} sold',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.mutedBrown,
-                      ),
+                      style: AppTypography.label12,
                     ),
                   ],
                 ),
               ),
               Text(
-                '₱${_parseAmount(item['revenue']).toStringAsFixed(0)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: AppColors.darkCharcoal,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
+                _formatCurrency(_parseAmount(item['revenue'])),
+                style: AppTypography.figureSmall,
               ),
             ],
           ),
@@ -920,79 +781,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  Widget _buildRecentActivitiesList(BuildContext context) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
-    if (_recentLogs.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppDesignTokens.space24),
-        child: Center(
-          child: Text(
-            'No recent activities recorded.',
-            style: TextStyle(color: AppColors.mutedBrown, fontSize: 13),
-          ),
-        ),
-      );
-    }
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _recentLogs.length,
-      separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
-      itemBuilder: (context, index) {
-        final log = _recentLogs[index];
-        final isSuccess = log['status'] == 'Success';
-
-        final dateStr = log['created_at'] ?? '';
-        String formattedDate = '';
-        if (dateStr.isNotEmpty) {
-          final parsedDate = DateTime.tryParse(dateStr);
-          if (parsedDate != null) {
-            formattedDate = '${parsedDate.month}/${parsedDate.day} ${parsedDate.hour.toString().padLeft(2, '0')}:${parsedDate.minute.toString().padLeft(2, '0')}';
-          }
-        }
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppDesignTokens.space8),
-          child: Row(
-            children: [
-              Icon(
-                isSuccess ? Icons.check_circle_outline : Icons.error_outline,
-                size: 16,
-                color: isSuccess ? AppColors.forest : AppColors.brandRed,
-              ),
-              const SizedBox(width: AppDesignTokens.space12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      log['action'] ?? '',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: AppColors.darkCharcoal,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${log['username'] ?? 'System'} \u2022 $formattedDate',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.mutedBrown,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// Compact Quick Actions Card (4 essential operational shortcuts)
-  Widget _buildQuickActionsCard(BuildContext context) {
+  /// Slim Quick Actions Strip: one row of 4 compact buttons (36-40px high, tonal fill, hover, tooltip, no outlines)
+  Widget _buildQuickActionsStrip(BuildContext context) {
     final actions = [
       _QuickActionItem(
         title: 'Add Food Item',
@@ -1016,34 +806,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
-      ),
-      padding: const EdgeInsets.all(AppDesignTokens.space24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return SizedBox(
+      height: 38,
+      child: Row(
         children: [
-          const Text(
-            'Quick Actions',
-            style: AppTypography.sectionTitle,
-          ),
-          const SizedBox(height: AppDesignTokens.space16),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: actions.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: AppDesignTokens.space8,
-              mainAxisSpacing: AppDesignTokens.space8,
-              childAspectRatio: 3.4,
-            ),
-            itemBuilder: (context, index) {
-              return _QuickActionButton(action: actions[index]);
-            },
-          ),
+          for (int i = 0; i < actions.length; i++) ...[
+            if (i > 0) const SizedBox(width: AppDesignTokens.space8),
+            Expanded(child: _QuickActionButton(action: actions[i])),
+          ],
         ],
       ),
     );
@@ -1076,46 +846,44 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.action.onTap,
-        child: AnimatedContainer(
-          duration: AppDesignTokens.motionFast,
-          padding: const EdgeInsets.symmetric(horizontal: AppDesignTokens.space12),
-          decoration: BoxDecoration(
-            color: _isHovered ? AppColors.pageBackground : AppColors.surfaceWhite,
-            borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-            border: Border.all(
-              color: _isHovered ? AppColors.darkCharcoal.withValues(alpha: 0.25) : AppColors.softBorder,
-              width: 1,
+    return Tooltip(
+      message: widget.action.title,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: widget.action.onTap,
+          child: AnimatedContainer(
+            duration: AppDesignTokens.motionFast,
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: AppDesignTokens.space8),
+            decoration: BoxDecoration(
+              color: _isHovered
+                  ? AppColors.goldenYellow.withValues(alpha: 0.25)
+                  : AppColors.surfaceWhite,
+              borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                widget.action.icon,
-                size: 16,
-                color: AppColors.darkCharcoal,
-              ),
-              const SizedBox(width: AppDesignTokens.space8),
-              Flexible(
-                child: Text(
-                  widget.action.title,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.darkCharcoal,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  widget.action.icon,
+                  size: 15,
+                  color: AppColors.darkCharcoal,
                 ),
-              ),
-            ],
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    widget.action.title,
+                    style: AppTypography.buttonSmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

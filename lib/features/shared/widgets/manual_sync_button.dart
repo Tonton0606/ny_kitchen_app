@@ -23,6 +23,7 @@ class ManualSyncButton extends StatefulWidget {
 class _ManualSyncButtonState extends State<ManualSyncButton>
     with SingleTickerProviderStateMixin {
   bool _isSyncing = false;
+  bool _hasSyncError = false;
   late final AnimationController _rotationController;
 
   @override
@@ -41,9 +42,31 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
   }
 
   Future<void> _performSync() async {
+    if (!SyncService().isConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.white, size: 18),
+              SizedBox(width: 8),
+              Text('Cloud sync is off: credentials not configured. Operating in local mode.'),
+            ],
+          ),
+          backgroundColor: AppColors.darkCharcoal,
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+      return;
+    }
+
     if (_isSyncing) return;
 
-    setState(() => _isSyncing = true);
+    setState(() {
+      _isSyncing = true;
+      _hasSyncError = false;
+    });
     _rotationController.repeat();
 
     try {
@@ -52,6 +75,7 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
       if (!mounted) return;
 
       if (success) {
+        setState(() => _hasSyncError = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Row(
@@ -69,6 +93,7 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
         );
         widget.onSyncCompleted?.call();
       } else {
+        setState(() => _hasSyncError = true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Row(
@@ -87,6 +112,7 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
       }
     } catch (e) {
       if (!mounted) return;
+      setState(() => _hasSyncError = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Sync error: $e'),
@@ -114,9 +140,38 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
           return const SizedBox.shrink();
         }
 
+        final isConfigured = SyncService().isConfigured;
+
+        final String label;
+        final String tooltip;
+        final IconData icon;
+        final Color iconColor;
+
+        if (!isConfigured) {
+          label = 'Sync off';
+          tooltip = 'Cloud sync is off (credentials missing)';
+          icon = LucideIcons.cloud_off;
+          iconColor = AppColors.mutedBrown;
+        } else if (_isSyncing) {
+          label = 'Syncing';
+          tooltip = 'Syncing with cloud...';
+          icon = LucideIcons.refresh_cw;
+          iconColor = AppColors.inkBlue;
+        } else if (_hasSyncError) {
+          label = 'Sync error';
+          tooltip = 'Sync error (tap to retry)';
+          icon = LucideIcons.circle_alert;
+          iconColor = AppColors.brandRed;
+        } else {
+          label = 'Synced';
+          tooltip = 'Synced with cloud (tap to sync now)';
+          icon = LucideIcons.cloud;
+          iconColor = AppColors.inkBlue;
+        }
+
         if (widget.isCompact) {
           return Tooltip(
-        message: _isSyncing ? 'Syncing with cloud...' : 'Sync with Cloud (2-Way)',
+            message: tooltip,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -132,16 +187,16 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
               child: _isSyncing
                   ? RotationTransition(
                       turns: _rotationController,
-                      child: const Icon(
-                        LucideIcons.refresh_cw,
+                      child: Icon(
+                        icon,
                         size: 16,
-                        color: AppColors.inkBlue,
+                        color: iconColor,
                       ),
                     )
-                  : const Icon(
-                      LucideIcons.cloud,
+                  : Icon(
+                      icon,
                       size: 16,
-                      color: AppColors.darkCharcoal,
+                      color: iconColor,
                     ),
             ),
           ),
@@ -150,7 +205,7 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
     }
 
     return Tooltip(
-      message: _isSyncing ? 'Syncing with cloud...' : 'Sync with Cloud (2-Way)',
+      message: tooltip,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -169,25 +224,23 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
                 if (_isSyncing)
                   RotationTransition(
                     turns: _rotationController,
-                    child: const Icon(
-                      LucideIcons.refresh_cw,
+                    child: Icon(
+                      icon,
                       size: 15,
-                      color: AppColors.inkBlue,
+                      color: iconColor,
                     ),
                   )
                 else
-                  const Icon(
-                    LucideIcons.cloud,
+                  Icon(
+                    icon,
                     size: 15,
-                    color: AppColors.inkBlue,
+                    color: iconColor,
                   ),
                 const SizedBox(width: 6),
                 Text(
-                  _isSyncing ? 'Syncing...' : 'Cloud Sync',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.darkCharcoal,
+                  label,
+                  style: AppTypography.buttonSmall.copyWith(
+                    color: _hasSyncError ? AppColors.brandRed : AppColors.darkCharcoal,
                   ),
                 ),
               ],

@@ -78,10 +78,9 @@ class AppStatusChip extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: TextStyle(
-              fontSize: isCompact ? 11 : 12,
-              fontWeight: FontWeight.w600,
+            style: (isCompact ? AppTypography.label : AppTypography.label12).copyWith(
               color: fg,
+              letterSpacing: 0.2,
               height: 1.1,
             ),
           ),

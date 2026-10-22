@@ -18,9 +18,22 @@ A POS is used all day by busy people. The UI must be fast to scan, honest, and c
 All values live in lib/core/theme/. If a token is missing, add it there first.
 - Spacing: 4, 8, 12, 16, 24, 32
 - Corner radius: one value everywhere (currently 12)
-- Type scale: 12 caption, 14 body, 16 subtitle, 20-24 title, 32+ hero figure only
-- Weights: 400 body, 600 emphasis, 700-800 numbers and titles only
 - Icons: Lucide, thin stroke, 18-20 px in content, 20-24 px in nav
+
+### 3a. Typography roles
+Five roles defined in the theme (max 2 font families total):
+- Figure: a distinct face used ONLY for numbers (hero revenue, stat values, amounts, counts), bold, tabular figures. Hero 32px+, other figures 18-24px.
+- Heading: clean UI sans for section titles ("Sales Trend", "Recent Transactions", "Top Selling Foods"), 16-18px, weight 600, normal letter-spacing, visibly lighter than the hero figure.
+- Body: same sans, 14px, weight 400 (row text, names, descriptions).
+- Label: 11-12px, UPPERCASE, weight 600, +0.5 letter-spacing, muted (must still pass 4.5:1). Used for stat captions, table headers, the date line.
+- Button: same sans, 14px, weight 600, sentence case, NOT uppercase. Used for Quick Actions, toggles (Today/Week/Month), View All, and any other tappable text.
+
+Typography rules:
+- Figure face only for numbers.
+- Heading is never uppercase.
+- Label is the only uppercase role.
+- No TextStyle literals in screen files.
+- All five roles come from the theme.
 Rules:
 - No Color(0x...), Colors.xxx, raw EdgeInsets/SizedBox numbers, or fontSize literals in screen files.
 - Numbers use tabular figures so columns line up.
@@ -62,6 +75,7 @@ Buttons: one primary action per area. Compact rows or small buttons with icon an
 - Destructive actions (delete, restore, reset) need a confirm step with specific wording.
 - Keyboard: logical Tab order, Enter submits, Esc closes dialogs.
 - Motion: short (150-200 ms), purposeful, never decorative. No glows, gradients, or flourishes.
+- Interactive text and button labels use the Button role (14px, 600, sentence case).
 
 ## 9. Never put in exports or screens
 password_hash, face_encoding, secrets, or tokens. Not in tables, not in reports, not in debug text.
@@ -71,6 +85,7 @@ password_hash, face_encoding, secrets, or tokens. Not in tables, not in reports,
 - [ ] No hardcoded or fake data; every label is true
 - [ ] Filters apply to every panel, or the scope is labeled
 - [ ] Only tokens used; no inline colors, sizes, or spacing
+- [ ] Every text element uses one of the five typography roles (no inline TextStyle)
 - [ ] No yellow text on light backgrounds; contrast passes AA
 - [ ] No outlined box inside another box; one radius
 - [ ] Grid aligned; no overflow at 1280x720 and 1920x1080

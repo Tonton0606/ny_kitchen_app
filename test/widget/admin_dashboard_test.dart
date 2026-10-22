@@ -25,8 +25,8 @@ void main() {
     );
     await tester.pump();
 
-    // Verify Quick Actions header exists
-    expect(find.text('Quick Actions'), findsOneWidget);
+    // Verify Quick Actions card title is removed (slim row without title)
+    expect(find.text('Quick Actions'), findsNothing);
 
     // Verify all 4 action items exist
     expect(find.text('Add Food Item'), findsOneWidget);
@@ -55,29 +55,23 @@ void main() {
     expect(navigatedIndex, 5);
   });
 
-  testWidgets('AdminDashboardPage User Settings triggers onSettingsTap callback', (tester) async {
-    bool settingsOpened = false;
-
+  testWidgets('AdminDashboardPage does not render Open POS or duplicate settings icons', (tester) async {
     tester.view.physicalSize = const Size(1440, 1024);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() => tester.view.resetPhysicalSize());
 
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
-          body: AdminDashboardPage(
-            onSettingsTap: () {
-              settingsOpened = true;
-            },
-          ),
+          body: AdminDashboardPage(),
         ),
       ),
     );
     await tester.pump();
 
-    // Tap 'User Settings' -> Should trigger onSettingsTap
-    await tester.tap(find.byTooltip('User Settings'));
-    await tester.pump();
-    expect(settingsOpened, isTrue);
+    // Verify Open POS button does not exist anywhere on the dashboard
+    expect(find.text('Open POS'), findsNothing);
+    // Verify duplicate User Settings icon is removed from the dashboard
+    expect(find.byTooltip('User Settings'), findsNothing);
   });
 }

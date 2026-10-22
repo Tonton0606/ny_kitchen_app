@@ -33,6 +33,11 @@ class SyncService {
       return null;
     }
   }
+
+  bool get isConfigured {
+    if (backendMode) return BackendSyncService.instance != null;
+    return _supabase != null;
+  }
   
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 

@@ -59,5 +59,54 @@ void main() {
         expect(closeFinder, findsOneWidget);
       }
     });
+
+    testWidgets('Renders at 1000px, 1280x720, and 1920x1080 without overflow and with all three window buttons', (WidgetTester tester) async {
+      final resolutions = [
+        const Size(1000, 720),
+        const Size(1280, 720),
+        const Size(1920, 1080),
+      ];
+
+      for (final size in resolutions) {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            builder: (context, child) => Overlay(
+              initialEntries: [
+                OverlayEntry(
+                  builder: (context) => Material(
+                    child: Column(
+                      children: [
+                        const CustomTitleBar(),
+                        Expanded(child: child ?? const SizedBox.shrink()),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            home: const Scaffold(body: Center(child: Text('Content'))),
+          ),
+        );
+
+        // Assert no overflow exceptions thrown
+        expect(tester.takeException(), isNull);
+
+        // If desktop platform, verify title and all 3 buttons exist
+        final titleFinder = find.text('N.Y Kitchen POS');
+        if (titleFinder.evaluate().isNotEmpty) {
+          expect(titleFinder, findsOneWidget);
+          expect(find.byIcon(Icons.remove), findsOneWidget); // Minimize
+          expect(find.byIcon(Icons.crop_square), findsOneWidget); // Maximize
+          expect(find.byIcon(Icons.close), findsOneWidget); // Close
+        }
+      }
+    });
   });
 }

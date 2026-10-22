@@ -42,6 +42,7 @@ class CustomTitleBar extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: AppColors.darkCharcoal,
                         ),
                       ),
                 ),
@@ -130,7 +131,7 @@ class _WindowButtonState extends State<_WindowButton> {
       iconColor = AppColors.darkCharcoal;
     }
 
-    return MouseRegion(
+    final button = MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
@@ -149,6 +150,15 @@ class _WindowButtonState extends State<_WindowButton> {
           ),
         ),
       ),
+    );
+
+    if (widget.tooltip.isEmpty || Overlay.maybeOf(context) == null) {
+      return button;
+    }
+
+    return Tooltip(
+      message: widget.tooltip,
+      child: button,
     );
   }
 }

@@ -190,6 +190,7 @@ class _AdminShellState extends State<AdminShell> {
           IconButton(
             icon: const Icon(Icons.close),
             color: AppColors.darkCharcoal,
+            tooltip: 'Close settings',
             onPressed: _closeSettings,
           ),
         ],
@@ -220,6 +221,7 @@ class _SettingsShell extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.close),
                 color: AppColors.darkCharcoal,
+                tooltip: 'Close settings',
                 onPressed: onClose,
               ),
             ],

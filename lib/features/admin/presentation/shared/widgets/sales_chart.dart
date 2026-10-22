@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
 
@@ -32,57 +31,27 @@ class SalesChart extends StatelessWidget {
 
     if (!hasSales || data.isEmpty) {
       return Container(
-        height: 250,
+        height: 160,
         alignment: Alignment.center,
-        child: Column(
+        child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.bar_chart_rounded,
               size: 38,
               color: AppColors.mutedBrown,
             ),
-            const SizedBox(height: AppDesignTokens.space8),
-            const Text(
+            SizedBox(height: AppDesignTokens.space8),
+            Text(
               'No sales recorded for this period',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppColors.darkCharcoal,
-              ),
+              style: AppTypography.heading,
             ),
-            const SizedBox(height: AppDesignTokens.space4),
-            const Text(
+            SizedBox(height: AppDesignTokens.space4),
+            Text(
               'Orders rung up at the register will appear here.',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.mutedBrown,
-              ),
+              style: AppTypography.label12,
             ),
-            if (onOpenPos != null) ...[
-              const SizedBox(height: AppDesignTokens.space12),
-              FilledButton.icon(
-                onPressed: onOpenPos,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.goldenYellow,
-                  foregroundColor: AppColors.darkCharcoal,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDesignTokens.space16,
-                    vertical: AppDesignTokens.space8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-                  ),
-                ),
-                icon: const Icon(LucideIcons.shopping_bag, size: 15),
-                label: const Text(
-                  'Open POS',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
           ],
         ),
       );
@@ -92,7 +61,7 @@ class SalesChart extends StatelessWidget {
     maxY = maxY * 1.2;
 
     return Container(
-      height: 250,
+      height: 260,
       padding: const EdgeInsets.only(right: AppDesignTokens.space16, top: AppDesignTokens.space16),
       child: BarChart(
         BarChartData(
@@ -105,11 +74,7 @@ class SalesChart extends StatelessWidget {
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
                   '₱${rod.toY.toStringAsFixed(0)}',
-                  const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
+                  AppTypography.figureSmall.copyWith(color: Colors.white),
                 );
               },
             ),
@@ -120,16 +85,17 @@ class SalesChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 getTitlesWidget: (value, meta) {
-                  if (value.toInt() >= 0 && value.toInt() < data.length) {
+                  final idx = value.toInt();
+                  if (idx >= 0 && idx < data.length) {
+                    // Show every 2 hours or on compact list so labels never touch
+                    if (data.length > 7 && idx % 2 != 0) {
+                      return const SizedBox.shrink();
+                    }
                     return Padding(
                       padding: const EdgeInsets.only(top: AppDesignTokens.space8),
                       child: Text(
-                        data[value.toInt()]['hour'] as String,
-                        style: const TextStyle(
-                          color: AppColors.mutedText,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        data[idx]['hour'] as String,
+                        style: AppTypography.label.copyWith(fontSize: 10, letterSpacing: 0.0),
                       ),
                     );
                   }
@@ -145,10 +111,10 @@ class SalesChart extends StatelessWidget {
                   if (value == 0) return const SizedBox.shrink();
                   return Text(
                     value >= 1000 ? '${(value / 1000).toStringAsFixed(1)}k' : value.toStringAsFixed(0),
-                    style: const TextStyle(
-                      color: AppColors.mutedText,
+                    style: AppTypography.figureCustom(
                       fontSize: 10,
-                      fontFeatures: [FontFeature.tabularFigures()],
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.mutedText,
                     ),
                     textAlign: TextAlign.right,
                   );

@@ -37,7 +37,7 @@ void main() {
 
       expect(find.text('Point of Sale'), findsOneWidget);
       expect(find.text('Online'), findsOneWidget);
-      expect(find.text('Cloud Sync'), findsOneWidget);
+      expect(find.text('Sync off'), findsOneWidget);
       expect(find.byIcon(Icons.schedule), findsOneWidget);
 
       final settingsBtn = find.byTooltip('Settings');

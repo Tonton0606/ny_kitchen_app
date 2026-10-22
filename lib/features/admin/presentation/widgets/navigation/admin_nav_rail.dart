@@ -340,39 +340,39 @@ class _AdminNavRailState extends State<AdminNavRail> {
           // Logout Action
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              child: InkWell(
+            child: Tooltip(
+              message: 'Logout',
+              waitDuration: const Duration(milliseconds: 250),
+              child: Material(
+                color: Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
-                onTap: () => _showLogoutDialog(context),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                  child: widget.isExpanded
-                      ? const Row(
-                          children: [
-                            Icon(LucideIcons.log_out, size: 18, color: AppColors.brandRed),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'Logout',
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.brandRed,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => _showLogoutDialog(context),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    child: widget.isExpanded
+                        ? const Row(
+                            children: [
+                              Icon(LucideIcons.log_out, size: 18, color: AppColors.brandRed),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Logout',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.brandRed,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        )
-                      : const Tooltip(
-                          message: 'Logout',
-                          waitDuration: Duration(milliseconds: 250),
-                          child: Center(
+                            ],
+                          )
+                        : const Center(
                             child: Icon(LucideIcons.log_out, size: 20, color: AppColors.brandRed),
                           ),
-                        ),
+                  ),
                 ),
               ),
             ),

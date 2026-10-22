@@ -208,24 +208,30 @@ class _NYKitchenAppState extends State<NYKitchenApp> {
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
         builder: (context, child) {
-          return Material(
-            child: Column(
-              children: [
-                const CustomTitleBar(),
-                Expanded(child: child ?? const SizedBox.shrink()),
-                if (SyncService.backendMode)
-                  SafeArea(top: false, child: Padding(
-                    padding: const EdgeInsets.all(6),
-                    child: BackendSyncService.instance == null
-                        ? const Text('Online sync not configured; working locally')
-                        : ValueListenableBuilder<String>(
-                            valueListenable: BackendSyncService.instance!.status,
-                            builder: (context, value, child) => Text(value,
-                              style: Theme.of(context).textTheme.bodySmall),
-                          ),
-                  )),
-              ],
-            ),
+          return Overlay(
+            initialEntries: [
+              OverlayEntry(
+                builder: (context) => Material(
+                  child: Column(
+                    children: [
+                      const CustomTitleBar(),
+                      Expanded(child: child ?? const SizedBox.shrink()),
+                      if (SyncService.backendMode)
+                        SafeArea(top: false, child: Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: BackendSyncService.instance == null
+                              ? const Text('Online sync not configured; working locally')
+                              : ValueListenableBuilder<String>(
+                                  valueListenable: BackendSyncService.instance!.status,
+                                  builder: (context, value, child) => Text(value,
+                                    style: Theme.of(context).textTheme.bodySmall),
+                                ),
+                        )),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         },
         home: const LoginPage(),

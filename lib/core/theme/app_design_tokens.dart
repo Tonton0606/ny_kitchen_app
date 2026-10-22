@@ -183,7 +183,113 @@ extension AppDesignTokensContextX on BuildContext {
 }
 
 /// Typography helper for tabular figures (prices, quantities, timers)
+/// Standardized 5 Typography Roles according to UI Principles Specification:
+/// 1. Figure: used ONLY for numbers (hero revenue, stat values, amounts, counts), bold, tabular figures.
+/// 2. Heading: clean UI sans for section titles (16-18px, weight 600, normal spacing, not uppercase).
+/// 3. Body: clean UI sans (14px, weight 400) for row text, names, descriptions.
+/// 4. Label: 11-12px, UPPERCASE, weight 600, +0.5 letter-spacing, muted (passes 4.5:1).
+/// 5. Button: same sans, 14px (or 12px compact), weight 600, sentence case, NOT uppercase.
 class AppTypography {
+  // --- ROLE 1: FIGURE (numbers only, bold, tabular figures) ---
+  static const TextStyle figureHero = TextStyle(
+    fontSize: 40,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.8,
+    color: AppColors.darkCharcoal,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
+  static const TextStyle figure = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.3,
+    color: AppColors.darkCharcoal,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
+  static const TextStyle figureSmall = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    color: AppColors.darkCharcoal,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
+  static TextStyle figureCustom({
+    required double fontSize,
+    FontWeight fontWeight = FontWeight.w700,
+    Color color = AppColors.darkCharcoal,
+    double? letterSpacing,
+  }) {
+    return TextStyle(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      letterSpacing: letterSpacing,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+  }
+
+  // --- ROLE 2: HEADING (16-18px, weight 600, sentence case, visibly lighter than hero) ---
+  static const TextStyle heading = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.0,
+    color: AppColors.darkCharcoal,
+  );
+
+  static const TextStyle headingLarge = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.0,
+    color: AppColors.darkCharcoal,
+  );
+
+  // --- ROLE 3: BODY (14px, weight 400) ---
+  static const TextStyle body = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: AppColors.darkCharcoal,
+    height: 1.4,
+  );
+
+  static const TextStyle bodyMuted = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: AppColors.mutedBrown,
+    height: 1.4,
+  );
+
+  // --- ROLE 4: LABEL (11-12px, UPPERCASE, weight 600, +0.5 letter-spacing, muted) ---
+  static const TextStyle label = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.5,
+    color: AppColors.mutedBrown,
+  );
+
+  static const TextStyle label12 = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.5,
+    color: AppColors.mutedBrown,
+  );
+
+  // --- ROLE 5: BUTTON (14px, weight 600, sentence case, NOT uppercase) ---
+  static const TextStyle button = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.0,
+    color: AppColors.darkCharcoal,
+  );
+
+  static const TextStyle buttonSmall = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.0,
+    color: AppColors.darkCharcoal,
+  );
+
+  // --- Backward-compatibility aliases for other screens ---
   static const TextStyle display = TextStyle(
     fontSize: 28,
     fontWeight: FontWeight.w700,
@@ -205,13 +311,6 @@ class AppTypography {
     height: 1.4,
   );
 
-  static const TextStyle body = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    color: AppColors.darkCharcoal,
-    height: 1.4,
-  );
-
   static const TextStyle caption = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w400,
@@ -219,7 +318,6 @@ class AppTypography {
     height: 1.3,
   );
 
-  /// Tabular figure styling for monetary values and currency displays
   static TextStyle tabularPrice({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w700,
@@ -282,49 +380,12 @@ class AppTypography {
     color: AppColors.mutedText,
   );
 
-  static const TextStyle sectionTitle = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.2,
-    color: AppColors.darkCharcoal,
-  );
-
-  static const TextStyle kpiHeroValue = TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.w800,
-    letterSpacing: -0.6,
-    color: AppColors.darkCharcoal,
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
-
-  static const TextStyle kpiHeroDominant = TextStyle(
-    fontSize: 42,
-    fontWeight: FontWeight.w800,
-    letterSpacing: -0.8,
-    color: AppColors.darkCharcoal,
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
-
-  static const TextStyle metricValue = TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.w800,
-    letterSpacing: -0.5,
-    color: AppColors.darkCharcoal,
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
-
-  static const TextStyle metricLabel = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    color: AppColors.mutedText,
-  );
-
-  static const TextStyle tableHeader = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 0.3,
-    color: AppColors.mutedText,
-  );
+  static const TextStyle sectionTitle = heading;
+  static const TextStyle kpiHeroValue = figureHero;
+  static const TextStyle kpiHeroDominant = figureHero;
+  static const TextStyle metricValue = figure;
+  static const TextStyle metricLabel = label12;
+  static const TextStyle tableHeader = label12;
 
   static const TextStyle tableCellPrimary = TextStyle(
     fontSize: 13,
