@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
-import '../../../../../core/session/session_manager.dart';
-import '../../../../auth/presentation/pages/login_page.dart';
+import '../../../../shared/widgets/app_confirm_dialog.dart';
 
 class AdminDrawer extends StatelessWidget {
   final int selectedIndex;
@@ -18,78 +17,7 @@ class AdminDrawer extends StatelessWidget {
   });
 
   void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.brandRed.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-              ),
-              child: const Icon(
-                LucideIcons.log_out,
-                color: AppColors.brandRed,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Text(
-                'Confirm Logout',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal),
-              ),
-            ),
-          ],
-        ),
-        content: const Text(
-          'Are you sure you want to end your administrative session and log out?',
-          style: TextStyle(fontSize: 14, color: AppColors.mutedBrown),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            autofocus: true,
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                color: AppColors.darkCharcoal,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          FilledButton(
-            onPressed: () {
-              SessionManager().clearSession();
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                (route) => false,
-              );
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.brandRed,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-              ),
-            ),
-            child: const Text(
-              'Logout',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
+    AppConfirmDialog.showLogoutDialog(context, isAdmin: true);
   }
 
   @override

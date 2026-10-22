@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_design_tokens.dart';
-import 'app_buttons.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_design_tokens.dart';
+import '../../../core/session/session_manager.dart';
+import '../../auth/presentation/pages/login_page.dart';
 
-/// Standard Destructive Confirmation Dialog conforming strictly to:
-/// - Red action button
-/// - Plain-language consequence text
+/// Standard Confirmation Dialog conforming strictly to UI_PRINCIPLES.md:
+/// - Clean 12px surface with 1px softBorder
 /// - Cancel as default focus (autofocus: true)
-/// - Flat 12px surface with 1px softBorder
+/// - Typography roles (Space Grotesk heading/button, Inter body)
+/// - No arbitrary colored container boxes
 class AppConfirmDialog extends StatelessWidget {
   final String title;
   final String consequenceText;
@@ -16,6 +18,7 @@ class AppConfirmDialog extends StatelessWidget {
   final VoidCallback onConfirm;
   final VoidCallback? onCancel;
   final bool isDestructive;
+  final IconData? icon;
 
   const AppConfirmDialog({
     super.key,
@@ -26,9 +29,10 @@ class AppConfirmDialog extends StatelessWidget {
     required this.onConfirm,
     this.onCancel,
     this.isDestructive = true,
+    this.icon,
   });
 
-  /// Helper static method to show the dialog
+  /// Helper static method to show a confirmation dialog
   static Future<bool?> show(
     BuildContext context, {
     required String title,
@@ -36,6 +40,7 @@ class AppConfirmDialog extends StatelessWidget {
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
     bool isDestructive = true,
+    IconData? icon,
   }) {
     return showDialog<bool>(
       context: context,
@@ -45,8 +50,34 @@ class AppConfirmDialog extends StatelessWidget {
         confirmText: confirmText,
         cancelText: cancelText,
         isDestructive: isDestructive,
+        icon: icon,
         onConfirm: () => Navigator.of(ctx).pop(true),
         onCancel: () => Navigator.of(ctx).pop(false),
+      ),
+    );
+  }
+
+  /// Unified clean logout confirmation dialog conforming to UI_PRINCIPLES.md
+  static void showLogoutDialog(BuildContext context, {required bool isAdmin}) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AppConfirmDialog(
+        title: 'Confirm Logout',
+        consequenceText: isAdmin
+            ? 'Are you sure you want to end your administrative session and log out?'
+            : 'Are you sure you want to end your shift and log out? Unsaved orders should be checked out first.',
+        confirmText: 'Logout',
+        cancelText: 'Cancel',
+        isDestructive: true,
+        icon: LucideIcons.log_out,
+        onConfirm: () {
+          SessionManager().clearSession();
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        },
       ),
     );
   }
@@ -57,52 +88,37 @@ class AppConfirmDialog extends StatelessWidget {
       backgroundColor: AppColors.surfaceWhite,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
+        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+        side: const BorderSide(color: AppColors.softBorder, width: 1),
       ),
       titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-      contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+      contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
       title: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isDestructive
-                  ? AppColors.brandRed.withValues(alpha: 0.12)
-                  : AppColors.goldenYellow,
-              borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-            ),
-            child: Icon(
-              isDestructive ? Icons.warning_amber_rounded : Icons.help_outline_rounded,
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: 20,
               color: isDestructive ? AppColors.brandRed : AppColors.darkCharcoal,
-              size: 22,
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 10),
+          ],
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: AppColors.darkCharcoal,
-              ),
+              style: AppTypography.heading,
             ),
           ),
         ],
       ),
       content: Text(
         consequenceText,
-        style: const TextStyle(
-          fontSize: 14,
-          color: AppColors.mutedBrown,
-          height: 1.45,
-        ),
+        style: AppTypography.bodyMuted,
       ),
       actions: [
         // Cancel is ALWAYS default focus
-        TextButton(
+        OutlinedButton(
           autofocus: true,
           onPressed: () {
             if (onCancel != null) {
@@ -111,29 +127,37 @@ class AppConfirmDialog extends StatelessWidget {
               Navigator.of(context).pop(false);
             }
           },
-          style: TextButton.styleFrom(
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: AppColors.softBorder),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            foregroundColor: AppColors.darkCharcoal,
           ),
           child: Text(
             cancelText,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: AppColors.darkCharcoal,
-            ),
+            style: AppTypography.button.copyWith(color: AppColors.darkCharcoal),
           ),
         ),
         const SizedBox(width: 8),
-        isDestructive
-            ? AppDestructiveButton(
-                text: confirmText,
-                onPressed: onConfirm,
-              )
-            : AppPrimaryButton(
-                text: confirmText,
-                onPressed: onConfirm,
-              ),
+        ElevatedButton(
+          onPressed: onConfirm,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isDestructive ? AppColors.brandRed : AppColors.goldenYellow,
+            foregroundColor: isDestructive ? Colors.white : AppColors.darkCharcoal,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
+          child: Text(
+            confirmText,
+            style: AppTypography.button.copyWith(
+              color: isDestructive ? Colors.white : AppColors.darkCharcoal,
+            ),
+          ),
+        ),
       ],
     );
   }

@@ -376,3 +376,101 @@ Unverified items / remaining risks:
 - The `Lost connection to device` line has not been reproduced; the screenshot shows the app still open, so it is not attributed to the settings assertion.
 
 Next concrete step: restart the updated Windows app, tap the top-bar sync control once in a development project using synthetic data, and record only the snackbar status (no secrets). Do not full-sync the Production project.
+
+## Settings Drawer, Food Management Filters & Token Alignment Session — 2026-10-22 (Asia/Manila)
+
+Date/time and timezone: 2026-10-22T23:25:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+1. Fix cross-device sync order visibility (repaired `sync_service.dart`, added reactive sync listeners to `orders_page.dart` and `transaction_history_page.dart`).
+2. Make Settings appear on the right side for both Admin (`AdminShell`) and Cashier (`CashierShell`) with clean header, left border, and subtle shadow.
+3. Standardize Logout confirmation dialog (`AppConfirmDialog.showLogoutDialog`) to strictly follow `UI_PRINCIPLES.md` (12px radius, neutral styling, autofocus Cancel, destructive Logout).
+4. Clean Food Management layout: eliminate redundant Category and Status filter popup menus in table header, unify search and filter dropdowns into a single responsive toolbar, and eliminate rainbow colors (`_chipColors`) from category pills.
+5. Follow operator Git procedure: always check remote tracking for pull/merge, ask user permission before push.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles compliance), AT10 (Integration boundaries & sync resilience), SEC-02 (Session controls).
+Files changed:
+- `lib/core/services/sync_service.dart`
+- `lib/features/cashier/presentation/pages/orders_page.dart`
+- `lib/features/cashier/presentation/pages/transaction_history_page.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `lib/features/admin/presentation/pages/admin_shell.dart`
+- `lib/features/cashier/presentation/pages/cashier_shell.dart`
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/shared/widgets/app_confirm_dialog.dart`
+- `lib/features/admin/presentation/widgets/navigation/admin_nav_rail.dart`
+- `lib/features/cashier/presentation/widgets/navigation/cashier_nav_rail.dart`
+- `lib/features/admin/presentation/widgets/navigation/admin_drawer.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze`: 0 errors / clean on all touched files.
+- `flutter test test/security/`: 65/65 tests passed cleanly.
+- `git fetch origin ui-refinements`: up to date, nothing to pull or merge.
+- Permission requested and confirmed by MJ Daz.
+- Committed (`910b357`) and pushed to `origin/ui-refinements`.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Continue testing UI workflows in running application.
+
+## Sales Reports UI Hierarchy, Typography & Table Filters Session — 2026-10-22 (Asia/Manila)
+
+Date/time and timezone: 2026-10-22T23:42:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+1. Apply UI principles (`UI_PRINCIPLES.md`) to the Sales Reports tab in Admin (`sales_reports_page.dart`).
+2. Add clear visual hierarchy: Hero Revenue KPI card with 32px+ bold tabular figures, flanked by quiet secondary metric cards (Average Order, Completed Orders, Voided & Refunded) computed honestly from state with zero hardcoded badges or fake 100% metrics.
+3. Fix typography: standard 5-role design tokens (`AppTypography`), eliminating all inline `TextStyle` literals and yellow text on light surfaces.
+4. Add comprehensive transaction table filters: receipt/order search field, status dropdown (`All Statuses`, `Completed`, `Served`, `Voided`, `Refunded`), cashier dropdown (`All Staff` + dynamic cashiers), date range picker, and clear filters action.
+5. Standardize table presentation: `AppStatusChip` with WCAG-compliant colors and icons, right-aligned monetary values with tabular figures, single radius 12.
+6. Follow operator Git procedure: always check remote tracking for pull/merge, ask user permission before push.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles compliance), AT10 (Integration boundaries & sync resilience), SEC-01 (Input validation & sanitization).
+Files changed:
+- `lib/features/admin/presentation/pages/sales_reports_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/features/admin/presentation/pages/sales_reports_page.dart`: 0 errors / No issues found.
+- `flutter test test/security/`: 65/65 tests passed cleanly.
+- `git fetch origin ui-refinements`: up to date, nothing to pull or merge.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Continue testing UI workflows in running application.
+
+## Biometrics & Face Scan Artifacts Complete Removal Session — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T00:01:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+1. Audit and completely remove all remaining face scan, biometric, and camera artifacts from the project.
+2. Remove unused `camera` and `camera_windows` dependencies from `pubspec.yaml` to accelerate Windows build times.
+3. Clean UI: remove Biometrics metric card, table column, status pill, action buttons, and dialogs from `account_management_page.dart`; delete `biometric_consent_dialog.dart`.
+4. Clean core services & security utils: delete `ai_service_client.dart`; remove AES face encoding encryption/decryption from `security_utils.dart`; remove biometric methods from `user_repository.dart`.
+5. Remove external microservice: delete root `ai_service/` folder, remove `AI_SERVICE_KEY` from `.env` and `.env.example`.
+6. Remove obsolete test suites: delete `ai_service_client_test.dart`, `biometric_lifecycle_test.dart`, and `face_encryption_test.dart`.
+7. Follow operator Git procedure: check remote tracking, commit cleanly, and ask user permission before push.
+Rubric / risk / acceptance-test IDs: SEC-01 (Credential and PII attack surface reduction), AT04 (Cryptographic boundaries), UI-01 (UI Principles compliance).
+Files changed:
+- `pubspec.yaml`
+- `pubspec.lock`
+- `.env`
+- `.env.example`
+- `lib/features/admin/presentation/pages/account_management_page.dart`
+- `lib/core/utils/security_utils.dart`
+- `lib/core/database/repositories/user_repository.dart`
+- `windows/flutter/generated_plugin_registrant.cc`
+- `windows/flutter/generated_plugins.cmake`
+- `SECURITY_DEFENSE_RECORD.md`
+Files deleted:
+- `lib/features/auth/presentation/widgets/biometric_consent_dialog.dart`
+- `lib/core/services/ai_service_client.dart`
+- `ai_service/` (entire microservice directory)
+- `test/security/ai_service_client_test.dart`
+- `test/security/biometric_lifecycle_test.dart`
+- `test/security/face_encryption_test.dart`
+Checks actually run and actual results:
+- `flutter pub get`: Resolved cleanly without camera dependencies.
+- `flutter analyze`: 0 errors / No issues found across all modified files.
+- `flutter test test/security/`: 47/47 active security tests passed cleanly.
+- `git fetch origin ui-refinements`: up to date, nothing to pull or merge.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Seek user permission to push merged main to origin/main.

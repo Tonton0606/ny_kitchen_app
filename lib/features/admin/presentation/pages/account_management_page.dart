@@ -6,8 +6,6 @@ import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/utils/security_utils.dart';
 import '../../../../core/session/session_manager.dart';
-import '../../../auth/presentation/widgets/biometric_consent_dialog.dart';
-import '../../../shared/widgets/app_confirm_dialog.dart';
 
 /// User & Account Management Page for Administrators.
 /// Strictly follows N.Y Kitchen System UI Principles & Design System.
@@ -624,62 +622,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     );
   }
 
-  void _showBiometricManagementDialog(BuildContext context, Map<String, dynamic> user) async {
-    final hasBiometrics = user['face_encoding'] != null;
-    final userName = user['full_name'] as String;
-    final userId = user['id'] as int;
-
-    if (hasBiometrics) {
-      final confirmed = await AppConfirmDialog.show(
-        context,
-        title: 'Delete Biometric Profile',
-        consequenceText:
-            'Permanently delete the enrolled facial biometric template for $userName? '
-            'This action removes all local mathematical vectors and cannot be undone.',
-        confirmText: 'Delete Template',
-        cancelText: 'Keep Template',
-        isDestructive: true,
-      );
-
-      if (confirmed == true) {
-        try {
-          final adminName = SessionManager().fullName ?? 'Admin';
-          await _userRepo.deleteBiometricProfile(userId, adminName: adminName);
-          if (!context.mounted) return;
-          _loadUsers();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Biometric profile deleted for $userName')),
-          );
-        } catch (e) {
-          if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete biometric profile: $e')),
-          );
-        }
-      }
-    } else {
-      final consentGranted = await BiometricConsentDialog.show(
-        context,
-        targetUserName: userName,
-      );
-
-      if (!consentGranted) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Biometric enrollment cancelled (Consent not confirmed).')),
-        );
-        return;
-      }
-
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Biometric consent recorded for $userName. Ready for face capture.'),
-        ),
-      );
-    }
-  }
-
   List<Map<String, dynamic>> get _filteredUsers {
     return _users.where((u) {
       // Search Query filter
@@ -723,7 +665,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     final totalUsers = _users.length;
     final totalCashiers = _users.where((u) => u['role'] == 'cashier').length;
     final totalAdmins = _users.where((u) => u['role'] == 'admin').length;
-    final totalBiometrics = _users.where((u) => u['face_encoding'] != null).length;
 
     return Scaffold(
       backgroundColor: AppColors.canvasBackground,
@@ -734,12 +675,11 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top 4 Metric KPI Cards
+                // Top 3 Metric KPI Cards
                 _buildMetricsStrip(
                   total: totalUsers,
                   cashiers: totalCashiers,
                   admins: totalAdmins,
-                  biometrics: totalBiometrics,
                 ),
                 const SizedBox(height: 20),
 
@@ -767,7 +707,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     required int total,
     required int cashiers,
     required int admins,
-    required int biometrics,
   }) {
     return LayoutBuilder(builder: (context, constraints) {
       final isCompact = constraints.maxWidth < 800;
@@ -779,7 +718,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             _buildMetricCard('TOTAL ACCOUNTS', '$total', LucideIcons.users, width: (constraints.maxWidth - 12) / 2),
             _buildMetricCard('CASHIERS', '$cashiers', LucideIcons.shopping_bag, width: (constraints.maxWidth - 12) / 2),
             _buildMetricCard('ADMINISTRATORS', '$admins', LucideIcons.shield_check, width: (constraints.maxWidth - 12) / 2),
-            _buildMetricCard('BIOMETRICS', '$biometrics', LucideIcons.scan_face, width: (constraints.maxWidth - 12) / 2),
           ],
         );
       }
@@ -791,8 +729,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
           Expanded(child: _buildMetricCard('CASHIERS', '$cashiers', LucideIcons.shopping_bag)),
           const SizedBox(width: 14),
           Expanded(child: _buildMetricCard('ADMINISTRATORS', '$admins', LucideIcons.shield_check)),
-          const SizedBox(width: 14),
-          Expanded(child: _buildMetricCard('BIOMETRICS', '$biometrics', LucideIcons.scan_face)),
         ],
       );
     });
@@ -1046,9 +982,8 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         Expanded(flex: 3, child: Text('NAME', style: AppTypography.tableHeader)),
                         Expanded(flex: 2, child: Text('USERNAME', style: AppTypography.tableHeader)),
                         SizedBox(width: 110, child: Text('ROLE', style: AppTypography.tableHeader)),
-                        SizedBox(width: 140, child: Text('BIOMETRICS', style: AppTypography.tableHeader)),
                         SizedBox(width: 110, child: Text('STATUS', style: AppTypography.tableHeader)),
-                        SizedBox(width: 180, child: Text('ACTIONS', style: AppTypography.tableHeader)),
+                        SizedBox(width: 140, child: Text('ACTIONS', style: AppTypography.tableHeader)),
                       ],
                     ),
                   ),
@@ -1137,8 +1072,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     final username = user['username'] as String? ?? '';
     final role = (user['role'] as String? ?? 'cashier').toLowerCase();
     final status = (user['status'] as String? ?? 'active').toLowerCase();
-    final hasBiometrics = user['face_encoding'] != null;
-
     final isActive = status == 'active';
     final isLocked = status == 'locked';
 
@@ -1216,41 +1149,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             ),
           ),
 
-          // Biometrics Status Pill
-          SizedBox(
-            width: 140,
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: hasBiometrics ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        LucideIcons.scan_face,
-                        size: 13,
-                        color: hasBiometrics ? const Color(0xFF166534) : AppColors.mutedText,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        hasBiometrics ? 'Enrolled' : 'Not Set',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: hasBiometrics ? const Color(0xFF166534) : AppColors.mutedText,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Status Dot & Label
           SizedBox(
             width: 110,
@@ -1298,13 +1196,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                   tooltip: 'Reset Password',
                   color: const Color(0xFF2563EB),
                   onPressed: () => _showResetPasswordDialog(context, user),
-                ),
-                const SizedBox(width: 6),
-                _buildActionIconButton(
-                  icon: LucideIcons.scan_face,
-                  tooltip: hasBiometrics ? 'Delete Biometric Profile' : 'Enroll Biometrics',
-                  color: hasBiometrics ? AppColors.brandRed : AppColors.mutedText,
-                  onPressed: () => _showBiometricManagementDialog(context, user),
                 ),
                 const SizedBox(width: 6),
                 if (isLocked)

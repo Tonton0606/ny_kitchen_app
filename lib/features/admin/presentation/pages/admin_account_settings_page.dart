@@ -252,26 +252,19 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
         border: Border.all(color: AppColors.softBorder),
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.goldenYellow,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: AppColors.darkCharcoal, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Text(title, style: AppTypography.sectionTitle),
+              Icon(icon, color: AppColors.darkCharcoal, size: 20),
+              const SizedBox(width: 10),
+              Text(title, style: AppTypography.heading),
             ],
           ),
           child,

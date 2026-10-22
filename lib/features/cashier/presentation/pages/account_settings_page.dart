@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/utils/security_utils.dart';
@@ -23,33 +24,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Account Settings',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                      color: AppColors.darkCharcoal,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Manage your profile and preferences',
-                    style: TextStyle(color: AppColors.mutedText, fontSize: 15),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
@@ -110,31 +84,20 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  color: AppColors.surfaceWhite,
+                  borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
                   border: Border.all(color: AppColors.softBorder),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.goldenYellow,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.cloud_sync_outlined, color: AppColors.darkCharcoal, size: 22),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
+                        Icon(Icons.cloud_sync_outlined, color: AppColors.darkCharcoal, size: 20),
+                        SizedBox(width: 10),
+                        Text(
                           'Cloud Syncing',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.darkCharcoal,
-                          ),
+                          style: AppTypography.heading,
                         ),
                       ],
                     ),
