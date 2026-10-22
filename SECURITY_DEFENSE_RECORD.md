@@ -286,3 +286,26 @@ Checks actually run and actual results:
 Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Continue testing UI workflows in running application.
+
+## Sales Reports UI Hierarchy, Typography & Table Filters Session — 2026-10-22 (Asia/Manila)
+
+Date/time and timezone: 2026-10-22T23:42:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+1. Apply UI principles (`UI_PRINCIPLES.md`) to the Sales Reports tab in Admin (`sales_reports_page.dart`).
+2. Add clear visual hierarchy: Hero Revenue KPI card with 32px+ bold tabular figures, flanked by quiet secondary metric cards (Average Order, Completed Orders, Voided & Refunded) computed honestly from state with zero hardcoded badges or fake 100% metrics.
+3. Fix typography: standard 5-role design tokens (`AppTypography`), eliminating all inline `TextStyle` literals and yellow text on light surfaces.
+4. Add comprehensive transaction table filters: receipt/order search field, status dropdown (`All Statuses`, `Completed`, `Served`, `Voided`, `Refunded`), cashier dropdown (`All Staff` + dynamic cashiers), date range picker, and clear filters action.
+5. Standardize table presentation: `AppStatusChip` with WCAG-compliant colors and icons, right-aligned monetary values with tabular figures, single radius 12.
+6. Follow operator Git procedure: always check remote tracking for pull/merge, ask user permission before push.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles compliance), AT10 (Integration boundaries & sync resilience), SEC-01 (Input validation & sanitization).
+Files changed:
+- `lib/features/admin/presentation/pages/sales_reports_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/features/admin/presentation/pages/sales_reports_page.dart`: 0 errors / No issues found.
+- `flutter test test/security/`: 65/65 tests passed cleanly.
+- `git fetch origin ui-refinements`: up to date, nothing to pull or merge.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Seek user permission to push commit to `origin/ui-refinements`.
