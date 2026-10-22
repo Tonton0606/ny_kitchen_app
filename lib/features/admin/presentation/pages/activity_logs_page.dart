@@ -65,106 +65,13 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Activity Logs',
-                      style: AppTypography.pageTitle,
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'System-wide security and audit trail records',
-                      style: AppTypography.pageSubtitle,
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        if (_isLoading) return;
-                        if (filteredLogs.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('No logs to print')),
-                          );
-                          return;
-                        }
-                        ExportService.printLogsPDF(filteredLogs);
-                      },
-                      icon: const Icon(Icons.print, size: 18),
-                      label: const Text('Print'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.darkCharcoal,
-                        side: const BorderSide(color: AppColors.softBorder),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    PopupMenuButton<String>(
-                      offset: const Offset(0, 40),
-                      onSelected: (value) {
-                        if (_isLoading) return;
-                        if (filteredLogs.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('No logs to export')),
-                          );
-                          return;
-                        }
-                        if (value == 'excel') {
-                          ExportService.exportLogsToExcel(filteredLogs, context);
-                        } else if (value == 'pdf') {
-                          ExportService.exportLogsToPDF(filteredLogs, context);
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'excel',
-                          child: Text('Export as Excel (.xlsx)'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'pdf',
-                          child: Text('Export as PDF (.pdf)'),
-                        ),
-                      ],
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: AppColors.goldenYellow,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.download, size: 18, color: Colors.black),
-                            SizedBox(width: 8),
-                            Text('Export', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
             child: Row(
               children: [
                 Expanded(
                   child: SizedBox(
-                    width: 360,
+                    height: 42,
                     child: TextField(
                       onChanged: (val) {
                         setState(() => _searchQuery = val);
@@ -175,6 +82,11 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                         prefixIcon: const Icon(Icons.search, size: 20),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -233,7 +145,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.softBorder),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -253,6 +165,76 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     tooltip: 'Clear Date Filter',
                   ),
                 ],
+                const SizedBox(width: 16),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    if (_isLoading) return;
+                    if (filteredLogs.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No logs to print')),
+                      );
+                      return;
+                    }
+                    ExportService.printLogsPDF(filteredLogs);
+                  },
+                  icon: const Icon(Icons.print, size: 18),
+                  label: const Text('Print'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.darkCharcoal,
+                    side: const BorderSide(color: AppColors.softBorder),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  offset: const Offset(0, 40),
+                  onSelected: (value) {
+                    if (_isLoading) return;
+                    if (filteredLogs.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No logs to export')),
+                      );
+                      return;
+                    }
+                    if (value == 'excel') {
+                      ExportService.exportLogsToExcel(filteredLogs, context);
+                    } else if (value == 'pdf') {
+                      ExportService.exportLogsToPDF(filteredLogs, context);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'excel',
+                      child: Text('Export as Excel (.xlsx)'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'pdf',
+                      child: Text('Export as PDF (.pdf)'),
+                    ),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.goldenYellow,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.download, size: 18, color: Colors.black),
+                        SizedBox(width: 8),
+                        Text('Export', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

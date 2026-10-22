@@ -24,28 +24,7 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Account Settings',
-                    style: AppTypography.pageTitle,
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Manage administrator profile and preferences',
-                    style: AppTypography.pageSubtitle,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+
         Expanded(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
