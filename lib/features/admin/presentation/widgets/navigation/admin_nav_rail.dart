@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -95,10 +94,6 @@ class _AdminNavRailState extends State<AdminNavRail> {
       _NavItem(icon: LucideIcons.database_backup, label: 'Backup & Restore'),
     ];
 
-    final isDesktop = defaultTargetPlatform == TargetPlatform.windows ||
-        defaultTargetPlatform == TargetPlatform.macOS ||
-        defaultTargetPlatform == TargetPlatform.linux;
-
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
@@ -182,14 +177,17 @@ class _AdminNavRailState extends State<AdminNavRail> {
               ),
             ),
 
-            if (isDesktop)
-              IconButton(
+            Tooltip(
+              message: widget.isExpanded ? 'Collapse sidebar' : 'Expand sidebar',
+              waitDuration: const Duration(milliseconds: 300),
+              child: IconButton(
                 icon: Icon(
                   widget.isExpanded ? Symbols.chevron_left_rounded : Symbols.chevron_right_rounded,
                   color: AppColors.darkCharcoal,
                 ),
                 onPressed: () => widget.onToggleExpand(!widget.isExpanded),
               ),
+            ),
 
             const Divider(color: AppColors.softBorder, height: 1, indent: 12, endIndent: 12),
             const SizedBox(height: 10),
@@ -203,7 +201,7 @@ class _AdminNavRailState extends State<AdminNavRail> {
                 final item = items[index];
                 final isSelected = widget.selectedIndex == index;
 
-                return Padding(
+                final navButton = Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Material(
                     color: Colors.transparent,
@@ -257,70 +255,83 @@ class _AdminNavRailState extends State<AdminNavRail> {
                     ),
                   ),
                 );
+
+                if (!widget.isExpanded) {
+                  return Tooltip(
+                    message: item.label,
+                    waitDuration: const Duration(milliseconds: 250),
+                    child: navButton,
+                  );
+                }
+                return navButton;
               },
             ),
           ),
 
           // Pinned Role & Admin Badge / Profile Chip
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.creamBackground,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.softBorder, width: 1),
-            ),
-            child: widget.isExpanded
-                ? Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.inkBlue,
-                          shape: BoxShape.circle,
+          Tooltip(
+            message: 'Administrator (Full System Access)',
+            waitDuration: const Duration(milliseconds: 300),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.isExpanded ? 10 : 0,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.creamBackground,
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                border: Border.all(color: AppColors.softBorder, width: 1),
+              ),
+              child: widget.isExpanded
+                  ? Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppColors.inkBlue,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'ADMINISTRATOR',
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: AppColors.darkCharcoal,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'ADMINISTRATOR',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: AppColors.darkCharcoal,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
-                            ),
-                            Text(
-                              'Full System Access',
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: AppColors.inkBlue,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
+                              Text(
+                                'Full System Access',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: AppColors.inkBlue,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  )
-                : Center(
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
+                      ],
+                    )
+                  : const Center(
+                      child: Icon(
+                        LucideIcons.shield_check,
+                        size: 18,
                         color: AppColors.inkBlue,
-                        shape: BoxShape.circle,
                       ),
                     ),
-                  ),
+            ),
           ),
 
           const Divider(color: AppColors.softBorder, height: 1, indent: 12, endIndent: 12),
@@ -354,8 +365,12 @@ class _AdminNavRailState extends State<AdminNavRail> {
                             ),
                           ],
                         )
-                      : const Center(
-                          child: Icon(LucideIcons.log_out, size: 20, color: AppColors.brandRed),
+                      : const Tooltip(
+                          message: 'Logout',
+                          waitDuration: Duration(milliseconds: 250),
+                          child: Center(
+                            child: Icon(LucideIcons.log_out, size: 20, color: AppColors.brandRed),
+                          ),
                         ),
                 ),
               ),

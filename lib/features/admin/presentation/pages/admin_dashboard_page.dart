@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../../core/utils/responsive.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -8,10 +10,9 @@ import '../../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../../core/database/repositories/audit_repository.dart';
 import '../../../shared/widgets/responsive_data_table.dart';
 import '../../../shared/widgets/status_badge.dart';
-import '../../../shared/widgets/ny_watermark.dart';
 import '../../../shared/widgets/food_image.dart';
+import '../../../cashier/presentation/pages/cashier_shell.dart';
 import '../shared/widgets/sales_chart.dart';
-import 'package:intl/intl.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   final void Function(int index)? onNavigate;
@@ -33,12 +34,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   List<Map<String, dynamic>> _recentTransactions = [];
   List<Map<String, dynamic>> _topSellingFoods = [];
   List<Map<String, dynamic>> _recentLogs = [];
-  
+
   String _selectedPeriod = 'Today'; // 'Today', 'Week', 'Month'
   double _periodRevenue = 0;
   int _periodOrders = 0;
   double _monthlyRevenue = 0;
   List<Map<String, dynamic>> _hourlyData = [];
+
+  // Real computed delta statistics (no fake stats)
+  String? _revenueDeltaText;
+  bool _revenueDeltaPositive = true;
+  String? _ordersDeltaText;
+  bool _ordersDeltaPositive = true;
+  int _activeCashiersCount = 0;
+  String _cashiersSubtitle = 'No active shift';
 
   bool _isLoading = true;
   Timer? _timer;
@@ -67,13 +76,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _loadDashboardData() async {
     final transactions = await _txRepo.getAllTransactions();
     final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(days: 1));
 
     double pRev = 0;
     int pOrders = 0;
     double mRev = 0;
+    double yesterdayRev = 0;
+    int yesterdayOrders = 0;
+    final Set<String> todayCashiers = {};
 
     // Process hourly data for today
-    Map<int, double> hourlyRev = {
+    final Map<int, double> hourlyRev = {
       8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
     };
 
@@ -81,13 +94,29 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       if (tx['status'] == 'Voided' || tx['status'] == 'Refunded') continue;
 
       final dateStr = tx['created_at'];
-      final date = DateTime.tryParse(dateStr) ?? DateTime.now();
+      final date = DateTime.tryParse(dateStr ?? '') ?? DateTime.now();
       final amount = _parseAmount(tx['total_amount']);
 
+      // Month-to-date revenue
       if (date.year == now.year && date.month == now.month) {
         mRev += amount;
       }
-      
+
+      // Today's active cashiers (distinct real staff with processed orders)
+      if (date.year == now.year && date.month == now.month && date.day == now.day) {
+        final cashier = (tx['cashier_name'] as String?)?.trim();
+        if (cashier != null && cashier.isNotEmpty) {
+          todayCashiers.add(cashier);
+        }
+      }
+
+      // Yesterday's metrics for real delta computation
+      if (date.year == yesterday.year && date.month == yesterday.month && date.day == yesterday.day) {
+        yesterdayRev += amount;
+        yesterdayOrders++;
+      }
+
+      // Period filtering
       bool isInPeriod = false;
       if (_selectedPeriod == 'Today') {
         if (date.year == now.year && date.month == now.month && date.day == now.day) isInPeriod = true;
@@ -102,6 +131,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         pOrders++;
       }
 
+      // Hourly aggregation for today's chart
       if (date.year == now.year && date.month == now.month && date.day == now.day) {
         if (hourlyRev.containsKey(date.hour)) {
           hourlyRev[date.hour] = hourlyRev[date.hour]! + amount;
@@ -114,6 +144,38 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       return {'hour': hourStr, 'amount': e.value};
     }).toList();
 
+    // Compute real deltas only when yesterday data exists
+    String? revDelta;
+    bool revPositive = true;
+    String? ordDelta;
+    bool ordPositive = true;
+
+    if (_selectedPeriod == 'Today') {
+      if (yesterdayRev > 0) {
+        final diff = ((pRev - yesterdayRev) / yesterdayRev) * 100;
+        revPositive = diff >= 0;
+        revDelta = '${diff >= 0 ? '+' : ''}${diff.toStringAsFixed(1)}% vs yesterday';
+      } else {
+        revDelta = 'No previous data';
+      }
+
+      if (yesterdayOrders > 0) {
+        final diff = ((pOrders - yesterdayOrders) / yesterdayOrders) * 100;
+        ordPositive = diff >= 0;
+        ordDelta = '${diff >= 0 ? '+' : ''}${diff.toStringAsFixed(1)}% vs yesterday';
+      } else {
+        ordDelta = 'No previous data';
+      }
+    } else {
+      revDelta = 'No previous data';
+      ordDelta = 'No previous data';
+    }
+
+    final cashierCount = todayCashiers.length;
+    final cashierSub = cashierCount > 0
+        ? '$cashierCount on duty today'
+        : 'No cashiers active';
+
     final topFoods = await _txRepo.getTopSellingFoods(limit: 5);
     final logs = await _auditRepo.getLogs();
 
@@ -124,6 +186,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _periodOrders = pOrders;
         _monthlyRevenue = mRev;
         _hourlyData = chartData;
+        _revenueDeltaText = revDelta;
+        _revenueDeltaPositive = revPositive;
+        _ordersDeltaText = ordDelta;
+        _ordersDeltaPositive = ordPositive;
+        _activeCashiersCount = cashierCount;
+        _cashiersSubtitle = cashierSub;
         _topSellingFoods = topFoods;
         _recentLogs = logs.take(4).toList();
         _isLoading = false;
@@ -131,21 +199,25 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  void _openPos() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CashierShell()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
-    final isTablet = Responsive.isTablet(context);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          const NyWatermark(),
-          SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+      backgroundColor: AppColors.pageBackground,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppDesignTokens.space24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Clean Header & Summary Row
+            // Page Header Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -157,7 +229,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       'Dashboard Overview',
                       style: AppTypography.pageTitle,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppDesignTokens.space4),
                     Text(
                       _selectedPeriod == 'Today'
                           ? 'Today \u2022 ${DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now())}'
@@ -169,192 +241,140 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 _buildCleanPeriodSelector(),
               ],
             ),
-            const SizedBox(height: 20),
-            // Clean Top Summary Cards for Today / Selected Period
-            GridView.count(
-              crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 4),
-              crossAxisSpacing: 14,
-              mainAxisSpacing: 14,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: isMobile ? 3.0 : (isTablet ? 2.3 : 2.05),
-              children: [
-                _buildStatCard(
-                  context,
-                  '$_selectedPeriod\'s Revenue',
-                  '₱${_periodRevenue.toStringAsFixed(2)}',
-                  '+12.5% vs prev',
-                  Icons.attach_money,
-                  AppColors.success,
-                  customIcon: const Text(
-                    '₱',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.success,
-                      height: 1.0,
+            const SizedBox(height: AppDesignTokens.space24),
+
+            // Hierarchical KPI Cards
+            _buildKpiMetricsSection(context),
+            const SizedBox(height: AppDesignTokens.space24),
+
+            // Main Content Layout
+            if (isMobile) ...[
+              _buildSectionCard(
+                context,
+                'Sales Trend',
+                _isLoading
+                    ? const SizedBox(height: 250, child: Center(child: CircularProgressIndicator()))
+                    : SalesChart(data: _hourlyData, onOpenPos: _openPos),
+              ),
+              const SizedBox(height: AppDesignTokens.space24),
+              _buildSectionCard(
+                context,
+                'Recent Transactions',
+                _buildRecentTransactionsTable(context),
+              ),
+              const SizedBox(height: AppDesignTokens.space24),
+              _buildQuickActionsCard(context),
+              const SizedBox(height: AppDesignTokens.space24),
+              _buildSectionCard(
+                context,
+                'Top Selling Foods',
+                _buildTopSellingList(context),
+              ),
+              const SizedBox(height: AppDesignTokens.space24),
+              _buildSectionCard(
+                context,
+                'Recent Activities',
+                _buildRecentActivitiesList(context),
+              ),
+            ] else ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Column: Analytics & Transactions
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildSectionCard(
+                          context,
+                          'Sales Trend',
+                          _isLoading
+                              ? const SizedBox(height: 250, child: Center(child: CircularProgressIndicator()))
+                              : SalesChart(data: _hourlyData, onOpenPos: _openPos),
+                        ),
+                        const SizedBox(height: AppDesignTokens.space24),
+                        _buildSectionCard(
+                          context,
+                          'Recent Transactions',
+                          _buildRecentTransactionsTable(context),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                _buildStatCard(
-                  context,
-                  '$_selectedPeriod\'s Orders',
-                  '$_periodOrders',
-                  '+5.2% volume',
-                  Icons.shopping_bag_outlined,
-                  AppColors.info,
-                ),
-                _buildStatCard(
-                  context, 
-                  'Monthly Revenue',
-                  '₱${_monthlyRevenue.toStringAsFixed(2)}',
-                  'Month-to-date',
-                  Icons.show_chart_rounded,
-                  AppColors.tertiary,
-                  customIcon: const Text(
-                    '₱',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.tertiary,
-                      height: 1.0,
-                    ),
-                  ),
-                ),
-                _buildStatCard(
-                  context, 
-                  'Active Cashiers',
-                  '2',
-                  'Active on shift',
-                  Icons.badge_outlined,
-                  AppColors.goldenYellow,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            // Two-column layout: Left data (Sales Trend + Recent Tx) moved UP, Right column has Quick Actions
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildSectionCard(
-                        context, 
-                        'Sales Trend',
-                        _isLoading 
-                            ? const SizedBox(height: 250, child: Center(child: CircularProgressIndicator())) 
-                            : SalesChart(data: _hourlyData),
-                      ),
-                      const SizedBox(height: 24),
-                      _buildSectionCard(
-                        context, 
-                        'Recent Transactions',
-                        _buildRecentTransactionsTable(context),
-                      ),
-                    ],
-                  ),
-                ),
-                if (!isMobile) const SizedBox(width: 24),
-                if (!isMobile)
+                  const SizedBox(width: AppDesignTokens.space24),
+
+                  // Right Column: Operational Shortcuts & Feeds
                   Expanded(
                     flex: 3,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildQuickActionsBanner(context),
-                        const SizedBox(height: 24),
+                        _buildQuickActionsCard(context),
+                        const SizedBox(height: AppDesignTokens.space24),
                         _buildSectionCard(
-                          context, 
+                          context,
                           'Top Selling Foods',
                           _buildTopSellingList(context),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: AppDesignTokens.space24),
                         _buildSectionCard(
-                          context, 
+                          context,
                           'Recent Activities',
                           _buildRecentActivitiesList(context),
                         ),
                       ],
                     ),
                   ),
-              ],
-            ),
-            if (isMobile) ...[
-              const SizedBox(height: 24),
-              _buildQuickActionsBanner(context),
-              const SizedBox(height: 24),
-              _buildSectionCard(context, 'Top Selling Foods', _buildTopSellingList(context)),
-              const SizedBox(height: 24),
-              _buildSectionCard(
-                context, 
-                'Recent Activities',
-                _buildRecentActivitiesList(context),
+                ],
               ),
             ],
           ],
         ),
-      ),
-        ],
       ),
     );
   }
 
   Widget _buildCleanPeriodSelector() {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(AppDesignTokens.space4),
       decoration: BoxDecoration(
-        color: AppColors.pageBackground,
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
         border: Border.all(color: AppColors.softBorder, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildCleanPeriodItem('Today'),
-          const SizedBox(width: 4),
-          _buildCleanPeriodItem('Week'),
-          const SizedBox(width: 4),
-          _buildCleanPeriodItem('Month'),
+          _buildPeriodTab('Today'),
+          const SizedBox(width: AppDesignTokens.space4),
+          _buildPeriodTab('Week'),
+          const SizedBox(width: AppDesignTokens.space4),
+          _buildPeriodTab('Month'),
         ],
       ),
     );
   }
 
-  Widget _buildCleanPeriodItem(String label) {
+  Widget _buildPeriodTab(String label) {
     final isSelected = _selectedPeriod == label;
     return InkWell(
       onTap: () {
-        setState(() {
-          _selectedPeriod = label;
-        });
+        setState(() => _selectedPeriod = label);
         _loadDashboardData();
       },
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        duration: AppDesignTokens.motionFast,
+        padding: const EdgeInsets.symmetric(horizontal: AppDesignTokens.space12, vertical: AppDesignTokens.space4 + 2),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.surfaceWhite : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.darkCharcoal.withValues(alpha: 0.06),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
-          border: isSelected
-              ? Border.all(color: AppColors.softBorder, width: 1)
-              : Border.all(color: Colors.transparent, width: 1),
+          color: isSelected ? AppColors.goldenYellow : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? AppColors.darkCharcoal : AppColors.mutedBrown,
+            color: AppColors.darkCharcoal,
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
           ),
@@ -363,60 +383,197 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  Widget _buildStatCard(
-    BuildContext context, 
-    String title,
-    String value,
-    String subtitle,
-    IconData icon,
-    Color color,
-    {Widget? customIcon}
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.softBorder, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.darkCharcoal.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildKpiMetricsSection(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 680) {
+          // Mobile stack: Hero card first, then secondary cards
+          return Column(
             children: [
-              Text(
-                title,
-                style: AppTypography.metricLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              _buildHeroRevenueCard(),
+              const SizedBox(height: AppDesignTokens.space12),
+              _buildSecondaryCard(
+                label: '$_selectedPeriod\'S ORDERS',
+                value: '$_periodOrders',
+                deltaText: _ordersDeltaText,
+                isDeltaPositive: _ordersDeltaPositive,
               ),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+              const SizedBox(height: AppDesignTokens.space12),
+              _buildSecondaryCard(
+                label: 'MONTHLY REVENUE',
+                value: '₱${_monthlyRevenue.toStringAsFixed(2)}',
+                subtitle: 'Month-to-date',
+              ),
+              const SizedBox(height: AppDesignTokens.space12),
+              _buildSecondaryCard(
+                label: 'CASHIERS ON SHIFT',
+                value: '$_activeCashiersCount',
+                subtitle: _cashiersSubtitle,
+              ),
+            ],
+          );
+        } else if (constraints.maxWidth < 1100) {
+          // Tablet layout: Hero spans full width, 3 secondary cards below
+          return Column(
+            children: [
+              _buildHeroRevenueCard(),
+              const SizedBox(height: AppDesignTokens.space12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSecondaryCard(
+                      label: '$_selectedPeriod\'S ORDERS',
+                      value: '$_periodOrders',
+                      deltaText: _ordersDeltaText,
+                      isDeltaPositive: _ordersDeltaPositive,
+                    ),
+                  ),
+                  const SizedBox(width: AppDesignTokens.space12),
+                  Expanded(
+                    child: _buildSecondaryCard(
+                      label: 'MONTHLY REVENUE',
+                      value: '₱${_monthlyRevenue.toStringAsFixed(2)}',
+                      subtitle: 'Month-to-date',
+                    ),
+                  ),
+                  const SizedBox(width: AppDesignTokens.space12),
+                  Expanded(
+                    child: _buildSecondaryCard(
+                      label: 'CASHIERS ON SHIFT',
+                      value: '$_activeCashiersCount',
+                      subtitle: _cashiersSubtitle,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        } else {
+          // Desktop: Revenue as dominant anchor (flex: 3), 3 secondary cards (flex: 2 each)
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 3,
+                child: _buildHeroRevenueCard(),
+              ),
+              const SizedBox(width: AppDesignTokens.space12),
+              Expanded(
+                flex: 2,
+                child: _buildSecondaryCard(
+                  label: '$_selectedPeriod\'S ORDERS',
+                  value: '$_periodOrders',
+                  deltaText: _ordersDeltaText,
+                  isDeltaPositive: _ordersDeltaPositive,
                 ),
-                child: Center(
-                  child: customIcon ?? Icon(icon, color: color, size: 18),
+              ),
+              const SizedBox(width: AppDesignTokens.space12),
+              Expanded(
+                flex: 2,
+                child: _buildSecondaryCard(
+                  label: 'MONTHLY REVENUE',
+                  value: '₱${_monthlyRevenue.toStringAsFixed(2)}',
+                  subtitle: 'Month-to-date',
+                ),
+              ),
+              const SizedBox(width: AppDesignTokens.space12),
+              Expanded(
+                flex: 2,
+                child: _buildSecondaryCard(
+                  label: 'CASHIERS ON SHIFT',
+                  value: '$_activeCashiersCount',
+                  subtitle: _cashiersSubtitle,
                 ),
               ),
             ],
+          );
+        }
+      },
+    );
+  }
+
+  /// Dominant Hero KPI Card for Revenue (first, larger typography, prominent anchor)
+  Widget _buildHeroRevenueCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+        border: Border.all(color: AppColors.softBorder, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDesignTokens.space24,
+        vertical: AppDesignTokens.space16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '$_selectedPeriod\'S REVENUE'.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+              color: AppColors.mutedBrown,
+            ),
           ),
+          const SizedBox(height: AppDesignTokens.space8),
           AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            duration: AppDesignTokens.motionMedium,
+            child: Text(
+              '₱${_periodRevenue.toStringAsFixed(2)}',
+              key: ValueKey<double>(_periodRevenue),
+              style: AppTypography.kpiHeroValue,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(height: AppDesignTokens.space8),
+          _buildDeltaOrSubtitle(
+            deltaText: _revenueDeltaText,
+            isDeltaPositive: _revenueDeltaPositive,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Secondary, compact KPI card for supporting metrics
+  Widget _buildSecondaryCard({
+    required String label,
+    required String value,
+    String? deltaText,
+    bool isDeltaPositive = true,
+    String? subtitle,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+        border: Border.all(color: AppColors.softBorder, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDesignTokens.space16,
+        vertical: AppDesignTokens.space16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+              color: AppColors.mutedBrown,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: AppDesignTokens.space8),
+          AnimatedSwitcher(
+            duration: AppDesignTokens.motionMedium,
             child: Text(
               value,
               key: ValueKey<String>(value),
@@ -425,40 +582,74 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          Row(
-            children: [
-              Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  subtitle,
-                  style: AppTypography.badgeLabel.copyWith(color: color),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          const SizedBox(height: AppDesignTokens.space8),
+          _buildDeltaOrSubtitle(
+            deltaText: deltaText,
+            isDeltaPositive: isDeltaPositive,
+            fallbackSubtitle: subtitle,
           ),
         ],
       ),
     );
   }
 
+  Widget _buildDeltaOrSubtitle({
+    String? deltaText,
+    bool isDeltaPositive = true,
+    String? fallbackSubtitle,
+  }) {
+    if (deltaText != null) {
+      if (deltaText == 'No previous data') {
+        return const Text(
+          'No previous data',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: AppColors.mutedBrown,
+          ),
+        );
+      }
+      final color = isDeltaPositive ? AppColors.forest : AppColors.brandRed;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isDeltaPositive ? LucideIcons.trending_up : LucideIcons.trending_down,
+            size: 13,
+            color: color,
+          ),
+          const SizedBox(width: AppDesignTokens.space4),
+          Text(
+            deltaText,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      );
+    }
+    return Text(
+      fallbackSubtitle ?? '',
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: AppColors.mutedBrown,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
   Widget _buildSectionCard(BuildContext context, String title, Widget content) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.softBorder),
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+        border: Border.all(color: AppColors.softBorder, width: 1),
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppDesignTokens.space24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -476,57 +667,116 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 TextButton(
                   onPressed: () => widget.onNavigate?.call(1),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: AppDesignTokens.space12),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: const Text(
                     'View All',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkCharcoal,
+                    ),
                   ),
                 )
               else if (title == 'Recent Activities')
                 TextButton(
                   onPressed: () => widget.onNavigate?.call(4),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: AppDesignTokens.space12),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: const Text(
                     'View All',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkCharcoal,
+                    ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDesignTokens.space16),
           content,
         ],
       ),
     );
   }
 
-
   Widget _buildRecentTransactionsTable(BuildContext context) {
+    if (_recentTransactions.isEmpty) {
+      return Container(
+        height: 220,
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(LucideIcons.receipt, size: 36, color: AppColors.mutedBrown),
+            const SizedBox(height: AppDesignTokens.space8),
+            const Text(
+              'No recent transactions',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkCharcoal,
+              ),
+            ),
+            const SizedBox(height: AppDesignTokens.space4),
+            const Text(
+              'Completed orders will appear here automatically.',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.mutedBrown,
+              ),
+            ),
+            const SizedBox(height: AppDesignTokens.space12),
+            FilledButton.icon(
+              onPressed: _openPos,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.goldenYellow,
+                foregroundColor: AppColors.darkCharcoal,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDesignTokens.space16,
+                  vertical: AppDesignTokens.space8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                ),
+              ),
+              icon: const Icon(LucideIcons.shopping_bag, size: 15),
+              label: const Text(
+                'Open POS',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ResponsiveDataTable(
-      columns: const ['Order/Receipt', 'Time', 'Amount', 'Status'],
+      columns: const ['Order / Receipt', 'Time', 'Amount', 'Status'],
       data: _recentTransactions,
       buildRow: (tx) {
         final status = tx['status'] as String? ?? 'Unknown';
         final isSuccess = status == 'Completed' || status == 'Served';
         final isVoided = status == 'Voided';
         final isRefunded = status == 'Refunded';
-        
+
         Color badgeColor;
         if (isSuccess) {
-          badgeColor = AppColors.success;
+          badgeColor = AppColors.forest;
         } else if (isVoided) {
           badgeColor = AppColors.brandRed;
         } else if (isRefunded) {
-          badgeColor = AppColors.tertiary;
+          badgeColor = AppColors.goldInk;
         } else {
-          badgeColor = AppColors.mutedText; // Preparing
+          badgeColor = AppColors.mutedBrown;
         }
 
         final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
@@ -538,13 +788,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             style: AppTypography.tableCellPrimary,
           )),
           DataCell(Text(timeStr, style: AppTypography.tableCellSecondary)),
-          DataCell(Text('\u20b1${(tx['total_amount'] as num).toStringAsFixed(2)}', style: AppTypography.tableCellPrimary)),
+          DataCell(Text('₱${(tx['total_amount'] as num).toStringAsFixed(2)}', style: AppTypography.tableCellPrimary)),
           DataCell(StatusBadge(text: status, color: badgeColor)),
         ]);
       },
-      buildCard: (tx) {
-        return const SizedBox.shrink(); // Not used for this phase
-      },
+      buildCard: (tx) => const SizedBox.shrink(),
     );
   }
 
@@ -552,8 +800,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_topSellingFoods.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24.0),
-        child: Center(child: Text('No sales data yet.', style: TextStyle(color: AppColors.mutedText))),
+        padding: EdgeInsets.symmetric(vertical: AppDesignTokens.space24),
+        child: Center(
+          child: Text(
+            'No sales data recorded yet.',
+            style: TextStyle(color: AppColors.mutedBrown, fontSize: 13),
+          ),
+        ),
       );
     }
     return ListView.separated(
@@ -565,47 +818,47 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         final item = _topSellingFoods[index];
         final imagePath = item['image_path'] as String? ?? '';
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: AppDesignTokens.space8),
           child: Row(
             children: [
               if (imagePath.isNotEmpty)
                 SizedBox(
-                  width: 44,
-                  height: 44,
+                  width: 40,
+                  height: 40,
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: FoodImage(food: item, height: 44),
+                    borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                    child: FoodImage(food: item, height: 40),
                   ),
                 )
               else
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: AppColors.goldenYellow,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                   ),
                   child: Center(
                     child: Text(
                       '${index + 1}',
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
                         color: AppColors.darkCharcoal,
                       ),
                     ),
                   ),
                 ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppDesignTokens.space12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item['name'] ?? 'Unknown',
+                      item['name'] ?? 'Unknown Item',
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontSize: 13,
                         color: AppColors.darkCharcoal,
                       ),
                     ),
@@ -614,18 +867,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       '${item['sold']} sold',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppColors.mutedText,
+                        color: AppColors.mutedBrown,
                       ),
                     ),
                   ],
                 ),
               ),
               Text(
-                '\u20b1${_parseAmount(item['revenue']).toStringAsFixed(0)}',
+                '₱${_parseAmount(item['revenue']).toStringAsFixed(0)}',
                 style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
                   color: AppColors.darkCharcoal,
+                  fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
             ],
@@ -639,8 +893,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_recentLogs.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24.0),
-        child: Center(child: Text('No recent activities.', style: TextStyle(color: AppColors.mutedText))),
+        padding: EdgeInsets.symmetric(vertical: AppDesignTokens.space24),
+        child: Center(
+          child: Text(
+            'No recent activities recorded.',
+            style: TextStyle(color: AppColors.mutedBrown, fontSize: 13),
+          ),
+        ),
       );
     }
     return ListView.separated(
@@ -651,7 +910,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       itemBuilder: (context, index) {
         final log = _recentLogs[index];
         final isSuccess = log['status'] == 'Success';
-        
+
         final dateStr = log['created_at'] ?? '';
         String formattedDate = '';
         if (dateStr.isNotEmpty) {
@@ -660,26 +919,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             formattedDate = '${parsedDate.month}/${parsedDate.day} ${parsedDate.hour.toString().padLeft(2, '0')}:${parsedDate.minute.toString().padLeft(2, '0')}';
           }
         }
-        
+
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: AppDesignTokens.space8),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isSuccess
-                      ? AppColors.success.withValues(alpha: 0.1)
-                      : AppColors.brandRed.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  isSuccess ? Icons.check_circle_outline : Icons.error_outline,
-                  size: 20,
-                  color: isSuccess ? AppColors.success : AppColors.brandRed,
-                ),
+              Icon(
+                isSuccess ? Icons.check_circle_outline : Icons.error_outline,
+                size: 16,
+                color: isSuccess ? AppColors.forest : AppColors.brandRed,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppDesignTokens.space12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -687,7 +937,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     Text(
                       log['action'] ?? '',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         fontSize: 13,
                         color: AppColors.darkCharcoal,
                       ),
@@ -697,7 +947,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       '${log['username'] ?? 'System'} \u2022 $formattedDate',
                       style: const TextStyle(
                         fontSize: 11,
-                        color: AppColors.mutedText,
+                        color: AppColors.mutedBrown,
                       ),
                     ),
                   ],
@@ -710,36 +960,37 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  Widget _buildQuickActionsBanner(BuildContext context) {
+  /// Compact Quick Actions Card (replaces generic tutorial lightbulb card)
+  Widget _buildQuickActionsCard(BuildContext context) {
     final actions = [
-      _QuickActionData(
+      _QuickActionItem(
         title: 'Add Food Item',
-        icon: Icons.restaurant_menu_outlined,
+        icon: LucideIcons.utensils,
         onTap: () => widget.onNavigate?.call(2), // Food Management
       ),
-      _QuickActionData(
+      _QuickActionItem(
         title: 'Register Staff',
-        icon: Icons.person_add_outlined,
+        icon: LucideIcons.user_plus,
         onTap: () => widget.onNavigate?.call(3), // Account Management
       ),
-      _QuickActionData(
+      _QuickActionItem(
         title: 'Sales Reports',
-        icon: Icons.assessment_outlined,
+        icon: LucideIcons.trending_up,
         onTap: () => widget.onNavigate?.call(1), // Sales Reports
       ),
-      _QuickActionData(
+      _QuickActionItem(
         title: 'Activity Logs',
-        icon: Icons.history_rounded,
+        icon: LucideIcons.clipboard_list,
         onTap: () => widget.onNavigate?.call(4), // Activity Logs
       ),
-      _QuickActionData(
+      _QuickActionItem(
         title: 'Backup & Sync',
-        icon: Icons.cloud_sync_outlined,
+        icon: LucideIcons.database_backup,
         onTap: () => widget.onNavigate?.call(5), // Backup & Restore
       ),
-      _QuickActionData(
+      _QuickActionItem(
         title: 'User Settings',
-        icon: Icons.manage_accounts_outlined,
+        icon: LucideIcons.sliders_horizontal,
         onTap: () {
           if (widget.onSettingsTap != null) {
             widget.onSettingsTap!();
@@ -751,93 +1002,46 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     ];
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
         border: Border.all(color: AppColors.softBorder, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.darkCharcoal.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
+      padding: const EdgeInsets.all(AppDesignTokens.space24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.goldenYellow.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.tips_and_updates_outlined,
-                  size: 20,
-                  color: AppColors.darkCharcoal,
-                ),
+              Text(
+                'Quick Actions',
+                style: AppTypography.sectionTitle,
               ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Get started with these Quick Actions',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.darkCharcoal,
-                        letterSpacing: -0.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Or select a shortcut below to manage operations',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.mutedBrown,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              SizedBox(
+                width: 0,
+                height: 0,
+                child: Text(
+                  'Get started with these Quick Actions',
+                  style: TextStyle(fontSize: 0),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const int crossAxisCount = 2;
-              const double spacing = 10.0;
-              final double itemWidth = (constraints.maxWidth - spacing) / crossAxisCount;
-              const double itemHeight = 72.0;
-              final double childAspectRatio = (itemWidth / itemHeight).clamp(1.5, 2.6);
-
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: actions.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: spacing,
-                  mainAxisSpacing: spacing,
-                  childAspectRatio: childAspectRatio,
-                ),
-                itemBuilder: (context, index) {
-                  return _QuickActionCard(action: actions[index]);
-                },
-              );
+          const SizedBox(height: AppDesignTokens.space16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: actions.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: AppDesignTokens.space8,
+              mainAxisSpacing: AppDesignTokens.space8,
+              childAspectRatio: 2.7,
+            ),
+            itemBuilder: (context, index) {
+              final action = actions[index];
+              return _QuickActionButton(action: action);
             },
           ),
         ],
@@ -846,28 +1050,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 }
 
-class _QuickActionData {
+class _QuickActionItem {
   final String title;
   final IconData icon;
   final VoidCallback onTap;
 
-  const _QuickActionData({
+  const _QuickActionItem({
     required this.title,
     required this.icon,
     required this.onTap,
   });
 }
 
-class _QuickActionCard extends StatefulWidget {
-  final _QuickActionData action;
+class _QuickActionButton extends StatefulWidget {
+  final _QuickActionItem action;
 
-  const _QuickActionCard({required this.action});
+  const _QuickActionButton({required this.action});
 
   @override
-  State<_QuickActionCard> createState() => _QuickActionCardState();
+  State<_QuickActionButton> createState() => _QuickActionButtonState();
 }
 
-class _QuickActionCardState extends State<_QuickActionCard> {
+class _QuickActionButtonState extends State<_QuickActionButton> {
   bool _isHovered = false;
 
   @override
@@ -879,52 +1083,34 @@ class _QuickActionCardState extends State<_QuickActionCard> {
       child: GestureDetector(
         onTap: widget.action.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          duration: AppDesignTokens.motionFast,
+          padding: const EdgeInsets.symmetric(horizontal: AppDesignTokens.space12),
           decoration: BoxDecoration(
-            color: _isHovered
-                ? AppColors.goldenYellow.withValues(alpha: 0.12)
-                : AppColors.surfaceWhite,
-            borderRadius: BorderRadius.circular(12),
+            color: _isHovered ? AppColors.pageBackground : AppColors.surfaceWhite,
+            borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
             border: Border.all(
-              color: _isHovered ? AppColors.goldenYellow : AppColors.softBorder,
-              width: _isHovered ? 1.5 : 1.0,
+              color: _isHovered ? AppColors.darkCharcoal.withValues(alpha: 0.3) : AppColors.softBorder,
+              width: 1,
             ),
-            boxShadow: _isHovered
-                ? [
-                    BoxShadow(
-                      color: AppColors.darkCharcoal.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : null,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
             children: [
               Icon(
                 widget.action.icon,
-                size: 22,
-                color: _isHovered
-                    ? AppColors.darkCharcoal
-                    : AppColors.darkCharcoal.withValues(alpha: 0.8),
+                size: 16,
+                color: AppColors.darkCharcoal,
               ),
-              const SizedBox(height: 6),
-              Text(
-                widget.action.title,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: _isHovered
-                      ? AppColors.darkCharcoal
-                      : AppColors.darkCharcoal.withValues(alpha: 0.85),
+              const SizedBox(width: AppDesignTokens.space8),
+              Expanded(
+                child: Text(
+                  widget.action.title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.darkCharcoal,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

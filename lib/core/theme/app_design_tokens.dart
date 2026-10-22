@@ -238,6 +238,14 @@ class AppTypography {
     color: AppColors.darkCharcoal,
   );
 
+  static const TextStyle kpiHeroValue = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.6,
+    color: AppColors.darkCharcoal,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
   static const TextStyle metricValue = TextStyle(
     fontSize: 22,
     fontWeight: FontWeight.w800,
