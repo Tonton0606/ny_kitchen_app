@@ -146,157 +146,173 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
               color: AppColors.surfaceWhite,
               border: Border(bottom: BorderSide(color: AppColors.softBorder, width: 1)),
             ),
-            child: Row(
-              children: [
-                // Title and Record Count Pill
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Recent Transactions',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                        color: AppColors.darkCharcoal,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.creamBackground,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.softBorder, width: 1),
-                      ),
-                      child: Text(
-                        '${_transactions.length} records',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.mutedBrown,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-
-                // Search Box
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 220, maxHeight: 36),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) => setState(() => _searchQuery = val),
-                    style: const TextStyle(fontSize: 12, color: AppColors.darkCharcoal),
-                    decoration: InputDecoration(
-                      hintText: 'Search order or receipt #...',
-                      hintStyle: const TextStyle(fontSize: 12, color: AppColors.mutedSlate),
-                      prefixIcon: const Icon(LucideIcons.search, size: 14, color: AppColors.mutedSlate),
-                      prefixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.close, size: 14, color: AppColors.mutedSlate),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                              },
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: AppColors.creamBackground,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: AppColors.softBorder, width: 1),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: AppColors.softBorder, width: 1),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Status Filter Pills
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: ['All', 'Served', 'Voided'].map((f) {
-                    final isSelected = _statusFilter == f;
-                    final count = _countForStatus(f);
-
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: InkWell(
-                        onTap: () => setState(() => _statusFilter = f),
-                        borderRadius: BorderRadius.circular(20),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.goldenYellow : AppColors.creamBackground,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected ? AppColors.goldenYellow : AppColors.softBorder,
-                              width: 1,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Title and Record Count Pill
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Recent Transactions',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
+                                color: AppColors.darkCharcoal,
+                              ),
                             ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                f,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                  color: AppColors.darkCharcoal,
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.creamBackground,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.softBorder, width: 1),
+                              ),
+                              child: Text(
+                                '${_transactions.length} records',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.mutedBrown,
                                 ),
                               ),
-                              const SizedBox(width: 5),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? Colors.white.withValues(alpha: 0.8)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '$count',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.darkCharcoal,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 16),
+
+                        // Search Box, Status Filter Pills & Refresh Button
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Search Box
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 220, maxHeight: 36),
+                              child: TextField(
+                                controller: _searchController,
+                                onChanged: (val) => setState(() => _searchQuery = val),
+                                style: const TextStyle(fontSize: 12, color: AppColors.darkCharcoal),
+                                decoration: InputDecoration(
+                                  hintText: 'Search order or receipt #...',
+                                  hintStyle: const TextStyle(fontSize: 12, color: AppColors.mutedSlate),
+                                  prefixIcon: const Icon(LucideIcons.search, size: 14, color: AppColors.mutedSlate),
+                                  prefixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                  suffixIcon: _searchQuery.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(Icons.close, size: 14, color: AppColors.mutedSlate),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            setState(() => _searchQuery = '');
+                                          },
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                                        )
+                                      : null,
+                                  filled: true,
+                                  fillColor: AppColors.creamBackground,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: const BorderSide(color: AppColors.softBorder, width: 1),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: const BorderSide(color: AppColors.softBorder, width: 1),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(width: 10),
+                            ),
+                            const SizedBox(width: 12),
 
-                // Refresh Button
-                IconButton(
-                  icon: const Icon(Icons.refresh, size: 18, color: AppColors.darkCharcoal),
-                  onPressed: () => _loadTransactions(),
-                  tooltip: 'Refresh',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                ),
-              ],
+                            // Status Filter Pills
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: ['All', 'Served', 'Voided'].map((f) {
+                                final isSelected = _statusFilter == f;
+                                final count = _countForStatus(f);
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 6),
+                                  child: InkWell(
+                                    onTap: () => setState(() => _statusFilter = f),
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 180),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: isSelected ? AppColors.goldenYellow : AppColors.creamBackground,
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: isSelected ? AppColors.goldenYellow : AppColors.softBorder,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            f,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                              color: AppColors.darkCharcoal,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 5),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? Colors.white.withValues(alpha: 0.8)
+                                                  : Colors.white,
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              '$count',
+                                              style: const TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w800,
+                                                color: AppColors.darkCharcoal,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(width: 10),
+
+                            // Refresh Button
+                            IconButton(
+                              icon: const Icon(Icons.refresh, size: 18, color: AppColors.darkCharcoal),
+                              onPressed: () => _loadTransactions(),
+                              tooltip: 'Refresh',
+                              padding: EdgeInsets.zero,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          ),
+        ),
 
           // Main Content
           Expanded(
@@ -405,7 +421,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
                             tx['order_number'] != null
@@ -426,7 +443,10 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 2,
+                        runSpacing: 2,
                         children: [
                           Text(formattedDate, style: AppTypography.tableCellSecondary),
                           _dot(),

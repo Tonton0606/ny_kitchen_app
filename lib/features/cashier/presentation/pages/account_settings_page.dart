@@ -84,7 +84,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Material(
                   color: AppColors.surfaceWhite,
-                  borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
                     side: const BorderSide(color: AppColors.softBorder),
@@ -181,7 +180,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: AppColors.softBorder),

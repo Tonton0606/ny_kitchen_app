@@ -2182,7 +2182,6 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                 padding: const EdgeInsets.only(bottom: 8),
                                 child: Material(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     side: const BorderSide(color: Color(0xFFE2E8F0)),

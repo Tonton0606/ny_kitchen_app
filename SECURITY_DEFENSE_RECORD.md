@@ -717,8 +717,27 @@ Evidence paths:
 - `AI_SESSION_HANDOFF.md`
 - `AI_DEVELOPMENT_RULES.md`
 - `SECURITY_DEFENSE_RECORD.md`
-Next concrete step: Commit and push session entry rules to `origin/main`.
+## Material Assertion & RenderFlex Overflow Remediation Session — 2026-10-23 (Asia/Manila)
 
-
-
-
+Date/time and timezone: 2026-10-23T05:22:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Fix runtime framework crashes:
+1. `_AssertionError: Cannot provide both a borderRadius and a shape` on `Material` widgets.
+2. `RenderFlex overflowed by 25, 117, 107, 120, 185, 63 pixels on the right` in `transaction_history_page.dart`.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles and Material design standards), AT10 (Integration & Resilience).
+Files changed:
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `lib/features/cashier/presentation/pages/transaction_history_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root cause & Remediation:
+- Material AssertionError: Flutter's `Material` constructor requires `borderRadius == null || shape == null`. When `shape: RoundedRectangleBorder(borderRadius: ...)` was specified alongside `borderRadius: ...`, debug mode asserted. Removed redundant `borderRadius` parameters in `account_settings_page.dart`, `admin_account_settings_page.dart`, and `food_management_page.dart`.
+- RenderFlex Overflow in Cashier Transactions Header: In constrained viewport widths, the header `Row` with title, search input, filter pills, and refresh button overflowed by 25px. Refactored into a `LayoutBuilder` + horizontal `SingleChildScrollView` wrapped `ConstrainedBox(minWidth: constraints.maxWidth)` with `MainAxisAlignment.spaceBetween` (without `Spacer`), providing responsive spacing on wide screens and horizontal scrolling on narrow screens without unbounded layout assertions.
+- RenderFlex Overflow in Transaction Cards: Inner metadata rows displaying timestamp, item count, payment method, and cashier name overflowed by up to 185px on smaller screen widths. Converted to `Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 2, runSpacing: 2)`, wrapping metadata elements onto secondary lines cleanly.
+Checks actually run and actual results:
+- `flutter analyze lib/features/cashier/presentation/pages/transaction_history_page.dart lib/features/cashier/presentation/pages/account_settings_page.dart lib/features/admin/presentation/pages/admin_account_settings_page.dart lib/features/admin/presentation/pages/food_management_page.dart`: 0 errors, 0 warnings.
+- `flutter test test/security/`: 47/47 tests passed cleanly (0 regressions).
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Stage changes, commit cleanly, ask user permission, and push to origin/main.

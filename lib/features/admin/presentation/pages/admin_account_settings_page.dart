@@ -249,7 +249,6 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
   }) {
     return Material(
       color: AppColors.surfaceWhite,
-      borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
         side: const BorderSide(color: AppColors.softBorder),
