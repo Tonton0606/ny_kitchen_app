@@ -72,19 +72,11 @@ class _SalesReportsPageState extends State<SalesReportsPage>
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
             child: LayoutBuilder(
               builder: (context, headerConstraints) {
-                final isCompact = headerConstraints.maxWidth < 500;
-                return Flex(
-                  direction: isCompact ? Axis.vertical : Axis.horizontal,
-                  crossAxisAlignment: isCompact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Sales Reports',
-                      style: AppTypography.pageTitle,
-                    ),
-                    if (isCompact) const SizedBox(height: 12),
-                    Row(
-                      children: [
+                return Align(
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                         OutlinedButton.icon(
                           onPressed: () {
                             if (_isLoading) return;
@@ -154,7 +146,6 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                         ),
                       ],
                     ),
-                  ],
                 );
               },
             ),

@@ -55,12 +55,7 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Database Backup & Restore',
-              style: AppTypography.pageTitle,
-            ),
-            const SizedBox(height: 24),
-            
+
             // Export Section
             Container(
               padding: const EdgeInsets.all(24),

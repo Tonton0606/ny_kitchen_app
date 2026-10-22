@@ -405,11 +405,6 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                 LayoutBuilder(
                   builder: (context, topConstraints) {
                     final isCompact = topConstraints.maxWidth < 650;
-                    const titleWidget = Text(
-                      'Food Management',
-                      style: AppTypography.pageTitle,
-                    );
-
                     final actionButtons = Row(
                       mainAxisSize: isCompact ? MainAxisSize.max : MainAxisSize.min,
                       children: [
@@ -467,23 +462,12 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     );
 
                     if (isCompact) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          titleWidget,
-                          const SizedBox(height: 12),
-                          actionButtons,
-                        ],
-                      );
+                      return actionButtons;
                     }
 
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        titleWidget,
-                        actionButtons,
-                      ],
+                    return Align(
+                      alignment: Alignment.centerRight,
+                      child: actionButtons,
                     );
                   },
                 ),

@@ -66,16 +66,10 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                const Text(
-                  'Activity Logs',
-                  style: AppTypography.pageTitle,
-                ),
-                Row(
-                  children: [
                     OutlinedButton.icon(
                       onPressed: () {
                         if (_isLoading) return;
@@ -145,8 +139,6 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     ),
                   ],
                 ),
-              ],
-            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),

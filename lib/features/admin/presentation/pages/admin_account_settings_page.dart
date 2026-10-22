@@ -24,18 +24,7 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-                const Text(
-                  'Account Settings',
-                  style: AppTypography.pageTitle,
-                ),
-            ],
-          ),
-        ),
+
         Expanded(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),

@@ -769,54 +769,30 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
   Widget _buildHeaderBar() {
     return LayoutBuilder(builder: (context, constraints) {
       final isNarrow = constraints.maxWidth < 650;
+      final addAccountButton = ElevatedButton.icon(
+        onPressed: _openAddUser,
+        icon: const Icon(LucideIcons.user_plus, size: 18),
+        label: const Text('Add Account', style: TextStyle(fontWeight: FontWeight.bold)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.goldenYellow,
+          foregroundColor: AppColors.darkCharcoal,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+
       if (isNarrow) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Account Management',
-              style: AppTypography.pageTitle,
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton.icon(
-                onPressed: _openAddUser,
-                icon: const Icon(LucideIcons.user_plus, size: 18),
-                label: const Text('Add Account', style: TextStyle(fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.goldenYellow,
-                  foregroundColor: AppColors.darkCharcoal,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ),
-          ],
+        return SizedBox(
+          width: double.infinity,
+          height: 44,
+          child: addAccountButton,
         );
       }
 
-      return Row(
-        children: [
-          const Text(
-            'Account Management',
-            style: AppTypography.pageTitle,
-          ),
-          const Spacer(),
-          ElevatedButton.icon(
-            onPressed: _openAddUser,
-            icon: const Icon(LucideIcons.user_plus, size: 18),
-            label: const Text('Add Account', style: TextStyle(fontWeight: FontWeight.bold)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.goldenYellow,
-              foregroundColor: AppColors.darkCharcoal,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-        ],
+      return Align(
+        alignment: Alignment.centerRight,
+        child: addAccountButton,
       );
     });
   }
