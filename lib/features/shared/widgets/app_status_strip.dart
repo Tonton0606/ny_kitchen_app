@@ -118,36 +118,14 @@ class _AppStatusStripState extends State<AppStatusStrip> {
               ),
               const SizedBox(width: 12),
 
-              // Pinned Role Badge (Wide screens only)
+              // Role & User label (plain muted text, no heavy black pill)
               if (isWide) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.darkCharcoal,
-                    borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppColors.goldenYellow,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '$role • $name',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ],
+                Text(
+                  '$role \u2022 $name',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.mutedBrown,
                   ),
                 ),
                 const SizedBox(width: 12),

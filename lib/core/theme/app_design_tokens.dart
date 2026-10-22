@@ -246,6 +246,14 @@ class AppTypography {
     fontFeatures: [FontFeature.tabularFigures()],
   );
 
+  static const TextStyle kpiHeroDominant = TextStyle(
+    fontSize: 42,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.8,
+    color: AppColors.darkCharcoal,
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
   static const TextStyle metricValue = TextStyle(
     fontSize: 22,
     fontWeight: FontWeight.w800,

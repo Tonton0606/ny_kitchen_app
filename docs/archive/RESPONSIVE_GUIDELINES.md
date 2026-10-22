@@ -1,3 +1,5 @@
+SUPERSEDED: do not follow. See /UI_PRINCIPLES.md.
+
 ﻿# docs/RESPONSIVE_GUIDELINES.md
 # N.Y Kitchen — Responsive Design Guidelines
 

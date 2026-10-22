@@ -121,6 +121,7 @@ Skipping this reading order is not permitted.
 
 ## 8. UI Rules
 
+UI work must follow /UI_PRINCIPLES.md only. Ignore docs/archive/.
 - Use the design system defined in `docs/DESIGN_SYSTEM.md`.
 - Follow the color palette: Yellow, Red, White, Black (Material 3 compatible).
 - Maintain accessible color contrast ratios.

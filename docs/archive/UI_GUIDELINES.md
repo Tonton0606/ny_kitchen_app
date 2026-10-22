@@ -1,3 +1,5 @@
+SUPERSEDED: do not follow. See /UI_PRINCIPLES.md.
+
 ﻿# docs/UI_GUIDELINES.md
 # N.Y Kitchen — UI Guidelines
 

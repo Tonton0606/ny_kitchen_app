@@ -1,3 +1,5 @@
+SUPERSEDED: do not follow. See /UI_PRINCIPLES.md.
+
 # N.Y Kitchen POS — UI/UX Revamp & Engineering Plan
 
 > **Design Direction:** Unified Design System, Fast-Paced Ergonomics, Modern Tactile Polish, High-Contrast Brand Palette.  

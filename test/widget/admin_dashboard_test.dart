@@ -26,15 +26,13 @@ void main() {
     await tester.pump();
 
     // Verify Quick Actions header exists
-    expect(find.text('Get started with these Quick Actions'), findsOneWidget);
+    expect(find.text('Quick Actions'), findsOneWidget);
 
-    // Verify all 6 action items exist
+    // Verify all 4 action items exist
     expect(find.text('Add Food Item'), findsOneWidget);
     expect(find.text('Register Staff'), findsOneWidget);
     expect(find.text('Sales Reports'), findsOneWidget);
-    expect(find.text('Activity Logs'), findsOneWidget);
     expect(find.text('Backup & Sync'), findsOneWidget);
-    expect(find.text('User Settings'), findsOneWidget);
 
     // Tap 'Add Food Item' -> Should navigate to index 2 (Food Management)
     await tester.tap(find.text('Add Food Item'));
@@ -50,11 +48,6 @@ void main() {
     await tester.tap(find.text('Sales Reports'));
     await tester.pump();
     expect(navigatedIndex, 1);
-
-    // Tap 'Activity Logs' -> Should navigate to index 4 (Activity Logs)
-    await tester.tap(find.text('Activity Logs'));
-    await tester.pump();
-    expect(navigatedIndex, 4);
 
     // Tap 'Backup & Sync' -> Should navigate to index 5 (Backup & Restore)
     await tester.tap(find.text('Backup & Sync'));
@@ -83,7 +76,7 @@ void main() {
     await tester.pump();
 
     // Tap 'User Settings' -> Should trigger onSettingsTap
-    await tester.tap(find.text('User Settings'));
+    await tester.tap(find.byTooltip('User Settings'));
     await tester.pump();
     expect(settingsOpened, isTrue);
   });

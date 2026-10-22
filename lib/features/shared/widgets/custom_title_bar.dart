@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 
 class CustomTitleBar extends StatelessWidget {
   final Widget? title;
@@ -60,13 +61,16 @@ class WindowButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        _buildButton(
+        _WindowButton(
           icon: Icons.remove,
+          tooltip: 'Minimize',
           onPressed: () => windowManager.minimize(),
         ),
-        _buildButton(
+        _WindowButton(
           icon: Icons.crop_square,
+          tooltip: 'Maximize',
           onPressed: () async {
             if (await windowManager.isFullScreen()) {
               await windowManager.setFullScreen(false);
@@ -77,35 +81,74 @@ class WindowButtons extends StatelessWidget {
             }
           },
         ),
-        _buildButton(
+        _WindowButton(
           icon: Icons.close,
-          onPressed: () => windowManager.close(),
+          tooltip: 'Close',
           isClose: true,
+          onPressed: () => windowManager.close(),
         ),
       ],
     );
   }
+}
 
-  Widget _buildButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    bool isClose = false,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        hoverColor: isClose ? AppColors.brandRed : AppColors.softBorder.withValues(alpha: 0.5),
-        child: Container(
-          width: 46,
-          height: 40,
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 16,
-            color: isClose
-                ? (Colors.white)
-                : AppColors.darkCharcoal,
+class _WindowButton extends StatefulWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+  final bool isClose;
+
+  const _WindowButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.isClose = false,
+  });
+
+  @override
+  State<_WindowButton> createState() => _WindowButtonState();
+}
+
+class _WindowButtonState extends State<_WindowButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bgColor;
+    final Color iconColor;
+
+    if (_isHovered) {
+      if (widget.isClose) {
+        bgColor = AppColors.brandRed;
+        iconColor = Colors.white;
+      } else {
+        bgColor = AppColors.softBorder.withValues(alpha: 0.6);
+        iconColor = AppColors.darkCharcoal;
+      }
+    } else {
+      bgColor = Colors.transparent;
+      iconColor = AppColors.darkCharcoal;
+    }
+
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          child: AnimatedContainer(
+            duration: AppDesignTokens.motionFast,
+            width: 46,
+            height: 40,
+            alignment: Alignment.center,
+            color: bgColor,
+            child: Icon(
+              widget.icon,
+              size: 16,
+              color: iconColor,
+            ),
           ),
         ),
       ),

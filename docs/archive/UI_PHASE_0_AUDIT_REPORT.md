@@ -1,3 +1,5 @@
+SUPERSEDED: do not follow. See /UI_PRINCIPLES.md.
+
 # Phase 0 — Baseline UI/UX Audit Report
 
 > **Project:** N.Y Kitchen POS & Management App  

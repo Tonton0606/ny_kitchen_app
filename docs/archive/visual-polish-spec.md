@@ -1,3 +1,5 @@
+SUPERSEDED: do not follow. See /UI_PRINCIPLES.md.
+
 # Visual Polish & Design Philosophy
 
 > High-contrast, functional typography. Intentional whitespace. No-nonsense flat layouts. Sleek muted dark mode.
