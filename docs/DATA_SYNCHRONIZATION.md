@@ -1,13 +1,19 @@
 ﻿# docs/DATA_SYNCHRONIZATION.md
 # N.Y Kitchen — Data Synchronization
 
-> Status: FUTURE/OPTIONAL
+> Status: PARTIALLY IMPLEMENTED — Cloud round trips and conflict recovery remain unverified.
 > See: DECISIONS.md ADR-012
 
 ---
 
 ## Purpose
 Define the strategy for synchronizing local SQLite data with Supabase when internet is available.
+
+## Current Transaction Identity Control
+
+New sales and their line items receive device-scoped signed 64-bit IDs from `SyncIdGenerator`. The installation namespace and counter are stored only in local `app_settings`. Receipt numbers include the sale ID suffix, while daily order numbers remain local display sequences.
+
+For legacy data, Supabase synchronization compares rows with the same transaction ID. If the receipt and sale fields show they are different transactions, the client rekeys the local transaction and its child items before upload or insert. See `docs/SYNC_CONFLICT_POLICY.md` for limits and schema requirements. This is implemented in source but has not been tested across two devices or against the live database.
 
 ---
 

@@ -31,6 +31,7 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ### Fixed — 2026-10-23
 
+- New offline sales and line items use installation-scoped 64-bit IDs and unique receipt suffixes. Supabase sync detects legacy sale-ID collisions and rekeys the locally retained sale and its items before writing; cross-device recovery is implemented but not yet verified.
 - Supabase sync status may now identify a not-null column by name for SQLSTATE `23502`, while keeping the failing row and other server details out of user-visible messages.
 - User sync now downloads only profile columns, preserves existing device-local auth state, and creates an unguessable local-only hash for a newly imported account; an Admin must reset that account's password on each device.
 - Added read-only schema diagnostics and a proposed nullability migration. Supabase confirmed `public.users.password_hash` is NOT NULL; migration application and live sync remain pending.

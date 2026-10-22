@@ -149,7 +149,10 @@
 
 ## Synchronization follow-up
 
-- [ ] Define and verify cross-device conflict handling for each synchronized table.
+- [x] Add device-scoped sale/item IDs and legacy transaction-ID collision recovery; runtime verification remains pending.
+- [ ] Run `docs/security/supabase_transaction_id_diagnostic.sql` in development and confirm transaction and item IDs are `bigint` before deploying the new client.
+- [ ] Re-test the two-device case with synthetic sales; confirm both distinct receipts, totals, and line items remain visible after repeated manual and automatic sync.
+- [ ] Define and verify conflict handling for non-transaction synchronized tables and concurrent status changes.
 - [ ] Verify Supabase pagination and behavior above the API's row limit.
 - [ ] Verify image upload/download policies and safe retry behavior.
 - [ ] Capture manual and automatic sync outcomes for the defense evidence record.

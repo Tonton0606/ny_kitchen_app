@@ -387,6 +387,10 @@ When multiple devices sync to Supabase, conflicts may occur. A policy is needed 
 - [ ] How are immutable records (transactions, activity logs) protected from overwrite?
 - [ ] How are device clock differences handled?
 
+### Implementation Note — 2026-10-23 (Pending Verification)
+
+To address observed cross-device sale ID collisions, the client now assigns new transactions and transaction items installation-scoped signed 64-bit IDs. The local namespace and counter are stored outside the synchronized table set. During Supabase sync, a same-ID transaction with a different receipt/sale identity is preserved by moving the local transaction and its items to new IDs before the cloud record is inserted. This is a partial identity-collision control, not a final policy for simultaneous status edits or all synchronized tables. Confirm cloud key columns are `bigint` and verify with two devices before accepting this ADR.
+
 ### Revisit Conditions
 - Before Supabase sync implementation begins.
 

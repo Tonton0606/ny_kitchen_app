@@ -1,13 +1,22 @@
 ﻿# docs/SYNC_CONFLICT_POLICY.md
 # N.Y Kitchen — Sync Conflict Policy
 
-> Status: PENDING REVIEW — No conflict strategy has been finalized.
+> Status: Partial sale-ID collision handling implemented; broader sync conflict rules remain pending review.
 > See: DECISIONS.md ADR-014
 
 ---
 
 ## Purpose
 Define how conflicts are handled when local SQLite records and Supabase cloud records disagree.
+
+## Implemented Sale ID Collision Handling — 2026-10-23
+
+- New offline sales and transaction items use signed 63-bit IDs composed from a random per-installation namespace and a local monotonic counter. The namespace and counter remain in local-only `app_settings`; neither is sent to the cloud.
+- New receipt numbers include the generated transaction ID, so receipts stay distinct when devices sell during the same second. The daily `order_number` remains a local sequence and can repeat across devices; screens should retain the receipt as the stable display identifier.
+- Before transaction upserts and during pulls, the client compares records sharing a numeric ID by receipt, creation time, total, discount, and payment method. If they are different sales, it moves the local transaction and all local line items to newly generated IDs before inserting the cloud row. This prevents an old local ID collision from silently replacing either sale.
+- This repair can recover a distinct sale only while at least one device still has its local row. It cannot reconstruct data that has already been overwritten or deleted on every device.
+- Cloud `transactions.id` and `transaction_items.id` columns, plus `transaction_items.transaction_id`, must be PostgreSQL `bigint` before this client change is deployed. Verify with `docs/security/supabase_transaction_id_diagnostic.sql` in a development project. No live schema change or sync validation is recorded here.
+- This handles row identity collisions only. Concurrent status edits, menu/account conflicts, retries, and broader append-only semantics remain pending ADR-014 review.
 
 ---
 
