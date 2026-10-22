@@ -477,16 +477,16 @@ class _CashierHomePageState extends State<CashierHomePage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.creamBackground,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.softBorder, width: 1),
+                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
                 ),
                 child: Text(
                   '${_foods.length} items',
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.mutedBrown,
+                    color: Color(0xFF64748B),
                   ),
                 ),
               ),
@@ -508,26 +508,26 @@ class _CashierHomePageState extends State<CashierHomePage> {
             child: Container(
               height: 40,
               decoration: BoxDecoration(
-                color: AppColors.creamBackground,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.softBorder, width: 1),
+                border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
               ),
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Search product here...',
                   hintStyle: const TextStyle(
                     fontSize: 13,
-                    color: AppColors.mutedBrown,
+                    color: Color(0xFF94A3B8),
                     fontWeight: FontWeight.w400,
                   ),
                   prefixIcon: const Icon(
                     LucideIcons.search,
                     size: 17,
-                    color: AppColors.mutedBrown,
+                    color: Color(0xFF64748B),
                   ),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(LucideIcons.x, size: 15, color: AppColors.mutedBrown),
+                          icon: const Icon(LucideIcons.x, size: 15, color: Color(0xFF64748B)),
                           onPressed: () => setState(() => _searchQuery = ''),
                           splashRadius: 16,
                           padding: EdgeInsets.zero,

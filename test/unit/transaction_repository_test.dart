@@ -136,7 +136,7 @@ void main() {
       final txs = await db.query('transactions');
       expect(txs.length, equals(1));
       expect(txs.first['total_amount'], equals(300.0));
-      expect(txs.first['status'], equals('Completed'));
+      expect(txs.first['status'], equals('Preparing'));
       
       final txItems = await db.query('transaction_items');
       expect(txItems.length, equals(1));

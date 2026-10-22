@@ -80,7 +80,12 @@ class TransactionRepository {
     );
 
     await _syncService.syncToCloud();
-    return {'transaction_id': transactionId, 'order_number': orderNumber};
+    return {
+      'id': transactionId,
+      'transaction_id': transactionId,
+      'order_number': orderNumber,
+      'receipt_number': finalReceiptNumber,
+    };
   }
 
   Future<List<Map<String, dynamic>>> getTransactions({String status = 'completed'}) async {

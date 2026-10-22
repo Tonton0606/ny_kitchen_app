@@ -18,7 +18,7 @@ void main() {
   setUp(() async {
     db = await databaseFactory.openDatabase(inMemoryDatabasePath,
         options: OpenDatabaseOptions(
-            version: 7,
+            version: 8,
             onCreate: (db, version) async {
               await db.execute('''
                 CREATE TABLE users (
@@ -31,6 +31,7 @@ void main() {
                   last_login TEXT,
                   failed_login_count INTEGER DEFAULT 0,
                   face_encoding TEXT,
+                  must_change_password INTEGER DEFAULT 0,
                   created_at TEXT NOT NULL
                 )
               ''');

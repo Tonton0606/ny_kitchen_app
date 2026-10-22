@@ -30,8 +30,7 @@ class OrderSummaryPanel extends StatefulWidget {
 }
 
 class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
-  String _diningType = 'Dine in';
-  String _paymentMethod = 'Cash';
+
 
   @override
   Widget build(BuildContext context) {
@@ -52,73 +51,70 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
       ),
       child: Column(
         children: [
-          // Header with Order # and Dining type pills
+          // Header with Order # and Dine-In badge
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 18, 16, 14),
+            padding: const EdgeInsets.fromLTRB(20, 16, 16, 14),
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.softBorder, width: 1)),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Text(
-                                'Order #${widget.orderId}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.darkCharcoal,
-                                  letterSpacing: -0.3,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Icon(LucideIcons.pencil, size: 14, color: AppColors.mutedBrown),
-                            ],
+                          Text(
+                            'Order #${widget.orderId}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.darkCharcoal,
+                              letterSpacing: -0.3,
+                            ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(width: 6),
+                          const Icon(LucideIcons.pencil, size: 14, color: AppColors.mutedBrown),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.goldenYellow.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: AppColors.goldenYellow.withValues(alpha: 0.5), width: 1),
+                            ),
+                            child: const Text(
+                              'Dine In Only',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.darkCharcoal,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
                           const Text(
                             'Live Terminal Cart',
                             style: TextStyle(fontSize: 11, color: AppColors.mutedBrown),
                           ),
                         ],
                       ),
-                    ),
-                    if (widget.onCollapse != null)
-                      IconButton(
-                        onPressed: widget.onCollapse,
-                        icon: const Icon(LucideIcons.panel_right_close, size: 18, color: AppColors.mutedBrown),
-                        tooltip: 'Collapse Cart',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Dining Type Selector (Dine in, Take Away, Delivery)
-                Container(
-                  height: 36,
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: AppColors.creamBackground,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.softBorder, width: 1),
-                  ),
-                  child: Row(
-                    children: [
-                      _buildDiningTypePill('Dine in'),
-                      _buildDiningTypePill('Take Away'),
-                      _buildDiningTypePill('Delivery'),
                     ],
                   ),
                 ),
+                if (widget.onCollapse != null)
+                  IconButton(
+                    onPressed: widget.onCollapse,
+                    icon: const Icon(LucideIcons.panel_right_close, size: 18, color: AppColors.mutedBrown),
+                    tooltip: 'Collapse Cart',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
               ],
             ),
           ),
@@ -206,15 +202,31 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
                 _buildSummaryRow('Total Amount', total, bold: true, large: true),
                 const SizedBox(height: 16),
 
-                // Payment Method Selector Tiles
-                Row(
-                  children: [
-                    _buildPaymentTile('Cash', LucideIcons.banknote),
-                    const SizedBox(width: 8),
-                    _buildPaymentTile('Card', LucideIcons.credit_card),
-                    const SizedBox(width: 8),
-                    _buildPaymentTile('QR Code', LucideIcons.qr_code),
-                  ],
+                // Payment Method (Cash Only)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.goldenYellow.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.goldenYellow, width: 1.5),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(LucideIcons.banknote, size: 18, color: AppColors.darkCharcoal),
+                      SizedBox(width: 8),
+                      Text(
+                        'Cash Payment Only',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.darkCharcoal,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
 
@@ -307,79 +319,7 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
     );
   }
 
-  Widget _buildDiningTypePill(String title) {
-    final isSelected = _diningType == title;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _diningType = title),
-        child: Container(
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.surfaceWhite : Colors.transparent,
-            borderRadius: BorderRadius.circular(7),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? AppColors.darkCharcoal : AppColors.mutedBrown,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildPaymentTile(String title, IconData icon) {
-    final isSelected = _paymentMethod == title;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _paymentMethod = title),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.goldenYellow
-                : AppColors.surfaceWhite,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isSelected ? AppColors.goldenYellow : AppColors.softBorder,
-              width: isSelected ? 1.5 : 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: isSelected ? AppColors.darkCharcoal : AppColors.mutedBrown,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? AppColors.darkCharcoal : AppColors.mutedBrown,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildSummaryRow(String label, double amount, {bool bold = false, bool large = false}) {
     return Row(
