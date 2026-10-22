@@ -251,3 +251,38 @@ Checks actually run and actual results:
 Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Stage, commit, and push changes to `origin/main`. Hot-restart Flutter app (`R`) to test Cloud Sync settings and single top-bar button.
+
+## Settings Drawer, Food Management Filters & Token Alignment Session — 2026-10-22 (Asia/Manila)
+
+Date/time and timezone: 2026-10-22T23:25:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+1. Fix cross-device sync order visibility (repaired `sync_service.dart`, added reactive sync listeners to `orders_page.dart` and `transaction_history_page.dart`).
+2. Make Settings appear on the right side for both Admin (`AdminShell`) and Cashier (`CashierShell`) with clean header, left border, and subtle shadow.
+3. Standardize Logout confirmation dialog (`AppConfirmDialog.showLogoutDialog`) to strictly follow `UI_PRINCIPLES.md` (12px radius, neutral styling, autofocus Cancel, destructive Logout).
+4. Clean Food Management layout: eliminate redundant Category and Status filter popup menus in table header, unify search and filter dropdowns into a single responsive toolbar, and eliminate rainbow colors (`_chipColors`) from category pills.
+5. Follow operator Git procedure: always check remote tracking for pull/merge, ask user permission before push.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles compliance), AT10 (Integration boundaries & sync resilience), SEC-02 (Session controls).
+Files changed:
+- `lib/core/services/sync_service.dart`
+- `lib/features/cashier/presentation/pages/orders_page.dart`
+- `lib/features/cashier/presentation/pages/transaction_history_page.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `lib/features/admin/presentation/pages/admin_shell.dart`
+- `lib/features/cashier/presentation/pages/cashier_shell.dart`
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/shared/widgets/app_confirm_dialog.dart`
+- `lib/features/admin/presentation/widgets/navigation/admin_nav_rail.dart`
+- `lib/features/cashier/presentation/widgets/navigation/cashier_nav_rail.dart`
+- `lib/features/admin/presentation/widgets/navigation/admin_drawer.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze`: 0 errors / clean on all touched files.
+- `flutter test test/security/`: 65/65 tests passed cleanly.
+- `git fetch origin ui-refinements`: up to date, nothing to pull or merge.
+- Permission requested and confirmed by MJ Daz.
+- Committed (`910b357`) and pushed to `origin/ui-refinements`.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Continue testing UI workflows in running application.
