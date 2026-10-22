@@ -456,11 +456,10 @@ class _OrdersPageState extends State<OrdersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.creamBackground,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Bar adhering to UI Principles
+          // Header Bar consistent with other Cashier tabs (Menu & Recent Transactions)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: const BoxDecoration(
@@ -473,20 +472,35 @@ class _OrdersPageState extends State<OrdersPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Kitchen Queue',
-                      style: AppTypography.headingLarge,
+                      'Queue',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: AppColors.darkCharcoal,
+                      ),
                     ),
-                    const SizedBox(width: AppDesignTokens.space12),
-                    AppStatusChip(
-                      label: '$_inProgressCount PREPARING',
-                      type: AppStatusType.warning,
-                      icon: Icons.soup_kitchen_outlined,
-                      isCompact: true,
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.creamBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.softBorder, width: 1),
+                      ),
+                      child: Text(
+                        '$_inProgressCount in progress',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.mutedBrown,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const Spacer(),
-                // Segmented Filter Tabs (Default is 'Preparing', not 'All')
+                // Filter pills consistent with cashier layout (Default: Preparing)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: ['Preparing', 'Served', 'All'].map((f) {
@@ -495,16 +509,16 @@ class _OrdersPageState extends State<OrdersPage> {
                         ? _orders.length
                         : _orders.where((o) => o['status'] == f).length;
                     return Padding(
-                      padding: const EdgeInsets.only(left: AppDesignTokens.space8),
+                      padding: const EdgeInsets.only(left: 8),
                       child: InkWell(
                         onTap: () => setState(() => _statusFilter = f),
-                        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                        borderRadius: BorderRadius.circular(20),
                         child: AnimatedContainer(
-                          duration: AppDesignTokens.motionFast,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.goldenYellow : AppColors.surfaceWhite,
-                            borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                            color: isSelected ? AppColors.goldenYellow : AppColors.creamBackground,
+                            borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isSelected ? AppColors.goldenYellow : AppColors.softBorder,
                               width: 1,
@@ -515,28 +529,26 @@ class _OrdersPageState extends State<OrdersPage> {
                             children: [
                               Text(
                                 f,
-                                style: AppTypography.buttonSmall.copyWith(
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                                   color: AppColors.darkCharcoal,
-                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 5),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? AppColors.surfaceWhite
-                                      : AppColors.creamBackground,
-                                  borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
-                                  border: isSelected
-                                      ? null
-                                      : Border.all(color: AppColors.softBorder, width: 0.5),
+                                      ? Colors.white.withValues(alpha: 0.8)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   '$count',
-                                  style: AppTypography.figureCustom(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
                                     color: AppColors.darkCharcoal,
                                   ),
                                 ),

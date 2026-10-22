@@ -552,3 +552,27 @@ Unverified items / remaining risks:
 - A successful upload/download cycle has not been verified.
 
 Next concrete step: Apply the nullable `password_hash` migration in a development project, then build the updated client and sync synthetic data. Confirm a profile-only account pull and Admin password reset on another device before applying the migration to Production. Do not share credentials, user rows, or secrets.
+
+## UI Consistency: Cashier Queue Header Alignment — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T00:36:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+- Align Cashier Queue header (`orders_page.dart`) with the other Cashier tabs (`Menu` in `home_page.dart` and `Recent Transactions` in `transaction_history_page.dart`).
+- Resolve visual discordance caused by earlier status chip experiment and square tabs:
+  - Header title set to standard Cashier headline typography (`Queue`, 18pt bold charcoal).
+  - Status indicator standardized to subtle 12px-radius cream count pill (`$_inProgressCount in progress`).
+  - Filter controls aligned with cashier pill button language (`BorderRadius.circular(20)`), retaining `Preparing` as the first and default tab.
+  - Removed custom Scaffold background color to maintain seamless tab transitions.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles compliance), SEC-01.
+Files changed:
+- `lib/features/cashier/presentation/pages/orders_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/features/cashier/presentation/pages/orders_page.dart`: No issues found! (0 warnings, 0 errors).
+- `flutter test test/security/`: 47/47 tests passed cleanly (0 regressions).
+- `git fetch origin main`: pulled incoming commit `bbc8998` from collaborator Ralston Villamin cleanly with fast-forward.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Seek user permission before running `git push origin main`.
+
