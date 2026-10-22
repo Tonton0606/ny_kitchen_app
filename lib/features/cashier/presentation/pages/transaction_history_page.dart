@@ -409,12 +409,16 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                 // Icon Avatar
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: isVoided
+                  backgroundColor: (isVoided || isRefunded)
                       ? AppColors.brandRed.withValues(alpha: 0.1)
                       : AppColors.goldenYellow.withValues(alpha: 0.25),
                   child: Icon(
-                    isVoided ? Icons.block : LucideIcons.receipt,
-                    color: isVoided ? AppColors.brandRed : AppColors.darkCharcoal,
+                    isVoided
+                        ? Icons.block
+                        : isRefunded
+                            ? Icons.assignment_return_outlined
+                            : LucideIcons.receipt,
+                    color: (isVoided || isRefunded) ? AppColors.brandRed : AppColors.darkCharcoal,
                     size: 18,
                   ),
                 ),
@@ -477,8 +481,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: isVoided ? AppColors.mutedBrown : AppColors.darkCharcoal,
-                          decoration: isVoided ? TextDecoration.lineThrough : null,
+                          color: (isVoided || isRefunded) ? AppColors.mutedBrown : AppColors.darkCharcoal,
+                          decoration: (isVoided || isRefunded) ? TextDecoration.lineThrough : null,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
@@ -493,7 +497,14 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                 ),
 
                 // Actions
-                if (!isVoided)
+                if (isServed)
+                  IconButton(
+                    icon: const Icon(Icons.assignment_return_outlined, size: 18, color: Color(0xFFD97706)),
+                    tooltip: 'Refund Order',
+                    onPressed: () => _confirmRefund(tx),
+                    visualDensity: VisualDensity.compact,
+                  )
+                else if (!isVoided && !isRefunded)
                   IconButton(
                     icon: const Icon(Icons.block, size: 18, color: AppColors.brandRed),
                     tooltip: 'Void Transaction',
@@ -545,6 +556,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     final formattedDate = DateFormat('MMM d, yyyy  h:mm a').format(parsedDate);
     final rawStatus = (tx['status'] as String? ?? 'Served').trim();
     final isVoided = rawStatus.toLowerCase() == 'voided';
+    final isRefunded = rawStatus.toLowerCase() == 'refunded';
 
     Navigator.push(
       context,
@@ -747,8 +759,14 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 AppStatusChip(
-                                  label: isVoided ? 'VOIDED' : 'SERVED',
-                                  type: isVoided ? AppStatusType.error : AppStatusType.success,
+                                  label: isVoided
+                                      ? 'VOIDED'
+                                      : isRefunded
+                                          ? 'REFUNDED'
+                                          : 'SERVED',
+                                  type: (isVoided || isRefunded)
+                                      ? AppStatusType.error
+                                      : AppStatusType.success,
                                 ),
                                 const SizedBox(width: 8),
                                 const Icon(Icons.payments_outlined,
@@ -779,6 +797,32 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                         'Reason: ${tx['void_reason']}',
                                         style: AppTypography.caption.copyWith(
                                           color: AppColors.brandRed,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ] else if (isRefunded && tx['refund_reason'] != null && tx['refund_reason'].toString().trim().isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF3C7),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFFFDE68A)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.assignment_return_outlined, size: 15, color: Color(0xFFD97706)),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        'Refund Reason: ${tx['refund_reason']}',
+                                        style: AppTypography.caption.copyWith(
+                                          color: const Color(0xFF92400E),
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -953,6 +997,157 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                           }
                         },
                   child: const Text('Void Transaction'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmRefund(Map<String, dynamic> tx) {
+    String selectedReason = 'Customer complaint / food quality';
+    final otherController = TextEditingController();
+    final reasons = [
+      'Customer complaint / food quality',
+      'Incorrect food / wrong order served',
+      'Food returned / customer walked out',
+      'Accidental double charge / punch',
+      'Other reason',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) {
+            final isOther = selectedReason == 'Other reason';
+            final canConfirm = !isOther || otherController.text.trim().isNotEmpty;
+            final totalAmount = (tx['total_amount'] as num?)?.toDouble() ?? 0.0;
+
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              title: const Row(
+                children: [
+                  Icon(Icons.assignment_return_outlined, color: Color(0xFFD97706), size: 22),
+                  SizedBox(width: 8),
+                  Text('Refund Transaction', style: AppTypography.heading),
+                ],
+              ),
+              content: SizedBox(
+                width: 440,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Issue cash refund for receipt ${tx['receipt_number']} (₱${totalAmount.toStringAsFixed(2)})? This will record the refund in the shift report and cannot be undone.',
+                      style: AppTypography.body,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Select Refund Reason:',
+                      style: AppTypography.label,
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.softBorder),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedReason,
+                          isExpanded: true,
+                          items: reasons.map((r) {
+                            return DropdownMenuItem<String>(
+                              value: r,
+                              child: Text(r, style: AppTypography.body),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setDialogState(() {
+                                selectedReason = val;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    if (isOther) ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: otherController,
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          hintText: 'Enter specific refund reason...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: AppColors.softBorder),
+                          ),
+                          contentPadding: const EdgeInsets.all(12),
+                        ),
+                        onChanged: (_) => setDialogState(() {}),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actionsPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel', style: AppTypography.buttonSmall),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFD97706),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: const Color(0xFFD97706).withValues(alpha: 0.3),
+                    disabledForegroundColor: Colors.white70,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: !canConfirm
+                      ? null
+                      : () async {
+                          final finalReason = isOther
+                              ? otherController.text.trim()
+                              : selectedReason;
+                          Navigator.pop(ctx);
+                          await _repository.updateTransactionStatus(
+                            tx['id'],
+                            'Refunded',
+                            reason: finalReason,
+                          );
+                          await _auditRepo.logAction(
+                            userId: SessionManager().userId ?? 1,
+                            username: SessionManager().fullName ?? 'unknown',
+                            role: SessionManager().role ?? 'cashier',
+                            module: 'Transactions',
+                            action: 'Refund Transaction',
+                            status: 'Success',
+                            description: 'Refunded receipt ${tx['receipt_number']} for ₱${totalAmount.toStringAsFixed(2)} (Reason: $finalReason)',
+                          );
+                          _loadTransactions();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Receipt ${tx['receipt_number']} refunded successfully (₱${totalAmount.toStringAsFixed(2)} returned).'),
+                                behavior: SnackBarBehavior.floating,
+                                backgroundColor: const Color(0xFFD97706),
+                              ),
+                            );
+                          }
+                        },
+                  child: const Text('Process Refund'),
                 ),
               ],
             );

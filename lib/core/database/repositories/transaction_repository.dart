@@ -1,7 +1,6 @@
 import '../database_helper.dart';
 import '../../services/sync_service.dart';
 import '../../utils/sync_id_generator.dart';
-import '../../utils/security_exception.dart';
 import '../../utils/repository_security_guard.dart';
 import 'audit_repository.dart';
 
@@ -179,19 +178,14 @@ class TransactionRepository {
       action: 'Update Transaction Status',
     );
 
-    // SEC-01: Refunding or arbitrary completed status modifications strictly require Administrator role
-    if (newStatus == 'Refunded' && (actor['role'] as String?)?.toLowerCase() != 'admin') {
-      throw const SecurityException(
-        'Permission denied: Only administrators may process transaction refunds.',
-        code: 'ADMIN_REQUIRED_REFUND',
-      );
-    }
-
     final db = await _dbHelper.database;
     final Map<String, dynamic> updateValues = {'status': newStatus};
     if (newStatus == 'Voided' && reason != null && reason.trim().isNotEmpty) {
       updateValues['void_reason'] = reason.trim();
+    } else if (newStatus == 'Refunded' && reason != null && reason.trim().isNotEmpty) {
+      updateValues['refund_reason'] = reason.trim();
     }
+
     int count = await db.update(
       'transactions',
       updateValues,
@@ -199,13 +193,17 @@ class TransactionRepository {
       whereArgs: [id],
     );
 
-    // Audit status update (Gap 9 / SEC-01) - authoritative actor identity
+    // Audit status update - authoritative actor identity
     await _auditRepo.logAction(
       userId: actor['id'] as int?,
       username: actor['username'] as String? ?? username ?? 'System',
       role: actor['role'] as String? ?? role ?? 'System',
       module: 'Transactions',
-      action: newStatus == 'Voided' ? 'Transaction Voided' : newStatus == 'Refunded' ? 'Transaction Refunded' : 'Transaction Status Updated',
+      action: newStatus == 'Voided'
+          ? 'Transaction Voided'
+          : newStatus == 'Refunded'
+              ? 'Transaction Refunded'
+              : 'Transaction Status Updated',
       status: 'Success',
       description: 'Transaction ID $id status changed to $newStatus${reason != null ? ' ($reason)' : ''}',
     );

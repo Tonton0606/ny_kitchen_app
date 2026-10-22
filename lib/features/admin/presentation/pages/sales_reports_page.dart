@@ -884,6 +884,7 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
 
     final rawStatus = (tx['status'] as String? ?? 'Served').trim();
     final isVoided = rawStatus.toLowerCase() == 'voided';
+    final isRefunded = rawStatus.toLowerCase() == 'refunded';
     final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
     final formattedDate = DateFormat('MMM d, yyyy • h:mm a').format(parsedDate);
     final totalAmount = _parseAmount(tx['total_amount']);
@@ -907,12 +908,22 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
               decoration: BoxDecoration(
                 color: isVoided
                     ? AppColors.brandRed.withValues(alpha: 0.1)
-                    : AppColors.forest.withValues(alpha: 0.1),
+                    : isRefunded
+                        ? const Color(0xFFFEF3C7)
+                        : AppColors.forest.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                isVoided ? Icons.block : LucideIcons.receipt,
-                color: isVoided ? AppColors.brandRed : AppColors.forest,
+                isVoided
+                    ? Icons.block
+                    : isRefunded
+                        ? Icons.assignment_return_outlined
+                        : LucideIcons.receipt,
+                color: isVoided
+                    ? AppColors.brandRed
+                    : isRefunded
+                        ? const Color(0xFFD97706)
+                        : AppColors.forest,
                 size: 20,
               ),
             ),
@@ -970,6 +981,43 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                         'Reason: ${tx['void_reason'] != null && tx['void_reason'].toString().trim().isNotEmpty ? tx['void_reason'] : 'Not specified'}',
                         style: AppTypography.body.copyWith(
                           color: AppColors.brandRed,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ] else if (isRefunded) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.assignment_return_outlined, size: 16, color: Color(0xFFD97706)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'TRANSACTION REFUNDED',
+                            style: AppTypography.caption.copyWith(
+                              color: const Color(0xFF92400E),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Reason: ${tx['refund_reason'] != null && tx['refund_reason'].toString().trim().isNotEmpty ? tx['refund_reason'] : 'Not specified'}',
+                        style: AppTypography.body.copyWith(
+                          color: const Color(0xFF92400E),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1162,6 +1210,23 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                             '${tx['void_reason']}',
                             style: AppTypography.caption.copyWith(
                               color: AppColors.brandRed,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ] else if (statusLower == 'refunded' &&
+                          tx['refund_reason'] != null &&
+                          tx['refund_reason'].toString().trim().isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 130),
+                          child: Text(
+                            '${tx['refund_reason']}',
+                            style: AppTypography.caption.copyWith(
+                              color: const Color(0xFFD97706),
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                             ),
