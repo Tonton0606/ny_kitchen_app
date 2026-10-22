@@ -1,7 +1,7 @@
 # PROJECT_STATE.md
 # N.Y Kitchen — Project State Tracker
 
-> 2026-10-22 update: Rubric remains mapped in `docs/SECURITY_IMPLEMENTATION_PLAN.md`. Sync code was repaired to report failures; live Supabase reachability, deployed schema/RLS and end-to-end behavior have not been verified. Older completion entries below are historical claims and do not establish current pass status.
+> 2026-10-22 update: Rubric remains mapped in `docs/SECURITY_IMPLEMENTATION_PLAN.md`. A user-provided trace reports Supabase RLS write denials (`42501`) across the sync tables. Flutter-side failure reporting is present; deployed policies and a secure cloud identity path remain unresolved. No sync pass is claimed.
 
 > This file must be updated after every approved work session.
 > Do not claim features are complete unless they have been implemented and verified.
@@ -15,7 +15,7 @@
 |---|---|
 | **Project Name** | N.Y Kitchen Secure Order and Sales Management System |
 | **Current Phase** | Security defense preparation and cloud synchronization repair |
-| **Current Status** | Flutter/SQLite retained; manual and automatic sync paths now report failures; live cloud/RLS verification pending |
+| **Current Status** | Flutter/SQLite retained; manual and automatic sync paths report failures; Supabase writes are reportedly denied by RLS (`42501`) pending policy/auth review |
 | **Last Updated** | 2026-10-22 |
 | **Updated By** | Ralston Villamin session (self-reported) |
 

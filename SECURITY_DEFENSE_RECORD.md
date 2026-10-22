@@ -290,3 +290,36 @@ Unverified items / remaining risks:
 - These code changes do not establish a rubric pass or production security.
 
 Next concrete step: Run manual sync once on the defense device, then set Automatic Cloud Sync and observe the status. Record the status text (including failed table/error code, if any) so remaining Supabase schema/RLS configuration can be corrected without exposing credentials.
+
+## Supabase RLS Sync Error Triage — 2026-10-22 (Asia/Manila)
+
+Date/time and timezone: 2026-10-22 23:05 Asia/Manila
+Session owner (self-reported): Ralston Villamin
+Requested task and scope: Diagnose the attached manual/automatic Supabase sync error and prepare a secure next step; no live cloud policy changes.
+Rubric / risk / acceptance-test IDs: R08, R10; SEC-02; K02; AT10. No rubric score assigned.
+Files changed:
+- `docs/security/supabase_rls_diagnostics.sql`
+- `docs/SUPABASE_ARCHITECTURE.md`
+- `PROJECT_STATE.md`
+- `TODO.md`
+- `CHANGELOG.md`
+- `SECURITY_DEFENSE_RECORD.md`
+
+Findings:
+- The supplied trace reports PostgreSQL SQLSTATE `42501` and `new row violates row-level security policy` for `users`, `food_categories`, `food_items`, `transactions`, `transaction_items`, and `activity_logs`; this is a server-side authorization rejection.
+- The current Flutter source initializes Supabase with an anon key and custom `x-device-secret` header. POS login is local SQLite and no Supabase Auth sign-in is implemented in the repository. The custom header is not automatically enforced by RLS. No deployed policy/grant export or Supabase schema is present here, so the precise policy mismatch cannot be confirmed.
+- The attached trace also contains `SyncToCloud failed` and `Cloud Backup Sync Complete!`; those strings are absent from current source and indicate old-build/run output. Its later `flutter run` shows Supabase initialization only; no fresh sync result is present there. The UI `RenderFlex` and `ListTile` warnings are unrelated to PostgreSQL RLS.
+- Added a read-only catalog diagnostic that reports policy metadata and role grants without reading business data or policy expressions. No RLS policy was weakened or changed. Current Ubuntu mode is one-way sales replication and does not resolve full multi-table sync.
+
+Checks actually run and actual results:
+- Read the full user-provided log and inspected sync code, Supabase initialization, policy-related project guidance, handoff and Git state.
+- Confirmed the current repository source does not contain the old completion/error log strings; current sync status reports table names and safe error codes through the UI.
+- Did not connect to Supabase, run the diagnostic SQL, run tests/analyzer, or change cloud policies.
+
+Evidence paths: user attachment `C:/Users/tonton/.codex/attachments/29a921c8-6cf6-4a61-9350-b511f0a06ac0/Pasted text.txt`; `lib/main.dart`; `lib/core/services/sync_service.dart`; `docs/security/supabase_rls_diagnostics.sql`.
+Unverified items / remaining risks:
+- Current deployed RLS policies, SQL grants, table schemas, active client role/JWT, and any server-side custom-header hook remain unverified.
+- No successful manual or automatic multi-device Supabase synchronization is established. Do not disable RLS or grant unrestricted anon access to make the error disappear.
+- A secure multi-table sync design must bind writes to a verified identity and least-privilege policies. The separate Ubuntu API currently supports one-way sales replication only.
+
+Next concrete step: Run the read-only diagnostic in the Supabase SQL Editor and share its result (policy names/roles/commands and grants only). Then select and implement the appropriate secure auth/backend design before retesting with synthetic records.

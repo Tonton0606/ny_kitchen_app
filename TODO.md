@@ -138,6 +138,7 @@
 - [x] Owner approved hybrid offline/online sync with SQLite local storage.
 - [x] Add manual and saved-preference automatic push/pull paths.
 - [x] Report table-level failures and serialize sync operations.
+- [ ] Resolve reported `42501` RLS denials by inspecting deployed policy/grant metadata and choosing a cloud identity path; do not grant unrestricted `anon` writes or disable RLS.
 - [ ] Confirm configured Supabase project reachability using an approved development session.
 - [ ] Inspect deployed schema, least-privilege RLS and device-header enforcement.
 - [ ] Provide safe configuration/provisioning for Android; never package device secrets as assets.

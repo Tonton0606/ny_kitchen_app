@@ -94,6 +94,14 @@ Supabase serves as an optional cloud platform for:
 
 The code path is implemented, but live reachability, deployed table schemas, RLS policies, mobile provisioning, and cross-device conflict behavior remain unverified. See the latest entry in `SECURITY_DEFENSE_RECORD.md`.
 
+## Reported RLS rejection — 2026-10-22
+
+A user-provided Windows trace reports PostgreSQL `42501` / `new row violates row-level security policy` for every table in the sync allowlist. This is a Supabase authorization failure, not an offline SQLite failure. The trace's `SyncToCloud failed` and `Cloud Backup Sync Complete!` messages are absent from the current source, so those lines are from an older build/run; the later `flutter run` output in the same attachment shows Supabase initialization but no fresh sync result.
+
+The Flutter source initializes Supabase with the public anon key and a custom `x-device-secret` header. POS login is local SQLite; the repository has no Supabase Auth sign-in flow that establishes a cloud user identity. A custom HTTP header is not automatically enforced by PostgreSQL RLS. With RLS enabled and no matching policy for the request role, writes are denied as expected. The deployed policies and role grants are not available in this repository, so the exact policy mismatch is not yet established.
+
+Do not resolve this by disabling RLS or granting unrestricted `anon` access. The Ubuntu API is a separate, one-way sales replication path and does not currently replace this multi-table Supabase sync. Secure multi-table sync needs an explicit identity and authorization design (for example, Supabase Auth sessions with least-privilege policies, or reviewed authenticated backend endpoints). Run the read-only query in `docs/security/supabase_rls_diagnostics.sql` and review its output before writing project-specific policies. The query omits policy expressions and business data.
+
 ## Data Ownership
 - SQLite (local) is the primary data owner.
 - Supabase holds a synchronized copy.
