@@ -206,6 +206,7 @@ class _LoginPageState extends State<LoginPage>
       builder: (dialogCtx) => ForceChangePasswordDialog(
         user: mutableUser,
         onSuccess: () {
+          mutableUser['must_change_password'] = 0;
           Navigator.of(dialogCtx).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -213,7 +214,6 @@ class _LoginPageState extends State<LoginPage>
               backgroundColor: AppColors.success,
             ),
           );
-          mutableUser['must_change_password'] = 0;
           _proceedToShell(mutableUser);
         },
         onCancel: () {

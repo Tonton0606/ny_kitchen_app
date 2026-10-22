@@ -178,3 +178,49 @@ Unverified items / remaining risks:
 - Local repository authorization: SEC-01 permissions enforcement in local SQLite repositories remains open and pending.
 - No claim of full rubric compliance or full production deployment.
 Next concrete step: Deploy Ubuntu service onto the VM once provisioned, configure Caddy TLS, and execute end-to-end network replication tests and local repository authorization enforcement.
+
+## Login Password Change Bug Fix Session — 2026-10-22 (Asia/Manila)
+
+Date/time and timezone: 2026-10-22T14:46:00+08:00 (Asia/Manila)
+Session owner (self-reported): Ralston Villamin
+Requested task and scope: Fix default credentials login and force password change dialog failure ("Error: Unsupported operation: read-only") blocking entry as admin/cashier into the application.
+Rubric / risk / acceptance-test IDs: R10 (Authentication & Access Controls), AT01 (Account Authentication and Lockout), Gap 3 / SEC-09 (Forced Initial Password Change).
+Files changed:
+- `lib/core/database/repositories/user_repository.dart`
+- `lib/features/auth/presentation/widgets/force_change_password_dialog.dart`
+- `lib/features/auth/presentation/pages/login_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- Root cause: SQLite `db.query()` returns read-only map instances. When `force_change_password_dialog.dart` attempted in-place update `widget.user['must_change_password'] = 0`, Dart threw `Unsupported operation: read-only`.
+- Fix: `UserRepository.login` now wraps `updatedMaps.first` in `Map<String, dynamic>.from(...)`. `login_page.dart` ensures a mutable copy is passed to the dialog, and `force_change_password_dialog.dart` guards the local map mutation.
+- `flutter test test/security/force_password_change_test.dart`: 6/6 tests passed.
+- `flutter analyze lib/core/database/repositories/user_repository.dart lib/features/auth/presentation/widgets/force_change_password_dialog.dart lib/features/auth/presentation/pages/login_page.dart`: No issues found (0 warnings, 0 errors).
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Test logging in with admin/admin123 or cashier/cashier123, set new passwords (e.g., `admin1234` / `cashier1234`), and proceed to the admin/cashier shell.
+
+## Manual Cloud Sync Button & Background Polling Deactivation Session — 2026-10-22 (Asia/Manila)
+
+Date/time and timezone: 2026-10-22T15:48:00+08:00 (Asia/Manila)
+Session owner (self-reported): Ralston Villamin
+Requested task and scope: Remove automatic background cloud sync timers and provide interactive manual 2-way Cloud Sync button on both Admin and Cashier screens.
+Rubric / risk / acceptance-test IDs: R08/R10 (Security controls & system operation), AT10 (Integration boundaries and network failure resilience), SEC-02 (Cloud synchronization data protection).
+Files changed:
+- `lib/main.dart`
+- `lib/core/services/sync_service.dart`
+- `lib/features/shared/widgets/manual_sync_button.dart`
+- `lib/features/shared/widgets/app_status_strip.dart`
+- `lib/features/cashier/presentation/pages/home_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- Disabled automatic background sync timers in `lib/main.dart` (preventing unsolicited cloud calls during offline shifts).
+- Implemented `fullSync()` in `SyncService` providing unified 2-way sync (push local offline changes, then pull cloud updates).
+- Built interactive `ManualSyncButton` with spinning refresh animation, floating status SnackBar notifications, and offline resilience.
+- Placed `ManualSyncButton` in the top bar for both Admin (`AppStatusStrip`) and Cashier (`CashierHomePage`).
+- `flutter analyze lib/features/shared/widgets/manual_sync_button.dart`: Passed cleanly (0 issues).
+- `flutter test test/security/force_password_change_test.dart test/security/account_lockout_test.dart`: 10/10 tests passed.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Unverified items / remaining risks:
+- Live network reachability depends on active internet connection when the button is manually pressed; offline failure is safely caught without app interruption.
+Next concrete step: Launch or hot restart the app and test the Cloud Sync button in both Admin and Cashier screens.

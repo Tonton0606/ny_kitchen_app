@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/session/session_manager.dart';
 import 'app_status_chip.dart';
+import 'manual_sync_button.dart';
 
 /// Persistent Status Strip displaying:
 /// - Online/Offline connectivity chip
@@ -134,16 +135,9 @@ class _AppStatusStripState extends State<AppStatusStrip> {
                 const SizedBox(width: 8),
               ],
 
-              // Cloud Sync Status Chip (Wide screens only)
-              if (isWide) ...[
-                const AppStatusChip(
-                  label: 'Cloud Synced',
-                  type: AppStatusType.info,
-                  icon: Icons.cloud_done_outlined,
-                  isCompact: true,
-                ),
-                const SizedBox(width: 12),
-              ],
+              // Interactive Manual Cloud Sync Button
+              const ManualSyncButton(isCompact: false),
+              const SizedBox(width: 12),
 
               // Tabular Digital Clock
               Container(

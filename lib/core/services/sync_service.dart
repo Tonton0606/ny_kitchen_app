@@ -259,6 +259,19 @@ class SyncService {
       }
     } catch (e) {
       print('Download sync failed: $e');
+      rethrow;
+    }
+  }
+
+  /// Unified 2-way sync: first uploads local changes to cloud, then downloads cloud updates to local
+  Future<bool> fullSync() async {
+    try {
+      await syncToCloud();
+      await syncFromCloud();
+      return true;
+    } catch (e) {
+      print('Manual fullSync error: $e');
+      return false;
     }
   }
 
