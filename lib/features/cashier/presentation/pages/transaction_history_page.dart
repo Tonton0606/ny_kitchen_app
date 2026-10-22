@@ -462,6 +462,12 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
           title: const Text('Void Transaction'),
           content: Text('Are you sure you want to void receipt ${tx['receipt_number']}?'),
           actions: [

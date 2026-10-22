@@ -102,8 +102,6 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     return await db.query(
       'transactions',
-      where: 'status != ?',
-      whereArgs: ['Preparing'],
       orderBy: 'created_at DESC',
     );
   }

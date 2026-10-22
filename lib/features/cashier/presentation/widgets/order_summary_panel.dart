@@ -84,9 +84,9 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColors.goldenYellow.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: AppColors.goldenYellow.withValues(alpha: 0.5), width: 1),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
                             ),
                             child: const Text(
                               'Dine In Only',
@@ -205,11 +205,11 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
                 // Payment Method (Cash Only)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.goldenYellow.withValues(alpha: 0.18),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.goldenYellow, width: 1.5),
+                    border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,

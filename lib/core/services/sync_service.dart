@@ -165,12 +165,8 @@ class SyncService {
                 mutableRecord.remove('updated_at');
               }
               if (table == 'transactions') {
-                // Keep order_number so it syncs to cloud
-                // mutableRecord.remove('order_number');
-                mutableRecord.remove('amount_received');
-                mutableRecord.remove('change');
-                mutableRecord.remove('void_reason');
-                mutableRecord.remove('refund_reason');
+                // Retain all transaction fields (order_number, amount_received, change, void_reason, refund_reason)
+                // for accurate sales reporting and audit history in the cloud.
               }
               dataToSync.add(mutableRecord);
             }

@@ -123,7 +123,12 @@ class _FoodEmojiPickerDialogState extends State<FoodEmojiPickerDialog> {
     final filtered = _getFilteredEmojis();
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
       title: Row(
         children: [
           const Icon(Icons.fastfood, color: AppColors.brandRed),
@@ -179,8 +184,15 @@ class _FoodEmojiPickerDialogState extends State<FoodEmojiPickerDialog> {
                       )
                     : null,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(
+                filled: true,
+                fillColor: Colors.white,
+                enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
                 ),
               ),
             ),
@@ -242,13 +254,13 @@ class _FoodEmojiPickerDialogState extends State<FoodEmojiPickerDialog> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.goldenYellow.withValues(alpha: 0.3)
-                                : Colors.grey.shade100,
+                                ? const Color(0xFFFEF3C7)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
                                   ? AppColors.goldenYellow
-                                  : Colors.grey.shade300,
+                                  : const Color(0xFFE2E8F0),
                               width: isSelected ? 2 : 1,
                             ),
                           ),
