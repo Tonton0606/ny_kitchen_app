@@ -119,6 +119,13 @@ void main() async {
     }
   }
   envVars.addAll(processEnvVars);
+  if (!dotenv.isInitialized && envVars.isNotEmpty) {
+    try {
+      dotenv.loadFromString(
+        envString: envVars.entries.map((e) => '${e.key}=${e.value}').join('\n'),
+      );
+    } catch (_) {}
+  }
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();

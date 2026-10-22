@@ -71,19 +71,55 @@ class ExportService {
   // SALES REPORT GENERATORS
   // ==========================================
 
+  static String _getCashierName(Map<String, dynamic> tx) {
+    if (tx['cashier_role']?.toString().toLowerCase() == 'admin' ||
+        tx['user_id'] == 1) {
+      return 'Head Cashier';
+    }
+    final name = tx['cashier_name'] as String?;
+    if (name != null && name.trim().isNotEmpty) {
+      if (name.toLowerCase().contains('admin')) {
+        return 'Head Cashier';
+      }
+      return name.trim();
+    }
+    final username = tx['cashier_username'] as String?;
+    if (username != null && username.trim().isNotEmpty) {
+      if (username.toLowerCase().contains('admin')) {
+        return 'Head Cashier';
+      }
+      return username.trim();
+    }
+    return 'Head Cashier';
+  }
+
   /// Generates PDF document for Sales Transactions (paginated MultiPage).
   static pw.Document generateSalesPdfDoc(List<Map<String, dynamic>> rawTransactions) {
     final pdf = pw.Document();
     final sanitized = rawTransactions.map(sanitizeRecord).toList();
 
-    double totalRevenue = 0.0;
+    double grossAmount = 0.0;
+    double voidedAmount = 0.0;
+    int completedCount = 0;
+    int voidedCount = 0;
+
     for (var tx in sanitized) {
+      final status = (tx['status']?.toString() ?? 'Completed').trim().toLowerCase();
       final amountRaw = tx['total_amount'];
       final amount = amountRaw is num
           ? amountRaw.toDouble()
           : (double.tryParse(amountRaw?.toString() ?? '0') ?? 0.0);
-      totalRevenue += amount;
+
+      grossAmount += amount;
+      if (status == 'voided' || status == 'refunded') {
+        voidedCount++;
+        voidedAmount += amount;
+      } else {
+        completedCount++;
+      }
     }
+
+    final double totalRevenue = grossAmount - voidedAmount;
 
     final tableData = sanitized.map((tx) {
       final date = DateTime.tryParse(tx['created_at']?.toString() ?? '') ?? DateTime.now();
@@ -92,10 +128,12 @@ class ExportService {
       final amount = amountRaw is num
           ? amountRaw.toDouble()
           : (double.tryParse(amountRaw?.toString() ?? '0') ?? 0.0);
+      final cashier = _getCashierName(tx);
 
       return [
         tx['receipt_number']?.toString() ?? 'N/A',
         formattedDate,
+        cashier,
         tx['itemCount']?.toString() ?? '1',
         tx['payment_method']?.toString() ?? 'Cash',
         'Php ${amount.toStringAsFixed(2)}',
@@ -129,7 +167,7 @@ class ExportService {
             ),
             pw.SizedBox(height: 4),
             pw.Text(
-              'Total Transactions: ${sanitized.length}  |  Total Revenue: Php ${totalRevenue.toStringAsFixed(2)}',
+              'Valid Orders: $completedCount  |  Voided/Refunded: $voidedCount (Php ${voidedAmount.toStringAsFixed(2)})  |  Net Revenue: Php ${totalRevenue.toStringAsFixed(2)}',
               style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey800),
             ),
             pw.Divider(thickness: 1, color: PdfColors.grey400),
@@ -157,7 +195,7 @@ class ExportService {
           else
             pw.TableHelper.fromTextArray(
               context: context,
-              headers: ['Receipt No', 'Date', 'Items', 'Payment', 'Total', 'Status'],
+              headers: ['Receipt No', 'Date', 'Cashier', 'Items', 'Payment', 'Total', 'Status'],
               data: tableData,
               headerStyle: pw.TextStyle(
                 fontWeight: pw.FontWeight.bold,
@@ -172,10 +210,11 @@ class ExportService {
               cellAlignments: {
                 0: pw.Alignment.centerLeft,
                 1: pw.Alignment.centerLeft,
-                2: pw.Alignment.center,
-                3: pw.Alignment.centerLeft,
-                4: pw.Alignment.centerRight,
-                5: pw.Alignment.center,
+                2: pw.Alignment.centerLeft,
+                3: pw.Alignment.center,
+                4: pw.Alignment.centerLeft,
+                5: pw.Alignment.centerRight,
+                6: pw.Alignment.center,
               },
             ),
         ],
@@ -200,52 +239,85 @@ class ExportService {
     // Headers
     sheet.getRangeByName('A1').setText('Receipt No');
     sheet.getRangeByName('B1').setText('Date');
-    sheet.getRangeByName('C1').setText('Items');
-    sheet.getRangeByName('D1').setText('Payment');
-    sheet.getRangeByName('E1').setText('Total');
-    sheet.getRangeByName('F1').setText('Status');
+    sheet.getRangeByName('C1').setText('Cashier');
+    sheet.getRangeByName('D1').setText('Items');
+    sheet.getRangeByName('E1').setText('Payment');
+    sheet.getRangeByName('F1').setText('Total');
+    sheet.getRangeByName('G1').setText('Status');
 
-    final headerRange = sheet.getRangeByName('A1:F1');
+    final headerRange = sheet.getRangeByName('A1:G1');
     headerRange.cellStyle.bold = true;
 
     sheet.setColumnWidthInPixels(1, 120);
     sheet.setColumnWidthInPixels(2, 160);
-    sheet.setColumnWidthInPixels(3, 80);
-    sheet.setColumnWidthInPixels(4, 100);
-    sheet.setColumnWidthInPixels(5, 120);
-    sheet.setColumnWidthInPixels(6, 100);
+    sheet.setColumnWidthInPixels(3, 140);
+    sheet.setColumnWidthInPixels(4, 70);
+    sheet.setColumnWidthInPixels(5, 100);
+    sheet.setColumnWidthInPixels(6, 120);
+    sheet.setColumnWidthInPixels(7, 100);
 
     int row = 2;
+    double grossTotal = 0.0;
+    double voidedTotal = 0.0;
+
     for (var tx in sanitized) {
       final date = DateTime.tryParse(tx['created_at']?.toString() ?? '') ?? DateTime.now();
       final formattedDate = DateFormat('MMM d, yyyy h:mm a').format(date);
+      final cashier = _getCashierName(tx);
 
       final amountRaw = tx['total_amount'];
       final amount = amountRaw is num
           ? amountRaw.toDouble()
           : (double.tryParse(amountRaw?.toString() ?? '0') ?? 0.0);
 
+      final status = (tx['status']?.toString() ?? 'Completed').trim();
+      final statusLower = status.toLowerCase();
+
+      grossTotal += amount;
+      if (statusLower == 'voided' || statusLower == 'refunded') {
+        voidedTotal += amount;
+      }
+
       sheet.getRangeByIndex(row, 1).setText(tx['receipt_number']?.toString() ?? '');
       sheet.getRangeByIndex(row, 2).setText(formattedDate);
-      sheet.getRangeByIndex(row, 3).setNumber((tx['itemCount'] ?? 1).toDouble());
-      sheet.getRangeByIndex(row, 4).setText(tx['payment_method']?.toString() ?? 'Cash');
-      sheet.getRangeByIndex(row, 5).setNumber(amount);
-      sheet.getRangeByIndex(row, 6).setText(tx['status']?.toString() ?? 'Completed');
+      sheet.getRangeByIndex(row, 3).setText(cashier);
+      sheet.getRangeByIndex(row, 4).setNumber((tx['itemCount'] ?? 1).toDouble());
+      sheet.getRangeByIndex(row, 5).setText(tx['payment_method']?.toString() ?? 'Cash');
+      sheet.getRangeByIndex(row, 6).setNumber(amount);
+      sheet.getRangeByIndex(row, 7).setText(status);
 
       row++;
     }
 
+    final double netTotal = grossTotal - voidedTotal;
+
     if (row > 2) {
-      sheet.getRangeByIndex(row, 4).setText('TOTAL SUM');
-      sheet.getRangeByIndex(row, 4).cellStyle.bold = true;
-
-      final sumRange = sheet.getRangeByIndex(row, 5);
-      sumRange.setFormula('=SUM(E2:E${row - 1})');
-      sumRange.cellStyle.bold = true;
-      sumRange.cellStyle.numberFormat = '₱#,##0.00';
-
-      final totalCol = sheet.getRangeByName('E2:E${row - 1}');
+      final totalCol = sheet.getRangeByName('F2:F${row - 1}');
       totalCol.cellStyle.numberFormat = '₱#,##0.00';
+
+      // 1. GROSS TOTAL
+      sheet.getRangeByIndex(row, 5).setText('GROSS TOTAL');
+      sheet.getRangeByIndex(row, 5).cellStyle.bold = true;
+      final grossRange = sheet.getRangeByIndex(row, 6);
+      grossRange.setNumber(grossTotal);
+      grossRange.cellStyle.bold = true;
+      grossRange.cellStyle.numberFormat = '₱#,##0.00';
+
+      // 2. LESS VOIDED / REFUNDED
+      sheet.getRangeByIndex(row + 1, 5).setText('LESS VOIDED / REFUNDED');
+      sheet.getRangeByIndex(row + 1, 5).cellStyle.bold = true;
+      final voidedRange = sheet.getRangeByIndex(row + 1, 6);
+      voidedRange.setNumber(-voidedTotal.abs());
+      voidedRange.cellStyle.bold = true;
+      voidedRange.cellStyle.numberFormat = '₱#,##0.00; -₱#,##0.00; ₱0.00';
+
+      // 3. NET TOTAL REVENUE
+      sheet.getRangeByIndex(row + 2, 5).setText('NET TOTAL REVENUE');
+      sheet.getRangeByIndex(row + 2, 5).cellStyle.bold = true;
+      final netRange = sheet.getRangeByIndex(row + 2, 6);
+      netRange.setNumber(netTotal);
+      netRange.cellStyle.bold = true;
+      netRange.cellStyle.numberFormat = '₱#,##0.00';
     }
 
     final List<int> bytes = workbook.saveAsStream();

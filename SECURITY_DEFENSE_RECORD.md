@@ -576,3 +576,32 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Seek user permission before running `git push origin main`.
 
+## Sales Reports QA Polish & Export Revenue Sum Bug Fix Session — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T00:46:00+08:00 (Asia/Manila)
+Session owner (self-reported): Hance Gonzales
+Requested task and scope:
+1. Created and switched to dedicated QA branch `bug-fix`.
+2. Removed `System Administrator` and `Admin` attribution from cashier column across all period tabs (`All`, `Annual`, `Monthly`, `Weekly`, `Today`) and `All Staff` filter dropdown in `sales_reports_page.dart` and `export_service.dart`, standardizing to `Head Cashier`.
+3. UI Polish on `sales_reports_page.dart`:
+   - Fixed hero card plural typo for single order (`1 completed order` vs `$completedCount completed orders`).
+   - Wrapped `_buildDataTable` in `LayoutBuilder` with `ConstrainedBox(constraints: BoxConstraints(minWidth: constraints.maxWidth))` to ensure full-width table alignment even when the left sidebar is collapsed.
+   - Styled voided/refunded row totals in `_buildDataTable` with `AppColors.mutedSlate` and `TextDecoration.lineThrough` for clear visual distinction against active revenue.
+4. Fixed voided/refunded revenue calculation bug in PDF and Excel exports (`export_service.dart`):
+   - In `generateSalesPdfDoc`: excluded voided and refunded rows from `totalRevenue`, tracked gross, voided, and completed metrics separately, added informative header summary (`Valid Orders: $completedCount | Voided/Refunded: $voidedCount (Php ${voidedAmount.toStringAsFixed(2)}) | Net Revenue: Php ${totalRevenue.toStringAsFixed(2)}`), and added `Cashier` column.
+   - In `generateSalesExcelBytes`: added `Cashier` column, computed `grossTotal`, `voidedTotal`, and `netTotal = grossTotal - voidedTotal`, replacing the blind `=SUM` formula with 3 explicit summary rows: `GROSS TOTAL`, `LESS VOIDED / REFUNDED`, and `NET TOTAL REVENUE` (matching UI revenue cards to the exact cent).
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles compliance), ACC-01 (Accounting integrity & revenue accuracy), SEC-01 (Audit trail consistency).
+Files changed:
+- `lib/features/admin/presentation/pages/sales_reports_page.dart`
+- `lib/core/services/export_service.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `git branch --show-current`: confirmed `bug-fix`.
+- `flutter analyze lib/features/admin/presentation/pages/sales_reports_page.dart lib/core/services/export_service.dart`: 0 errors, 0 warnings (No issues found!).
+Evidence paths:
+- `lib/features/admin/presentation/pages/sales_reports_page.dart`
+- `lib/core/services/export_service.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Test the Sales Reports page and export PDF/Excel in the running desktop app.
+
+

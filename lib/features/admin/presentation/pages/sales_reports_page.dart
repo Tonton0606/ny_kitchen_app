@@ -91,11 +91,25 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
   String _formatCurrency(num amount) => _currencyFormat.format(amount);
 
   String _getCashierName(Map<String, dynamic> tx) {
+    if (tx['cashier_role']?.toString().toLowerCase() == 'admin' ||
+        tx['user_id'] == 1) {
+      return 'Head Cashier';
+    }
     final name = tx['cashier_name'] as String?;
-    if (name != null && name.trim().isNotEmpty) return name.trim();
+    if (name != null && name.trim().isNotEmpty) {
+      if (name.toLowerCase().contains('admin')) {
+        return 'Head Cashier';
+      }
+      return name.trim();
+    }
     final username = tx['cashier_username'] as String?;
-    if (username != null && username.trim().isNotEmpty) return username.trim();
-    return tx['user_id'] == 1 ? 'Admin' : 'Cashier';
+    if (username != null && username.trim().isNotEmpty) {
+      if (username.toLowerCase().contains('admin')) {
+        return 'Head Cashier';
+      }
+      return username.trim();
+    }
+    return 'Head Cashier';
   }
 
   List<String> get _availableCashiers {
@@ -556,7 +570,7 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
           ),
           const SizedBox(height: AppDesignTokens.space8),
           Text(
-            '$completedCount completed orders · $avgOrder avg',
+            '${completedCount == 1 ? '1 completed order' : '$completedCount completed orders'} · $avgOrder avg',
             style: AppTypography.label12.copyWith(color: AppColors.mutedSlate),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -876,109 +890,119 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
   }
 
   Widget _buildDataTable(BuildContext context, List<Map<String, dynamic>> filtered) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minWidth: MediaQuery.of(context).size.width > 900
-              ? MediaQuery.of(context).size.width - 340
-              : 800,
-        ),
-        child: DataTable(
-          headingRowHeight: 44,
-          dataRowMinHeight: 48,
-          dataRowMaxHeight: 54,
-          horizontalMargin: 20,
-          columnSpacing: 28,
-          headingRowColor: WidgetStateProperty.all(AppColors.pageBackground),
-          columns: const [
-            DataColumn(
-              label: Text('RECEIPT NO', style: AppTypography.label),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: constraints.maxWidth,
             ),
-            DataColumn(
-              label: Text('DATE & TIME', style: AppTypography.label),
-            ),
-            DataColumn(
-              label: Text('CASHIER', style: AppTypography.label),
-            ),
-            DataColumn(
-              label: Text('ITEMS', style: AppTypography.label),
-              numeric: true,
-            ),
-            DataColumn(
-              label: Text('STATUS', style: AppTypography.label),
-            ),
-            DataColumn(
-              label: Text('TOTAL', style: AppTypography.label),
-              numeric: true,
-            ),
-          ],
-          rows: filtered.map((tx) {
-            final status = (tx['status'] as String? ?? 'Completed').trim();
-            final statusLower = status.toLowerCase();
-
-            AppStatusType chipType;
-            if (statusLower == 'completed' || statusLower == 'served') {
-              chipType = AppStatusType.success;
-            } else if (statusLower == 'voided' || statusLower == 'refunded') {
-              chipType = AppStatusType.error;
-            } else if (statusLower == 'pending') {
-              chipType = AppStatusType.warning;
-            } else {
-              chipType = AppStatusType.info;
-            }
-
-            final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
-            final formattedDate = DateFormat('MMM d, yyyy  h:mm a').format(parsedDate);
-            final amount = _parseAmount(tx['total_amount']);
-
-            return DataRow(
-              cells: [
-                DataCell(
-                  Text(
-                    tx['receipt_number'] ?? tx['order_number']?.toString() ?? '—',
-                    style: AppTypography.tableCellPrimary,
-                  ),
+            child: DataTable(
+              headingRowHeight: 44,
+              dataRowMinHeight: 48,
+              dataRowMaxHeight: 54,
+              horizontalMargin: 20,
+              columnSpacing: 28,
+              headingRowColor: WidgetStateProperty.all(AppColors.pageBackground),
+              columns: const [
+                DataColumn(
+                  label: Text('RECEIPT NO', style: AppTypography.label),
                 ),
-                DataCell(
-                  Text(
-                    formattedDate,
-                    style: AppTypography.tableCellSecondary,
-                  ),
+                DataColumn(
+                  label: Text('DATE & TIME', style: AppTypography.label),
                 ),
-                DataCell(
-                  Text(
-                    _getCashierName(tx),
-                    style: AppTypography.tableCellSecondary,
-                  ),
+                DataColumn(
+                  label: Text('CASHIER', style: AppTypography.label),
                 ),
-                DataCell(
-                  Text(
-                    '${tx['itemCount'] ?? 0}',
-                    style: AppTypography.tabularFigure,
-                  ),
+                DataColumn(
+                  label: Text('ITEMS', style: AppTypography.label),
+                  numeric: true,
                 ),
-                DataCell(
-                  AppStatusChip(
-                    label: status,
-                    type: chipType,
-                    isCompact: true,
-                  ),
+                DataColumn(
+                  label: Text('STATUS', style: AppTypography.label),
                 ),
-                DataCell(
-                  Text(
-                    _formatCurrency(amount),
-                    style: AppTypography.tabularPrice(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                DataColumn(
+                  label: Text('TOTAL', style: AppTypography.label),
+                  numeric: true,
                 ),
               ],
-            );
-          }).toList(),
-        ),
-      ),
+              rows: filtered.map((tx) {
+                final status = (tx['status'] as String? ?? 'Completed').trim();
+                final statusLower = status.toLowerCase();
+
+                AppStatusType chipType;
+                if (statusLower == 'completed' || statusLower == 'served') {
+                  chipType = AppStatusType.success;
+                } else if (statusLower == 'voided' || statusLower == 'refunded') {
+                  chipType = AppStatusType.error;
+                } else if (statusLower == 'pending') {
+                  chipType = AppStatusType.warning;
+                } else {
+                  chipType = AppStatusType.info;
+                }
+
+                final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
+                final formattedDate = DateFormat('MMM d, yyyy  h:mm a').format(parsedDate);
+                final amount = _parseAmount(tx['total_amount']);
+
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Text(
+                        tx['receipt_number'] ?? tx['order_number']?.toString() ?? '—',
+                        style: AppTypography.tableCellPrimary,
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        formattedDate,
+                        style: AppTypography.tableCellSecondary,
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        _getCashierName(tx),
+                        style: AppTypography.tableCellSecondary,
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        '${tx['itemCount'] ?? 0}',
+                        style: AppTypography.tabularFigure,
+                      ),
+                    ),
+                    DataCell(
+                      AppStatusChip(
+                        label: status,
+                        type: chipType,
+                        isCompact: true,
+                      ),
+                    ),
+                    DataCell(
+                      Text(
+                        _formatCurrency(amount),
+                        style: (statusLower == 'voided' || statusLower == 'refunded')
+                            ? AppTypography.tabularPrice(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ).copyWith(
+                                color: AppColors.mutedSlate,
+                                decoration: TextDecoration.lineThrough,
+                              )
+                            : AppTypography.tabularPrice(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
     );
   }
 }
