@@ -69,104 +69,109 @@ class _SalesReportsPageState extends State<SalesReportsPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-            child: LayoutBuilder(
-              builder: (context, headerConstraints) {
-                return Align(
-                  alignment: Alignment.centerRight,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            if (_isLoading) return;
-                            if (_transactions.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('No transactions to print')),
-                              );
-                              return;
-                            }
-                            ExportService.printPDF(_transactions);
-                          },
-                          icon: const Icon(Icons.print, size: 18),
-                          label: const Text('Print'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.darkCharcoal,
-                            side: const BorderSide(color: AppColors.softBorder),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        PopupMenuButton<String>(
-                          offset: const Offset(0, 40),
-                          onSelected: (value) {
-                            if (_isLoading) return;
-                            if (_transactions.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('No transactions to export')),
-                              );
-                              return;
-                            }
-                            if (value == 'excel') {
-                              ExportService.exportToExcel(_transactions, context);
-                            } else if (value == 'pdf') {
-                              ExportService.exportToPDF(_transactions, context);
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 'excel',
-                              child: Text('Export as Excel (.xlsx)'),
-                            ),
-                            const PopupMenuItem(
-                              value: 'pdf',
-                              child: Text('Export as PDF (.pdf)'),
-                            ),
-                          ],
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: AppColors.goldenYellow,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              children: const [
-                                Icon(Icons.download, size: 18, color: Colors.black),
-                                SizedBox(width: 8),
-                                Text('Export', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-                          ),
-                        ),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      labelColor: AppColors.darkCharcoal,
+                      unselectedLabelColor: AppColors.mutedBrown,
+                      indicatorColor: AppColors.goldenYellow,
+                      indicatorWeight: 3,
+                      indicatorSize: TabBarIndicatorSize.label,
+                      labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                      unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      tabs: const [
+                        Tab(text: 'All'),
+                        Tab(text: 'Today'),
+                        Tab(text: 'Weekly'),
+                        Tab(text: 'Monthly'),
+                        Tab(text: 'Annual'),
                       ],
                     ),
-                );
-              },
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        if (_isLoading) return;
+                        if (_transactions.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('No transactions to print')),
+                          );
+                          return;
+                        }
+                        ExportService.printPDF(_transactions);
+                      },
+                      icon: const Icon(Icons.print, size: 18),
+                      label: const Text('Print'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.darkCharcoal,
+                        side: const BorderSide(color: AppColors.softBorder),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    PopupMenuButton<String>(
+                      offset: const Offset(0, 40),
+                      onSelected: (value) {
+                        if (_isLoading) return;
+                        if (_transactions.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('No transactions to export')),
+                          );
+                          return;
+                        }
+                        if (value == 'excel') {
+                          ExportService.exportToExcel(_transactions, context);
+                        } else if (value == 'pdf') {
+                          ExportService.exportToPDF(_transactions, context);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'excel',
+                          child: Text('Export as Excel (.xlsx)'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'pdf',
+                          child: Text('Export as PDF (.pdf)'),
+                        ),
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.goldenYellow,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.download, size: 18, color: Colors.black),
+                            SizedBox(width: 8),
+                            Text('Export', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          TabBar(
-            controller: _tabController,
-            labelColor: AppColors.darkCharcoal,
-            unselectedLabelColor: AppColors.mutedBrown,
-            indicatorColor: AppColors.goldenYellow,
-            indicatorWeight: 3,
-            indicatorSize: TabBarIndicatorSize.label,
-            labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            tabs: const [
-              Tab(text: 'All'),
-              Tab(text: 'Today'),
-              Tab(text: 'Weekly'),
-              Tab(text: 'Monthly'),
-              Tab(text: 'Annual'),
-            ],
           ),
           Expanded(
             child: TabBarView(

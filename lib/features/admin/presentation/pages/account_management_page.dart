@@ -734,10 +734,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Header Bar
-                _buildHeaderBar(),
-                const SizedBox(height: 20),
-
                 // Top 4 Metric KPI Cards
                 _buildMetricsStrip(
                   total: totalUsers,
@@ -766,36 +762,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     );
   }
 
-  Widget _buildHeaderBar() {
-    return LayoutBuilder(builder: (context, constraints) {
-      final isNarrow = constraints.maxWidth < 650;
-      final addAccountButton = ElevatedButton.icon(
-        onPressed: _openAddUser,
-        icon: const Icon(LucideIcons.user_plus, size: 18),
-        label: const Text('Add Account', style: TextStyle(fontWeight: FontWeight.bold)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.goldenYellow,
-          foregroundColor: AppColors.darkCharcoal,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-
-      if (isNarrow) {
-        return SizedBox(
-          width: double.infinity,
-          height: 44,
-          child: addAccountButton,
-        );
-      }
-
-      return Align(
-        alignment: Alignment.centerRight,
-        child: addAccountButton,
-      );
-    });
-  }
 
   Widget _buildMetricsStrip({
     required int total,
@@ -878,6 +844,19 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
   Widget _buildFilterBar() {
     return LayoutBuilder(builder: (context, constraints) {
       final isNarrow = constraints.maxWidth < 920;
+      final addAccountButton = ElevatedButton.icon(
+        onPressed: _openAddUser,
+        icon: const Icon(LucideIcons.user_plus, size: 18),
+        label: const Text('Add Account', style: TextStyle(fontWeight: FontWeight.bold)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.goldenYellow,
+          foregroundColor: AppColors.darkCharcoal,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+
       if (isNarrow) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -928,6 +907,12 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: addAccountButton,
+            ),
           ],
         );
       }
@@ -935,7 +920,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
       return Row(
         children: [
           SizedBox(
-            width: 320,
+            width: 300,
             height: 44,
             child: TextField(
               onChanged: (val) => setState(() => _searchQuery = val),
@@ -973,6 +958,8 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               _buildPill('Locked / Disabled', isSelected: _statusFilter == 'locked_or_disabled', onTap: () => setState(() => _statusFilter = 'locked_or_disabled')),
             ],
           ),
+          const Spacer(),
+          addAccountButton,
         ],
       );
     });

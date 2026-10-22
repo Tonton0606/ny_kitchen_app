@@ -404,118 +404,118 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
               children: [
                 LayoutBuilder(
                   builder: (context, topConstraints) {
-                    final isCompact = topConstraints.maxWidth < 650;
-                    final actionButtons = Row(
-                      mainAxisSize: isCompact ? MainAxisSize.max : MainAxisSize.min,
+                    final isCompact = topConstraints.maxWidth < 750;
+                    return Flex(
+                      direction: isCompact ? Axis.vertical : Axis.horizontal,
+                      crossAxisAlignment: isCompact ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Flexible(
-                          fit: isCompact ? FlexFit.tight : FlexFit.loose,
-                          child: OutlinedButton.icon(
-                            onPressed: _showManageCategoriesDialog,
-                            icon: const Icon(
-                              Icons.category_outlined,
-                              size: 17,
-                            ),
-                            label: const Text('Categories'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.darkCharcoal,
-                              side: const BorderSide(
-                                color: AppColors.softBorder,
+                        SizedBox(
+                          width: isCompact ? double.infinity : 340,
+                          height: 44,
+                          child: TextField(
+                            onChanged: (val) => setState(() {
+                              _searchQuery = val;
+                              _currentPage = 1;
+                            }),
+                            decoration: InputDecoration(
+                              hintText: 'Search foods...',
+                              hintStyle: const TextStyle(
+                                color: AppColors.mutedText,
+                                fontSize: 13,
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                size: 20,
+                                color: AppColors.mutedText,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: AppColors.softBorder,
+                                ),
                               ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: AppColors.softBorder,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Flexible(
-                          fit: isCompact ? FlexFit.tight : FlexFit.loose,
-                          child: ElevatedButton.icon(
-                            onPressed: _openAddFood,
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text(
-                              'Add Food',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                        if (isCompact) const SizedBox(height: 12),
+                        Row(
+                          mainAxisSize: isCompact ? MainAxisSize.max : MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              fit: isCompact ? FlexFit.tight : FlexFit.loose,
+                              child: OutlinedButton.icon(
+                                onPressed: _showManageCategoriesDialog,
+                                icon: const Icon(
+                                  Icons.category_outlined,
+                                  size: 17,
+                                ),
+                                label: const Text('Categories'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.darkCharcoal,
+                                  side: const BorderSide(
+                                    color: AppColors.softBorder,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  backgroundColor: Colors.white,
+                                ),
                               ),
                             ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.goldenYellow,
-                              foregroundColor: Colors.black,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              fit: isCompact ? FlexFit.tight : FlexFit.loose,
+                              child: ElevatedButton.icon(
+                                onPressed: _openAddFood,
+                                icon: const Icon(Icons.add, size: 18),
+                                label: const Text(
+                                  'Add Food',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.goldenYellow,
+                                  foregroundColor: Colors.black,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     );
-
-                    if (isCompact) {
-                      return actionButtons;
-                    }
-
-                    return Align(
-                      alignment: Alignment.centerRight,
-                      child: actionButtons,
-                    );
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 Wrap(
                   spacing: 12,
                   runSpacing: 10,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    SizedBox(
-                      width: 320,
-                      child: TextField(
-                        onChanged: (val) => setState(() {
-                          _searchQuery = val;
-                          _currentPage = 1;
-                        }),
-                        decoration: InputDecoration(
-                          hintText: 'Search foods...',
-                          hintStyle: const TextStyle(
-                            color: AppColors.mutedText,
-                            fontSize: 14,
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            size: 20,
-                            color: AppColors.mutedText,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.softBorder,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.softBorder,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                      ),
-                    ),
                     // Category Filter Dropdown
                     Container(
                       height: 48,
