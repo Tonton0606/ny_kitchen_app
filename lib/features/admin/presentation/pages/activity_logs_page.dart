@@ -70,19 +70,9 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Activity Logs',
-                      style: AppTypography.pageTitle,
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'System-wide security and audit trail records',
-                      style: AppTypography.pageSubtitle,
-                    ),
-                  ],
+                const Text(
+                  'Activity Logs',
+                  style: AppTypography.pageTitle,
                 ),
                 Row(
                   children: [

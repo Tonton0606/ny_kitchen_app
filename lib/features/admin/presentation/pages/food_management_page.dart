@@ -405,19 +405,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                 LayoutBuilder(
                   builder: (context, topConstraints) {
                     final isCompact = topConstraints.maxWidth < 650;
-                    final titleWidget = const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Food Management',
-                          style: AppTypography.pageTitle,
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Add, edit, and manage menu items',
-                          style: AppTypography.pageSubtitle,
-                        ),
-                      ],
+                    const titleWidget = Text(
+                      'Food Management',
+                      style: AppTypography.pageTitle,
                     );
 
                     final actionButtons = Row(

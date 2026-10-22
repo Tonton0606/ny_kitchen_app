@@ -78,19 +78,9 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                   crossAxisAlignment: isCompact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Sales Reports',
-                          style: AppTypography.pageTitle,
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'View, filter, and export sales data',
-                          style: AppTypography.pageSubtitle,
-                        ),
-                      ],
+                    const Text(
+                      'Sales Reports',
+                      style: AppTypography.pageTitle,
                     ),
                     if (isCompact) const SizedBox(height: 12),
                     Row(

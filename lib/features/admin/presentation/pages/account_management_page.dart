@@ -777,11 +777,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               'Account Management',
               style: AppTypography.pageTitle,
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'Manage administrative and cashier credentials, roles, and biometric security',
-              style: AppTypography.pageSubtitle,
-            ),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
@@ -804,19 +799,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
 
       return Row(
         children: [
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Account Management',
-                style: AppTypography.pageTitle,
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Manage administrative and cashier credentials, roles, and biometric security',
-                style: AppTypography.pageSubtitle,
-              ),
-            ],
+          const Text(
+            'Account Management',
+            style: AppTypography.pageTitle,
           ),
           const Spacer(),
           ElevatedButton.icon(

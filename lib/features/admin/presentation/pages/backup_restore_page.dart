@@ -59,12 +59,7 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
               'Database Backup & Restore',
               style: AppTypography.pageTitle,
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'Securely export your local SQLite database for safekeeping. You can use these backups to restore the system in case of data loss.',
-              style: AppTypography.pageSubtitle,
-            ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             
             // Export Section
             Container(

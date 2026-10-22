@@ -29,20 +29,10 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Account Settings',
-                    style: AppTypography.pageTitle,
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Manage administrator profile and preferences',
-                    style: AppTypography.pageSubtitle,
-                  ),
-                ],
-              ),
+                const Text(
+                  'Account Settings',
+                  style: AppTypography.pageTitle,
+                ),
             ],
           ),
         ),
