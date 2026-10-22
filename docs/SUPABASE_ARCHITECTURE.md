@@ -83,12 +83,16 @@ Supabase serves as an optional cloud platform for:
 - See: docs/DATA_SYNCHRONIZATION.md
 - See: docs/SYNC_CONFLICT_POLICY.md
 
-## Supported Synchronized Entities (Future)
-- [ ] Transactions (read-only in cloud after sync)
-- [ ] Activity Logs (append-only in cloud)
-- [ ] Menu items
-- [ ] User accounts (partial — no password hashes)
-- [ ] App settings
+## Current Synchronization Implementation (Not Yet Live-Verified)
+- The app can upload and download `users`, `food_categories`, `food_items`, `transactions`, `transaction_items`, `activity_logs`, and `login_attempts` through `SyncService`.
+- Manual mode invokes one upload followed by one download. Automatic mode starts an immediate full sync and retries every 15 seconds when the saved `app_settings.sync_mode` is `automatic`.
+- Ubuntu backend mode is a separate one-way sales upload path; it does not use this Supabase table sync.
+- Upload failures and download failures are reported by table and a safe database error code. A full sync is successful only when both directions finish without table failures.
+- Upserts use the minimal response so they do not require an additional `SELECT` policy. Download still requires valid `SELECT` access for each configured table.
+- User password hashes and face encodings are excluded from uploads. Local values are retained when user records are pulled.
+- `.env` values can be read from the process environment, the current working directory, or beside the desktop executable. Mobile builds do not receive `.env` automatically; do not package device secrets as Flutter assets.
+
+The code path is implemented, but live reachability, deployed table schemas, RLS policies, mobile provisioning, and cross-device conflict behavior remain unverified. See the latest entry in `SECURITY_DEFENSE_RECORD.md`.
 
 ## Data Ownership
 - SQLite (local) is the primary data owner.

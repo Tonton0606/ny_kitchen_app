@@ -1,7 +1,7 @@
 # PROJECT_STATE.md
 # N.Y Kitchen — Project State Tracker
 
-> 2026-10-20 review: Rubric received and mapped in `docs/SECURITY_IMPLEMENTATION_PLAN.md`. See `SECURITY_DEFENSE_RECORD.md` for session history. No fresh runtime/security test pass is claimed. Completion entries below the current information table are historical claims requiring current evidence.
+> 2026-10-22 update: Rubric remains mapped in `docs/SECURITY_IMPLEMENTATION_PLAN.md`. Sync code was repaired to report failures; live Supabase reachability, deployed schema/RLS and end-to-end behavior have not been verified. Older completion entries below are historical claims and do not establish current pass status.
 
 > This file must be updated after every approved work session.
 > Do not claim features are complete unless they have been implemented and verified.
@@ -14,10 +14,10 @@
 | Field | Value |
 |---|---|
 | **Project Name** | N.Y Kitchen Secure Order and Sales Management System |
-| **Current Phase** | Security defense planning and documentation reconciliation |
-| **Current Status** | SQLite implementation inspected; optional cloud code present; security gaps and runtime verification pending |
-| **Last Updated** | 2026-10-20 |
-| **Updated By** | Documentation review session |
+| **Current Phase** | Security defense preparation and cloud synchronization repair |
+| **Current Status** | Flutter/SQLite retained; manual and automatic sync paths now report failures; live cloud/RLS verification pending |
+| **Last Updated** | 2026-10-22 |
+| **Updated By** | Ralston Villamin session (self-reported) |
 
 ---
 
@@ -28,7 +28,7 @@
 | Project Phase 3 — SQLite integration | Implemented; targeted tests pending | 100% implementation |
 | Project Phase 4 — Authentication and security | Implemented; targeted security tests completed | 100% implementation |
 | Blueprint Phase 5 — Menu management | Implemented in the current SQLite-backed UI | 100% implementation |
-| Supabase background backup/sync | Background sync service implemented for SQLite to Cloud push | 100% implementation |
+| Supabase hybrid sync | Push/pull implementation present; failure reporting and serialization improved; live configuration/RLS unverified | Implemented, not runtime-verified |
 | Phase 6 — UI/UX Polish | Implemented premium aesthetics and responsive layout | 100% implementation |
 
 The percentages describe implementation scope, not production readiness. Security and offline test coverage remain explicit gates.
@@ -89,13 +89,13 @@ The percentages describe implementation scope, not production readiness. Securit
 - [x] Integrate native image picking for local food images.
 - [x] Implement Food Category CRUD/archive management in SQLite.
 
-### Phase 5: Cloud Synchronization [Completed]
-- [x] Integrate `supabase_flutter` and securely store keys in `.env`.
-- [x] Initialize Supabase connection in `main.dart`.
-- [x] Define Supabase background backup/sync contract and conflict resolution.
-- [x] Keep SQLite as the primary source of truth and preserve offline operation.
-- [x] Do not implement Supabase Auth; authentication remains local-only SQLite.
-- [x] Define row-level security, device-level secret, and sync policies.
+### Cloud Synchronization [Implementation present; verification pending]
+- [x] Integrate the Supabase client and load configuration from process environment or local `.env` files.
+- [x] Keep SQLite as the primary local store and preserve offline operation.
+- [x] Implement manual and saved-preference automatic push/pull paths.
+- [ ] Verify deployed Supabase schema and least-privilege RLS policies.
+- [ ] Verify a real-device offline/reconnect round trip and conflict behavior.
+- [ ] Provide safe mobile cloud configuration; do not bundle device secrets in Flutter assets.
 
 > The project blueprint currently names Project Phase 5 as Menu Management. This implementation has the menu/category/image foundation in place. The Supabase work above is a separate future cloud-sync track and must not be treated as completed Project Phase 5 work.
 
@@ -184,13 +184,13 @@ The percentages describe implementation scope, not production readiness. Securit
 
 ## Blocked
 
-*No blockers. Cloud synchronization is complete and active.*
+*Live cloud sync remains unverified. See the 2026-10-22 sync repair entry in `SECURITY_DEFENSE_RECORD.md`.*
 
 ---
 
 ## Next Steps
 
-1. Polish complete; tests complete. Project is fully transitioned to Phase 6 complete state.
+1. Run an authorized manual/automatic sync against the configured development cloud and capture the status plus Supabase RLS evidence.
 
 ---
 
@@ -203,8 +203,8 @@ The percentages describe implementation scope, not production readiness. Securit
 
 ## Security Concerns
 
-- [x] Production credentials stored in `.env` (ignored by git).
-- [x] Supabase device-level secret policy is implemented in PostgreSQL via `check_device_secret()`.
+- [ ] Verify cloud credentials are not exposed in a distributed client and rotate any previously committed credentials.
+- [ ] Inspect deployed RLS and device-header enforcement; source presence alone is not evidence of server policy.
 - [x] Password hashing uses PBKDF2-HMAC-SHA256 (10,000 iterations).
 - [x] Account lockout policy is 5 failed attempts.
 - [x] Session expiration policy implemented (30 minutes of inactivity via `SessionManager`).
@@ -269,12 +269,12 @@ The percentages describe implementation scope, not production readiness. Securit
 
 | Item | Status |
 |---|---|
-| Project setup | Not started (Future phase — optional) |
-| RLS policies | Not started |
-| Authentication config | Not started |
-| Cloud sync logic | Not started |
-| Environment config | Not started |
-| Scope | Background cloud backup/sync only; no Supabase Auth |
+| Project setup | Configuration exists locally; project identity/reachability not verified |
+| RLS policies | Not verified from repository or live deployment |
+| Authentication config | Local SQLite auth; client uses anon key and configured device header |
+| Cloud sync logic | Implemented; upload/download failures are reported; runtime result pending |
+| Environment config | Local `.env` key presence checked without printing values; mobile provisioning unresolved |
+| Scope | Supabase table push/pull; Ubuntu mode separately performs one-way sales upload |
 
 ---
 
@@ -342,13 +342,17 @@ The percentages describe implementation scope, not production readiness. Securit
 
 ---
 
+## Current sync repair — 2026-10-22
+
+`SyncService` previously swallowed table-level upload/download errors, allowing `fullSync()` and the manual button to report success despite failed tables. Upload used `.upsert(...).select()`, which unnecessarily required SELECT permission for returned rows. The repair removes the return-row request, returns failure when any table fails, serializes sync work, and exposes status for manual and automatic modes. Ubuntu mode now awaits one upload operation per full sync. No tests or live cloud requests were run for this repair.
+
 ## AI Notes
 
 - Read `PROJECT_BLUEPRINT.md` before any task.
 - Read `RULES.md` before any task.
 - Consult `DECISIONS.md` before making architectural choices.
 - Update this file after every approved work session.
-- Do not claim Supabase cloud synchronization is complete; it has not been implemented.
+- Do not claim Supabase cloud synchronization is verified until deployed schema/RLS and real online/offline behavior are demonstrated.
 
 ## Owner-confirmed scope — 2026-10-20
 

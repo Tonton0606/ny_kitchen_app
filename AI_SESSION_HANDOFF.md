@@ -117,6 +117,8 @@ Recorded October 22:
 
 See `docs/security/evidence/2026-10-defense/backend_verification.md` for commands and limitations. These results are historical once code changes; rerun relevant checks for affected code. Do not report them as tests executed in a new session.
 
+On 2026-10-22, the manual/automatic cloud sync paths were updated to report table failures, avoid an unnecessary Supabase SELECT response after upsert, serialize overlapping sync work, and expose automatic-mode status. No tests, app launch, or live cloud request was run for this repair. The current code is **Implemented—not verified**; see the latest entry in `SECURITY_DEFENSE_RECORD.md`.
+
 Not yet demonstrated: Ubuntu deployment, trusted HTTPS from Flutter, real-device offline/reconnect round trip, server backup/restore, rotation/revocation on the VM, Android provisioning, comprehensive dependency audit, or a complete rubric pass.
 
 ## 8. Evidence and safety rules

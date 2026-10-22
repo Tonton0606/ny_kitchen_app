@@ -133,31 +133,24 @@
 
 ---
 
-## Supabase (Future Phase — Optional)
+## Supabase cloud sync — implementation present; verification pending
 
-- [ ] Confirm Supabase scope with project owner
-- [ ] Set up development Supabase project
-- [ ] Configure Row-Level Security policies
-- [ ] Configure authentication
-- [ ] Configure storage buckets
-- [ ] Document environment variable setup
-- [ ] Implement cloud backup
-- [ ] Implement synchronization queue
-- [ ] Implement retry policy
+- [x] Owner approved hybrid offline/online sync with SQLite local storage.
+- [x] Add manual and saved-preference automatic push/pull paths.
+- [x] Report table-level failures and serialize sync operations.
+- [ ] Confirm configured Supabase project reachability using an approved development session.
+- [ ] Inspect deployed schema, least-privilege RLS and device-header enforcement.
+- [ ] Provide safe configuration/provisioning for Android; never package device secrets as assets.
+- [ ] Demonstrate online sync, offline operation and reconnect with synthetic records.
 
 ---
 
-## Synchronization (Future Phase — Optional)
+## Synchronization follow-up
 
-- [ ] Define sync entity list
-- [ ] Design sync queue table
-- [ ] Implement device identification
-- [ ] Implement last-sync timestamp
-- [ ] Implement pending-sync status
-- [ ] Implement retry on reconnection
-- [ ] Implement duplicate prevention
-- [ ] Implement conflict resolution
-- [ ] Test offline -> online sync
+- [ ] Define and verify cross-device conflict handling for each synchronized table.
+- [ ] Verify Supabase pagination and behavior above the API's row limit.
+- [ ] Verify image upload/download policies and safe retry behavior.
+- [ ] Capture manual and automatic sync outcomes for the defense evidence record.
 
 ---
 
@@ -368,11 +361,10 @@
 
 ---
 
-## Supabase Deployment (Future Phase — Optional)
+## Supabase Deployment and validation
 
-- [ ] Set up production Supabase project
-- [ ] Apply RLS policies
-- [ ] Configure production environment variables
+- [ ] Confirm development/production project separation and apply reviewed RLS policies.
+- [ ] Configure deployment environment variables without embedding client secrets.
 - [ ] Document deployment steps in `docs/SUPABASE_DEPLOYMENT.md`
 
 ---

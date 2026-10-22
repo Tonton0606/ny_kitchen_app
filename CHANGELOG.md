@@ -9,6 +9,14 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ## [Unreleased]
 
+### Fixed — 2026-10-22
+
+- Manual and automatic sync now fail visibly when a Supabase table upload/download fails; status includes the affected table and safe database error code.
+- Supabase upserts no longer request returned rows, avoiding an unnecessary SELECT policy requirement.
+- Sync operations are serialized and overlapping full-sync requests share one operation. Ubuntu mode now awaits a single one-way upload during full sync.
+- Environment configuration can come from process variables, the current working directory `.env`, or a `.env` beside the desktop executable. Automatic mode shows its current status in the app.
+- Live Supabase schema/RLS reachability and mobile credential provisioning remain unverified; no test suite or live cloud request was run for this change.
+
 ### Documentation — 2026-10-20
 
 - Read the supplied security rubric without modifying it; created `docs/SECURITY_IMPLEMENTATION_PLAN.md` with all 20 criteria, risk ratings, controls, acceptance tests, tool decisions, privacy/recovery planning and a defense script.

@@ -43,13 +43,16 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
 
   Future<void> _performSync() async {
     if (!SyncService().isConfigured) {
+      final status = SyncService.syncStatusNotifier.value;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.white, size: 18),
-              SizedBox(width: 8),
-              Text('Cloud sync is off: credentials not configured. Operating in local mode.'),
+              const Icon(Icons.info_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('$status. Operating in local mode.'),
+              ),
             ],
           ),
           backgroundColor: AppColors.darkCharcoal,
@@ -96,11 +99,17 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
         setState(() => _hasSyncError = true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
-                SizedBox(width: 8),
-                Text('Cloud Sync completed with warnings (offline/check network)'),
+                const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    SyncService.syncStatusNotifier.value,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             backgroundColor: AppColors.goldInk,
@@ -133,14 +142,25 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<String>(
-      valueListenable: SyncService.syncModeNotifier,
-      builder: (context, mode, child) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        SyncService.syncModeNotifier,
+        SyncService.syncStatusNotifier,
+      ]),
+      builder: (context, child) {
+        final mode = SyncService.syncModeNotifier.value;
+        final syncStatus = SyncService.syncStatusNotifier.value;
         if (mode != 'manual') {
           return const SizedBox.shrink();
         }
 
         final isConfigured = SyncService().isConfigured;
+        final hasSyncError = _hasSyncError ||
+            syncStatus.contains('incomplete') ||
+            syncStatus.startsWith('Sync unavailable') ||
+            syncStatus.startsWith('Sync failed') ||
+            syncStatus.startsWith('Upload failed') ||
+            syncStatus.startsWith('Download failed');
 
         final String label;
         final String tooltip;
@@ -149,19 +169,24 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
 
         if (!isConfigured) {
           label = 'Sync off';
-          tooltip = 'Cloud sync is off (credentials missing)';
+          tooltip = '$syncStatus; operating in local mode';
           icon = LucideIcons.cloud_off;
           iconColor = AppColors.mutedBrown;
-        } else if (_isSyncing) {
+        } else if (_isSyncing || syncStatus == 'Syncing with cloud') {
           label = 'Syncing';
           tooltip = 'Syncing with cloud...';
           icon = LucideIcons.refresh_cw;
           iconColor = AppColors.inkBlue;
-        } else if (_hasSyncError) {
+        } else if (hasSyncError) {
           label = 'Sync error';
-          tooltip = 'Sync error (tap to retry)';
+          tooltip = '$syncStatus (tap to retry)';
           icon = LucideIcons.circle_alert;
           iconColor = AppColors.brandRed;
+        } else if (syncStatus == 'Not synchronized') {
+          label = 'Sync now';
+          tooltip = 'Tap to sync with cloud';
+          icon = LucideIcons.cloud;
+          iconColor = AppColors.inkBlue;
         } else {
           label = 'Synced';
           tooltip = 'Synced with cloud (tap to sync now)';
@@ -240,7 +265,7 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
                 Text(
                   label,
                   style: AppTypography.buttonSmall.copyWith(
-                    color: _hasSyncError ? AppColors.brandRed : AppColors.darkCharcoal,
+                    color: hasSyncError ? AppColors.brandRed : AppColors.darkCharcoal,
                   ),
                 ),
               ],

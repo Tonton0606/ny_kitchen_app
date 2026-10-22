@@ -25,6 +25,8 @@ class SyncService {
 
   /// Event notifier triggered when a full sync finishes so UI pages can auto-refresh
   static final ValueNotifier<int> onSyncCompletedNotifier = ValueNotifier<int>(0);
+  static final ValueNotifier<String> syncStatusNotifier =
+      ValueNotifier<String>('Not synchronized');
 
   SupabaseClient? get _supabase {
     try {
@@ -53,6 +55,24 @@ class SyncService {
   ];
 
   Timer? _syncTimer;
+  Future<void> _operationQueue = Future<void>.value();
+  Future<bool>? _activeFullSync;
+  String? _lastUploadFailure;
+  String? _lastDownloadFailure;
+
+  Future<T> _enqueue<T>(Future<T> Function() operation) {
+    final result = _operationQueue.then((_) => operation());
+    _operationQueue = result.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace __) {},
+    );
+    return result;
+  }
+
+  String _safeErrorCode(Object error) {
+    final match = RegExp(r'\b[0-9A-Z]{5}\b').firstMatch(error.toString());
+    return match?.group(0) ?? error.runtimeType.toString();
+  }
 
   /// Loads saved sync mode from app_settings and starts timer if set to automatic
   Future<void> initSyncMode() async {
@@ -107,6 +127,10 @@ class SyncService {
   /// Starts an automatic periodic 2-way sync across all devices
   void startAutomaticSync({int intervalSeconds = 15}) {
     _syncTimer?.cancel();
+    if (!isConfigured) {
+      syncStatusNotifier.value = 'Automatic sync unavailable: cloud not configured';
+      return;
+    }
     // Run initial 2-way sync immediately
     fullSync();
     // Then repeat periodically
@@ -190,13 +214,32 @@ class SyncService {
     }
   }
 
-  /// Runs a full background sync from SQLite (Primary) to Supabase (Backup)
-  Future<void> syncToCloud() async {
+  /// Queues a cloud upload. Ubuntu mode intentionally queues without blocking
+  /// checkout; fullSync awaits its own single backend operation.
+  Future<bool> syncToCloud() async {
     if (backendMode) {
-      // Checkout has already committed locally; never await network on this path.
-      unawaited(BackendSyncService.instance?.sync() ?? Future<void>.value());
-      return;
+      final backend = BackendSyncService.instance;
+      if (backend == null) {
+        syncStatusNotifier.value = 'Upload unavailable: backend not configured';
+        return false;
+      }
+      unawaited(_enqueue(() => backend.sync()).then<void>((_) {}));
+      return true;
     }
+
+    return _enqueue(_syncToSupabase);
+  }
+
+  Future<bool> _syncToSupabase() async {
+    final client = _supabase;
+    if (client == null) {
+      _lastUploadFailure = 'Supabase is not initialized';
+      syncStatusNotifier.value = 'Upload unavailable: Supabase is not initialized';
+      return false;
+    }
+
+    final failedTables = <String>[];
+    _lastUploadFailure = null;
     try {
       final db = await _dbHelper.database;
 
@@ -241,35 +284,61 @@ class SyncService {
             }
 
             // 2. Upsert to Supabase
-            await _supabase?.from(table).upsert(dataToSync).select();
-
-            print('Synced ${dataToSync.length} records to $table.');
+            // Do not request returned rows: that adds a SELECT policy requirement
+            // to an otherwise valid INSERT/UPDATE upsert.
+            await client.from(table).upsert(dataToSync);
           }
         } catch (e) {
-          print('SyncToCloud failed for table $table: $e');
+          failedTables.add('$table (${_safeErrorCode(e)})');
         }
       }
-
-      print('Cloud Backup Sync Complete!');
     } catch (e) {
-      print('Sync failed: $e');
+      _lastUploadFailure = 'local database (${_safeErrorCode(e)})';
+      syncStatusNotifier.value = 'Upload failed: $_lastUploadFailure';
+      return false;
     }
+
+    if (failedTables.isNotEmpty) {
+      _lastUploadFailure = failedTables.join(', ');
+      syncStatusNotifier.value = 'Upload incomplete: $_lastUploadFailure';
+      return false;
+    }
+    syncStatusNotifier.value = 'Upload complete';
+    return true;
   }
 
   /// Downloads changes from Cloud to Local (For multi-device setups)
-  Future<void> syncFromCloud() async {
+  Future<bool> syncFromCloud() async {
     if (backendMode) {
-      await BackendSyncService.instance?.sync();
-      return;
+      final backend = BackendSyncService.instance;
+      if (backend == null) {
+        syncStatusNotifier.value = 'Sync unavailable: backend not configured';
+        return false;
+      }
+      return _enqueue(backend.sync);
     }
+
+    return _enqueue(_syncFromSupabase);
+  }
+
+  Future<bool> _syncFromSupabase() async {
+    final client = _supabase;
+    if (client == null) {
+      _lastDownloadFailure = 'Supabase is not initialized';
+      syncStatusNotifier.value = 'Download unavailable: Supabase is not initialized';
+      return false;
+    }
+
+    final failedTables = <String>[];
+    _lastDownloadFailure = null;
     try {
       final db = await _dbHelper.database;
 
       for (String table in _tables) {
         try {
-          final cloudData = await _supabase?.from(table).select();
+          final cloudData = await client.from(table).select();
 
-          if (cloudData != null && cloudData.isNotEmpty) {
+          if (cloudData.isNotEmpty) {
             for (var record in cloudData) {
               // Download images to local storage cache in background
               if (table == 'food_items' && record['image_path'] != null) {
@@ -314,29 +383,82 @@ class SyncService {
                 conflictAlgorithm: ConflictAlgorithm.replace,
               );
             }
-            print(
-              'Synced ${cloudData.length} records from cloud to local $table.',
-            );
           }
         } catch (e) {
-          print('SyncFromCloud failed for table $table: $e');
+          failedTables.add('$table (${_safeErrorCode(e)})');
         }
       }
     } catch (e) {
-      print('Download sync failed: $e');
-      rethrow;
+      _lastDownloadFailure = 'local database (${_safeErrorCode(e)})';
+      syncStatusNotifier.value = 'Download failed: $_lastDownloadFailure';
+      return false;
     }
+
+    if (failedTables.isNotEmpty) {
+      _lastDownloadFailure = failedTables.join(', ');
+      syncStatusNotifier.value = 'Download incomplete: $_lastDownloadFailure';
+      return false;
+    }
+    syncStatusNotifier.value = 'Download complete';
+    return true;
   }
 
   /// Unified 2-way sync: first uploads local changes to cloud, then downloads cloud updates to local
-  Future<bool> fullSync() async {
+  Future<bool> fullSync() {
+    final activeSync = _activeFullSync;
+    if (activeSync != null) return activeSync;
+
+    late final Future<bool> trackedSync;
+    trackedSync = _enqueue(_performFullSync).whenComplete(() {
+      if (identical(_activeFullSync, trackedSync)) _activeFullSync = null;
+    });
+    _activeFullSync = trackedSync;
+    return trackedSync;
+  }
+
+  Future<bool> _performFullSync() async {
+    if (!isConfigured) {
+      syncStatusNotifier.value = 'Sync unavailable: cloud credentials not configured';
+      return false;
+    }
+
+    syncStatusNotifier.value = 'Syncing with cloud';
     try {
-      await syncToCloud();
-      await syncFromCloud();
-      onSyncCompletedNotifier.value++;
-      return true;
+      bool succeeded;
+      if (backendMode) {
+        // Ubuntu mode is intentionally one-way sales replication. Calling both
+        // legacy directions here used to start the same backend upload twice.
+        final backend = BackendSyncService.instance;
+        if (backend == null) {
+          syncStatusNotifier.value = 'Sync unavailable: backend not configured';
+          return false;
+        }
+        succeeded = await backend.sync();
+        syncStatusNotifier.value = backend.status.value;
+      } else {
+        final uploaded = await _syncToSupabase();
+        final downloaded = await _syncFromSupabase();
+        succeeded = uploaded && downloaded;
+        if (succeeded) {
+          syncStatusNotifier.value = 'Cloud sync complete';
+        } else {
+          final failures = <String>[];
+          if (_lastUploadFailure != null) {
+            failures.add('upload: $_lastUploadFailure');
+          }
+          if (_lastDownloadFailure != null) {
+            failures.add('download: $_lastDownloadFailure');
+          }
+          syncStatusNotifier.value = failures.isEmpty
+              ? 'Cloud sync incomplete'
+              : 'Cloud sync incomplete (${failures.join('; ')})';
+        }
+      }
+
+      if (succeeded) onSyncCompletedNotifier.value++;
+      return succeeded;
     } catch (e) {
-      print('Manual fullSync error: $e');
+      syncStatusNotifier.value = 'Cloud sync failed (${_safeErrorCode(e)})';
       return false;
     }
   }

@@ -61,33 +61,64 @@ void main() async {
   }
   
   // Load environment variables
-  // Try filesystem first (desktop), then asset bundle (mobile)
-  Map<String, String> envVars = {};
-  bool loaded = false;
-  try {
-    final file = File('.env');
-    if (await file.exists()) {
-      final lines = await file.readAsLines();
-      for (var line in lines) {
-        if (line.trim().isEmpty || line.startsWith('#')) continue;
+  // Read recognized keys only; never print configuration values.
+  const configKeys = [
+    'SUPABASE_URL',
+    'SUPABASE_ANON_KEY',
+    'SUPABASE_DEVICE_SECRET',
+    'SYNC_BACKEND',
+    'BACKEND_URL',
+    'BACKEND_DEVICE_TOKEN',
+    'AI_SERVICE_KEY',
+  ];
+  final processEnvVars = <String, String>{};
+  for (final key in configKeys) {
+    final value = Platform.environment[key]?.trim();
+    if (value != null && value.isNotEmpty) processEnvVars[key] = value;
+  }
+  final envVars = <String, String>{};
+
+  final executableDirectory = File(Platform.resolvedExecutable).parent.path;
+  final envFiles = <File>[
+    File('.env'),
+    File('$executableDirectory${Platform.pathSeparator}.env'),
+  ];
+  var loadedEnvFile = false;
+  for (final file in envFiles) {
+    try {
+      if (!await file.exists()) continue;
+      for (var line in await file.readAsLines()) {
+        final trimmedLine = line.trim();
+        if (trimmedLine.isEmpty || trimmedLine.startsWith('#')) continue;
         final idx = line.indexOf('=');
-        if (idx != -1) {
-          final key = line.substring(0, idx).trim();
-          final value = line.substring(idx + 1).trim();
-          envVars[key] = value;
+        if (idx < 0) continue;
+        final key = line.substring(0, idx).trim();
+        if (!configKeys.contains(key)) continue;
+        var value = line.substring(idx + 1).trim();
+        if (value.length >= 2 &&
+            ((value.startsWith('"') && value.endsWith('"')) ||
+                (value.startsWith("'") && value.endsWith("'")))) {
+          value = value.substring(1, value.length - 1);
+        }
+        envVars[key] = value;
+      }
+      loadedEnvFile = true;
+    } catch (_) {}
+  }
+  if (!loadedEnvFile) {
+    try {
+      await dotenv.load(fileName: '.env');
+      for (final key in configKeys) {
+        final value = dotenv.maybeGet(key);
+        if (value != null && value.trim().isNotEmpty) {
+          envVars.putIfAbsent(key, () => value.trim());
         }
       }
-      loaded = true;
-    }
-  } catch (_) {}
-  if (!loaded) {
-    try {
-      await dotenv.load(fileName: ".env");
-      envVars = dotenv.env;
     } catch (_) {
-      print('No .env file found (filesystem or assets). Using defaults.');
+      debugPrint('No cloud configuration found; continuing with local storage.');
     }
   }
+  envVars.addAll(processEnvVars);
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
@@ -124,24 +155,24 @@ void main() async {
         await storage.write(key: storageKey, value: token);
       }
       BackendSyncService.instance = service;
-      // Automatic periodic background sync disabled in favor of manual Cloud Sync button
-      // SyncService().startAutomaticSync(intervalSeconds: 30);
     } catch (_) {
+      SyncService.syncStatusNotifier.value = 'Backend configuration unavailable';
       debugPrint('Backend configuration unavailable; local operation remains available.');
     }
-  } else if (envVars.containsKey('SUPABASE_URL') &&
-      envVars.containsKey('SUPABASE_ANON_KEY')) {
+  } else if (envVars['SUPABASE_URL']?.isNotEmpty == true &&
+      envVars['SUPABASE_ANON_KEY']?.isNotEmpty == true) {
     try {
       await Supabase.initialize(
         url: envVars['SUPABASE_URL']!,
         anonKey: envVars['SUPABASE_ANON_KEY']!,
         headers: {'x-device-secret': envVars['SUPABASE_DEVICE_SECRET'] ?? ''},
       );
-      // Automatic periodic background sync disabled in favor of manual Cloud Sync button
-      // SyncService().startAutomaticSync(intervalSeconds: 10);
     } catch (_) {
+      SyncService.syncStatusNotifier.value = 'Cloud initialization failed';
       debugPrint('Cloud initialization unavailable; continuing with local storage.');
     }
+  } else {
+    SyncService.syncStatusNotifier.value = 'Cloud credentials unavailable';
   }
 
   // Load configured sync mode preference (Manual vs Automatic)
@@ -226,7 +257,29 @@ class _NYKitchenAppState extends State<NYKitchenApp> {
                                   builder: (context, value, child) => Text(value,
                                     style: Theme.of(context).textTheme.bodySmall),
                                 ),
-                        )),
+                        ))
+                      else
+                        ValueListenableBuilder<String>(
+                          valueListenable: SyncService.syncModeNotifier,
+                          builder: (context, mode, _) {
+                            if (mode != 'automatic') return const SizedBox.shrink();
+                            return SafeArea(
+                              top: false,
+                              child: Padding(
+                                padding: const EdgeInsets.all(6),
+                                child: ValueListenableBuilder<String>(
+                                  valueListenable: SyncService.syncStatusNotifier,
+                                  builder: (context, status, _) => Text(
+                                    'Cloud sync: $status',
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),

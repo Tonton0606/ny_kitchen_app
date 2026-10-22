@@ -37,7 +37,7 @@ class BackendSyncService {
   final http.Client _client;
   final Future<Database> Function() _database;
   final ValueNotifier<String> status = ValueNotifier('Not synchronized');
-  bool _running = false;
+  Future<bool>? _activeSync;
 
   static int _cents(Object? value) {
     if (value is! num || !value.isFinite || value < 0) {
@@ -70,9 +70,19 @@ class BackendSyncService {
         .toList(),
   };
 
-  Future<void> sync() async {
-    if (_running) return;
-    _running = true;
+  Future<bool> sync() {
+    final activeSync = _activeSync;
+    if (activeSync != null) return activeSync;
+
+    late final Future<bool> trackedSync;
+    trackedSync = _runSync().whenComplete(() {
+      if (identical(_activeSync, trackedSync)) _activeSync = null;
+    });
+    _activeSync = trackedSync;
+    return trackedSync;
+  }
+
+  Future<bool> _runSync() async {
     status.value = 'Synchronizing';
     try {
       final db = await _database();
@@ -140,7 +150,7 @@ class BackendSyncService {
           if (response.statusCode != 200) {
             status.value =
                 'Sync rejected (${response.statusCode}); local data retained';
-            return;
+            return false;
           }
           final result = jsonDecode(response.body);
           if (result is! Map || result['accepted'] != 1) {
@@ -156,15 +166,15 @@ class BackendSyncService {
           // Keep cycles below the backend per-minute rate limit.
           if (++sent >= 40) {
             status.value = 'Batch synchronized; remaining sales queued';
-            return;
+            return false;
           }
         }
       }
       status.value = 'Sales synchronized';
+      return true;
     } catch (_) {
       status.value = 'Sync unavailable; local sales retained for retry';
-    } finally {
-      _running = false;
+      return false;
     }
   }
 }

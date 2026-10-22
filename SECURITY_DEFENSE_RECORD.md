@@ -251,3 +251,42 @@ Checks actually run and actual results:
 Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Stage, commit, and push changes to `origin/main`. Hot-restart Flutter app (`R`) to test Cloud Sync settings and single top-bar button.
+
+## Manual and Automatic Cloud Sync Failure Investigation — 2026-10-22 (Asia/Manila)
+
+Date/time and timezone: 2026-10-22 22:47 Asia/Manila
+Session owner (self-reported): Ralston Villamin
+Requested task and scope: Investigate and fix why manual and automatic cloud synchronization do not work. Preserve Flutter with local SQLite and the separately approved Ubuntu backend mode.
+Rubric / risk / acceptance-test IDs: R08, R10; SEC-02; AT10. No rubric score assigned.
+Files changed:
+- `AI_SESSION_HANDOFF.md`
+- `lib/core/services/sync_service.dart`
+- `lib/core/services/backend_sync_service.dart`
+- `lib/features/shared/widgets/manual_sync_button.dart`
+- `lib/main.dart`
+- `docs/SUPABASE_ARCHITECTURE.md`
+- `PROJECT_STATE.md`
+- `TODO.md`
+- `CHANGELOG.md`
+- `SECURITY_DEFENSE_RECORD.md`
+
+Findings and changes:
+- Supabase push/pull caught each table error and continued without returning failure. `fullSync()` then reported success, so the manual button could show a green success even when cloud tables failed.
+- Upload used `.upsert(...).select()`, which asks Supabase to return rows and can fail when the client has write permission but no SELECT policy. Upload now uses minimal upsert response.
+- Overlapping periodic, manual and event-triggered syncs could run concurrently. Operations are serialized; simultaneous full-sync requests share the active operation.
+- Ubuntu mode’s previous full sync invoked the same one-way backend sync from both “push” and “pull,” and its in-progress guard returned immediately to the second caller. Full sync now awaits one backend sync and reports its result.
+- Automatic Supabase mode now exposes its current state in the app. Environment loading accepts process variables, `.env` in the working directory, and `.env` beside the desktop executable; credential values were not printed or recorded.
+
+Checks actually run and actual results:
+- Inspected the sync service, app initialization, settings controls, backend sync client, cloud architecture notes, and current Git status.
+- Confirmed locally that `.env` has non-empty entries for Supabase and AI configuration by recording only key names, state and value lengths; no values were disclosed.
+- No tests, analyzer, app launch, or live cloud request was run for this change. Git status showed pre-existing generated platform files, `android/build/`, and `# LUMORA — AI Engineering Framework.md`; they were preserved.
+
+Evidence paths: `lib/core/services/sync_service.dart`, `lib/main.dart`, `lib/features/shared/widgets/manual_sync_button.dart`, `lib/core/services/backend_sync_service.dart`, `docs/SUPABASE_ARCHITECTURE.md`.
+Unverified items / remaining risks:
+- Live Supabase endpoint, table schema, RLS policies and configured device-header enforcement were not inspected. New on-screen status should expose the first affected table and safe database error code if server configuration still rejects a request.
+- `SUPABASE_URL`/anon key/device header setup on Android is not provided by the current app; do not bundle device secrets as assets. Use an approved provisioning approach before presenting mobile sync.
+- Pagination, cross-device conflict behavior, storage permissions and real offline/reconnect operation remain unverified. Ubuntu backend mode remains one-way sales upload.
+- These code changes do not establish a rubric pass or production security.
+
+Next concrete step: Run manual sync once on the defense device, then set Automatic Cloud Sync and observe the status. Record the status text (including failed table/error code, if any) so remaining Supabase schema/RLS configuration can be corrected without exposing credentials.
