@@ -80,76 +80,79 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 onTap: () => _showChangePasswordDialog(context),
               ),
               // Cloud Syncing Preference Section for Cashier
-              Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Material(
                   color: AppColors.surfaceWhite,
                   borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
-                  border: Border.all(color: AppColors.softBorder),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                    side: const BorderSide(color: AppColors.softBorder),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.cloud_sync_outlined, color: AppColors.darkCharcoal, size: 20),
-                        SizedBox(width: 10),
-                        Text(
-                          'Cloud Syncing',
-                          style: AppTypography.heading,
+                        const Row(
+                          children: [
+                            Icon(Icons.cloud_sync_outlined, color: AppColors.darkCharcoal, size: 20),
+                            SizedBox(width: 10),
+                            Text(
+                              'Cloud Syncing',
+                              style: AppTypography.heading,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        ValueListenableBuilder<String>(
+                          valueListenable: SyncService.syncModeNotifier,
+                          builder: (context, currentMode, _) {
+                            return Column(
+                              children: [
+                                RadioListTile<String>(
+                                  title: const Text(
+                                    'Manual Cloud Sync',
+                                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.darkCharcoal),
+                                  ),
+                                  subtitle: const Text(
+                                    'Displays the "Cloud Sync" button at the top. Syncs on demand.',
+                                    style: TextStyle(color: AppColors.mutedText, fontSize: 12),
+                                  ),
+                                  value: 'manual',
+                                  groupValue: currentMode,
+                                  activeColor: AppColors.goldenYellow,
+                                  contentPadding: EdgeInsets.zero,
+                                  onChanged: (val) {
+                                    if (val != null) SyncService().setSyncMode(val);
+                                  },
+                                ),
+                                const Divider(height: 12, color: AppColors.softBorder),
+                                RadioListTile<String>(
+                                  title: const Text(
+                                    'Automatic Cloud Sync',
+                                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.darkCharcoal),
+                                  ),
+                                  subtitle: const Text(
+                                    'Automatically synchronizes transactions and menu across all devices.',
+                                    style: TextStyle(color: AppColors.mutedText, fontSize: 12),
+                                  ),
+                                  value: 'automatic',
+                                  groupValue: currentMode,
+                                  activeColor: AppColors.goldenYellow,
+                                  contentPadding: EdgeInsets.zero,
+                                  onChanged: (val) {
+                                    if (val != null) SyncService().setSyncMode(val);
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    ValueListenableBuilder<String>(
-                      valueListenable: SyncService.syncModeNotifier,
-                      builder: (context, currentMode, _) {
-                        return Material(
-                          color: Colors.transparent,
-                          child: Column(
-                            children: [
-                              RadioListTile<String>(
-                                title: const Text(
-                                  'Manual Cloud Sync',
-                                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.darkCharcoal),
-                                ),
-                                subtitle: const Text(
-                                  'Displays the "Cloud Sync" button at the top. Syncs on demand.',
-                                  style: TextStyle(color: AppColors.mutedText, fontSize: 12),
-                                ),
-                                value: 'manual',
-                                groupValue: currentMode,
-                                activeColor: AppColors.goldenYellow,
-                                contentPadding: EdgeInsets.zero,
-                                onChanged: (val) {
-                                  if (val != null) SyncService().setSyncMode(val);
-                                },
-                              ),
-                              const Divider(height: 12, color: AppColors.softBorder),
-                              RadioListTile<String>(
-                                title: const Text(
-                                  'Automatic Cloud Sync',
-                                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.darkCharcoal),
-                                ),
-                                subtitle: const Text(
-                                  'Automatically synchronizes transactions and menu across all devices.',
-                                  style: TextStyle(color: AppColors.mutedText, fontSize: 12),
-                                ),
-                                value: 'automatic',
-                                groupValue: currentMode,
-                                activeColor: AppColors.goldenYellow,
-                                contentPadding: EdgeInsets.zero,
-                                onChanged: (val) {
-                                  if (val != null) SyncService().setSyncMode(val);
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                  ),
                 ),
               ),
               _buildTile(
@@ -177,9 +180,14 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: Colors.transparent,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.softBorder),
+        ),
+        clipBehavior: Clip.antiAlias,
         child: ListTile(
-          tileColor: Colors.white,
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -201,10 +209,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 4,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppColors.softBorder),
           ),
         ),
       ),

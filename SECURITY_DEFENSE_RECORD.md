@@ -673,4 +673,28 @@ Unverified items / remaining risks:
 - Live multi-device sales replication on physical devices remains unverified until deployed with synthetic data.
 Next concrete step: Conclude merge commit and push to origin/main.
 
+## ListTile & RadioListTile DecoratedBox Material Surface Remediation — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T05:07:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Fix Flutter framework assertion `ListTile background color or ink splashes may be invisible. The ListTile is wrapped in a DecoratedBox that has a background color.`
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles and Material design standards), AT10.
+Files changed:
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root cause:
+- `RadioListTile` (and `ListTile`) in Settings sections was wrapped inside a `Container` with `BoxDecoration(color: AppColors.surfaceWhite, ...)` (DecoratedBox). Because `ListTile` paints its background and ink splashes on the nearest `Material` ancestor, intermediate decorated boxes with background colors trigger a Flutter debug assertion.
+Remediation:
+- Replaced decorated `Container` wrappers with `Material(color: AppColors.surfaceWhite, borderRadius: BorderRadius.circular(AppDesignTokens.radius12), shape: RoundedRectangleBorder(...), clipBehavior: Clip.antiAlias)` in `account_settings_page.dart`, `admin_account_settings_page.dart`, and `food_management_page.dart`.
+- Removed redundant intermediate `Material(color: Colors.transparent)` wrappers, allowing ink splashes and highlights to paint cleanly directly onto the Material surface.
+Checks actually run and actual results:
+- `flutter analyze`: 0 errors across all modified files.
+- `flutter test test/security/`: 47/47 tests passed cleanly (0 regressions).
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Stage changes, commit cleanly, and push to origin/main if approved.
+
+
 

@@ -2178,14 +2178,17 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                             itemBuilder: (context, index) {
                               final cat = cats[index];
                               final String iconStr = (cat['icon_url'] as String?) ?? 'utensils';
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                decoration: BoxDecoration(
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Material(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                                ),
-                                child: ListTile(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: const BorderSide(color: Color(0xFFE2E8F0)),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: ListTile(
                                   leading: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
@@ -2358,8 +2361,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                     ],
                                   ),
                                 ),
-                              );
-                            },
+                              ),
+                            );
+                          },
                           );
                         },
                       ),
