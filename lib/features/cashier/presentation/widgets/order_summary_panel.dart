@@ -249,12 +249,16 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
                                 ),
                                 if (widget.orderItems.isNotEmpty) ...[
                                   const SizedBox(width: 8),
-                                  Text(
-                                    '• ₱${total.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      fontFeatures: [FontFeature.tabularFigures()],
+                                  Flexible(
+                                    child: Text(
+                                      '• ₱${total.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        fontFeatures: [FontFeature.tabularFigures()],
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
@@ -288,13 +292,19 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
             fontSize: large ? 16 : 13,
           ),
         ),
-        Text(
-          '₱${amount.abs().toStringAsFixed(2)}',
-          style: TextStyle(
-            color: bold ? AppColors.darkCharcoal : AppColors.mutedBrown,
-            fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
-            fontSize: large ? 18 : 13,
-            fontFeatures: const [FontFeature.tabularFigures()],
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            '₱${amount.abs().toStringAsFixed(2)}',
+            style: TextStyle(
+              color: bold ? AppColors.darkCharcoal : AppColors.mutedBrown,
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+              fontSize: large ? 18 : 13,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
           ),
         ),
       ],

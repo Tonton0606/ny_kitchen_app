@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
@@ -182,6 +183,9 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                   TextField(
                     controller: _newPasswordController,
                     obscureText: _obscureNew,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(64),
+                    ],
                     decoration: InputDecoration(
                       labelText: 'New Password',
                       prefixIcon: const Icon(Icons.lock_outline, color: AppColors.mutedBrown),
@@ -212,6 +216,9 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
                   TextField(
                     controller: _confirmPasswordController,
                     obscureText: _obscureConfirm,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(64),
+                    ],
                     decoration: InputDecoration(
                       labelText: 'Confirm New Password',
                       prefixIcon: const Icon(Icons.lock_outline, color: AppColors.mutedBrown),

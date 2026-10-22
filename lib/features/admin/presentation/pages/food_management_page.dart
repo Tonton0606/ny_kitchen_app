@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
@@ -167,12 +168,15 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
 
   Future<void> _saveEditedFood() async {
     if (_selectedFood == null) return;
-    if (_editNameController.text.trim().isEmpty ||
-        _editPriceController.text.trim().isEmpty ||
+    final name = _editNameController.text.trim();
+    final price = double.tryParse(_editPriceController.text.trim()) ?? 0.0;
+    if (name.isEmpty ||
+        name.length > 50 ||
+        price <= 0 ||
+        price > 99999.99 ||
         _editCategoryId == null) {
       return;
     }
-    final price = double.tryParse(_editPriceController.text.trim()) ?? 0.0;
     final foodId = _selectedFood!['id'] as int;
 
     final repo = FoodRepository();
@@ -226,16 +230,19 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   }
 
   Future<void> _saveNewFood() async {
-    if (_addNameController.text.isEmpty ||
-        _addPriceController.text.isEmpty ||
+    final name = _addNameController.text.trim();
+    final price = double.tryParse(_addPriceController.text.trim()) ?? 0.0;
+    if (name.isEmpty ||
+        name.length > 50 ||
+        price <= 0 ||
+        price > 99999.99 ||
         _addCategoryId == null) {
       return;
     }
-    final price = double.tryParse(_addPriceController.text) ?? 0.0;
 
     final repo = FoodRepository();
     await repo.insertFoodItem({
-      'name': _addNameController.text,
+      'name': name,
       'price': price,
       'category_id': _addCategoryId,
       'availability': _addIsAvailable ? 'available' : 'unavailable',
@@ -411,6 +418,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                               width: isCompact ? 220 : 280,
                               height: 44,
                               child: TextField(
+                                inputFormatters: [
+                                  LengthLimitingTextInputFormatter(100),
+                                ],
                                 onChanged: (val) => setState(() {
                                   _searchQuery = val;
                                   _currentPage = 1;
@@ -1594,6 +1604,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: _editNameController,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(50),
+                  ],
                   decoration: InputDecoration(
                     labelText: 'Food Name',
                     border: OutlineInputBorder(
@@ -1646,7 +1659,11 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     filled: true,
                     fillColor: Colors.white,
                   ),
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                    LengthLimitingTextInputFormatter(8),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -1844,6 +1861,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: _addNameController,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(50),
+                  ],
                   decoration: InputDecoration(
                     labelText: 'Food Name',
                     hintText: 'e.g. Pastil Special',
@@ -1898,7 +1918,11 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     filled: true,
                     fillColor: Colors.white,
                   ),
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                    LengthLimitingTextInputFormatter(8),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -2108,6 +2132,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                         Expanded(
                           child: TextField(
                             controller: categoryController,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(30),
+                            ],
                             decoration: InputDecoration(
                               hintText: 'New Category Name',
                               filled: true,
@@ -2263,6 +2290,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                                     Expanded(
                                                       child: TextField(
                                                         controller: editController,
+                                                        inputFormatters: [
+                                                          LengthLimitingTextInputFormatter(30),
+                                                        ],
                                                         decoration: InputDecoration(
                                                           hintText: 'Category Name',
                                                           filled: true,

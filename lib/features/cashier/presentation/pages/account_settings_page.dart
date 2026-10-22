@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/session/session_manager.dart';
@@ -255,6 +256,9 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           children: [
             TextField(
               controller: newPasswordController,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(64),
+              ],
               decoration: InputDecoration(
                 labelText: 'New Password',
                 prefixIcon: const Icon(Icons.lock_outline),
@@ -269,6 +273,9 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             const SizedBox(height: 12),
             TextField(
               controller: confirmPasswordController,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(64),
+              ],
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
                 prefixIcon: const Icon(Icons.lock_outline),

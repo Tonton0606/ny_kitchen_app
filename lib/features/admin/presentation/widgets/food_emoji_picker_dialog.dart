@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class FoodEmojiPickerDialog extends StatefulWidget {
@@ -170,6 +171,9 @@ class _FoodEmojiPickerDialogState extends State<FoodEmojiPickerDialog> {
           children: [
             TextField(
               controller: _searchController,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(50),
+              ],
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
                 hintText: 'Search food emoji (e.g. rice, burger, drink)...',

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:intl/intl.dart';
 
@@ -198,6 +199,9 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                               constraints: const BoxConstraints(maxWidth: 220, maxHeight: 36),
                               child: TextField(
                                 controller: _searchController,
+                                inputFormatters: [
+                                  LengthLimitingTextInputFormatter(50),
+                                ],
                                 onChanged: (val) => setState(() => _searchQuery = val),
                                 style: const TextStyle(fontSize: 12, color: AppColors.darkCharcoal),
                                 decoration: InputDecoration(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/session/session_manager.dart';
@@ -91,6 +92,9 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                   children: [
                     const SizedBox(height: 20),
                     TextField(
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(50),
+                      ],
                       decoration: InputDecoration(
                         labelText: 'Full Name',
                         labelStyle: const TextStyle(fontWeight: FontWeight.w500),
@@ -103,6 +107,10 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                     ),
                     const SizedBox(height: 16),
                     TextField(
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
+                        LengthLimitingTextInputFormatter(25),
+                      ],
                       decoration: InputDecoration(
                         labelText: 'Username',
                         labelStyle: const TextStyle(fontWeight: FontWeight.w500),

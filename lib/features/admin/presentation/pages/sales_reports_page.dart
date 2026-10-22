@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:intl/intl.dart';
 
@@ -686,6 +687,9 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
               height: 40,
               child: TextField(
                 controller: _searchController,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(50),
+                ],
                 onChanged: (val) => setState(() => _searchQuery = val),
                 style: AppTypography.body.copyWith(fontSize: 13),
                 decoration: InputDecoration(

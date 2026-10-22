@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
@@ -183,6 +184,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: editFullNameController,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(50),
+                    ],
                     decoration: InputDecoration(
                       hintText: 'Enter full name',
                       prefixIcon: const Icon(LucideIcons.user, size: 18),
@@ -203,6 +207,10 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: editUsernameController,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
+                      LengthLimitingTextInputFormatter(25),
+                    ],
                     decoration: InputDecoration(
                       hintText: 'Enter username',
                       prefixIcon: const Icon(LucideIcons.at_sign, size: 18),
@@ -360,6 +368,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               TextField(
                 controller: passwordController,
                 obscureText: true,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(64),
+                ],
                 decoration: InputDecoration(
                   hintText: 'Enter new password',
                   prefixIcon: const Icon(LucideIcons.lock, size: 18),
@@ -381,6 +392,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               TextField(
                 controller: confirmPasswordController,
                 obscureText: true,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(64),
+                ],
                 decoration: InputDecoration(
                   hintText: 'Re-enter new password',
                   prefixIcon: const Icon(LucideIcons.lock, size: 18),
@@ -801,6 +815,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               width: double.infinity,
               height: 44,
               child: TextField(
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(50),
+                ],
                 onChanged: (val) => setState(() => _searchQuery = val),
                 decoration: InputDecoration(
                   hintText: 'Search by name or username...',
@@ -859,6 +876,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             width: 300,
             height: 44,
             child: TextField(
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(50),
+              ],
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
                 hintText: 'Search by name or username...',
@@ -1304,6 +1324,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         const SizedBox(height: 6),
                         TextField(
                           controller: _addFullNameController,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(50),
+                          ],
                           decoration: InputDecoration(
                             hintText: 'e.g. Maria Santos',
                             prefixIcon: const Icon(LucideIcons.user, size: 18),
@@ -1325,6 +1348,10 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         const SizedBox(height: 6),
                         TextField(
                           controller: _addUsernameController,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
+                            LengthLimitingTextInputFormatter(25),
+                          ],
                           decoration: InputDecoration(
                             hintText: 'e.g. msantos',
                             prefixIcon: const Icon(LucideIcons.at_sign, size: 18),
@@ -1347,6 +1374,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         TextField(
                           controller: _addPasswordController,
                           obscureText: true,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(64),
+                          ],
                           decoration: InputDecoration(
                             hintText: 'Enter initial password',
                             prefixIcon: const Icon(LucideIcons.lock, size: 18),

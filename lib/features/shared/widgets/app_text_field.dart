@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 
@@ -18,6 +19,8 @@ class AppTextField extends StatefulWidget {
   final bool autofocus;
   final bool readOnly;
   final int maxLines;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? maxLength;
 
   const AppTextField({
     super.key,
@@ -34,6 +37,8 @@ class AppTextField extends StatefulWidget {
     this.autofocus = false,
     this.readOnly = false,
     this.maxLines = 1,
+    this.inputFormatters,
+    this.maxLength,
   });
 
   @override
@@ -70,6 +75,11 @@ class _AppTextFieldState extends State<AppTextField> {
           controller: widget.controller,
           obscureText: widget.isPassword ? _obscureText : false,
           keyboardType: widget.keyboardType,
+          inputFormatters: widget.inputFormatters,
+          maxLength: widget.maxLength,
+          buildCounter: widget.maxLength != null
+              ? (context, {required currentLength, required isFocused, maxLength}) => null
+              : null,
           validator: widget.validator,
           onChanged: widget.onChanged,
           autofocus: widget.autofocus,

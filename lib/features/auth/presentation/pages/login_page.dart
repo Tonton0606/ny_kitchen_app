@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -350,6 +351,9 @@ class _LoginPageState extends State<LoginPage>
             focusNode: _emailFocus,
             enabled: !_isLoading && !_isLockedOut,
             keyboardType: TextInputType.emailAddress,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(100),
+            ],
             autofillHints: const [AutofillHints.email, AutofillHints.username],
             textInputAction: TextInputAction.next,
             onSubmitted: (_) => _passwordFocus.requestFocus(),
@@ -375,6 +379,9 @@ class _LoginPageState extends State<LoginPage>
             focusNode: _passwordFocus,
             enabled: !_isLoading && !_isLockedOut,
             obscureText: _obscurePassword,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(64),
+            ],
             autofillHints: const [AutofillHints.password],
             textInputAction: TextInputAction.done,
             onSubmitted: (_) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/database/repositories/audit_repository.dart';
 import '../../../../../core/services/export_service.dart';
@@ -76,6 +77,9 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                   child: SizedBox(
                     height: 42,
                     child: TextField(
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(100),
+                      ],
                       onChanged: (val) {
                         setState(() => _searchQuery = val);
                         _onFilterChanged();

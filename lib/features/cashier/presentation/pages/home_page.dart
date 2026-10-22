@@ -29,6 +29,8 @@ class _CashierHomePageState extends State<CashierHomePage> {
   final List<Map<String, dynamic>> _orderItems = [];
   bool _isOrderPanelExpanded = true;
   String _currentOrderId = _generateOrderId();
+  bool _isCheckingOut = false;
+  static const int _maxItemQuantity = 99;
 
   static String _generateOrderId() =>
       DateTime.now().millisecondsSinceEpoch.toString().substring(6);
@@ -56,10 +58,12 @@ class _CashierHomePageState extends State<CashierHomePage> {
   void _addToOrder(Map<String, dynamic> food) {
     setState(() {
       final existingIndex = _orderItems.indexWhere(
-        (item) => item['food']['id'].toString() == food['id'].toString() && item['quantity'] < 50,
+        (item) => item['food']['id'].toString() == food['id'].toString(),
       );
       if (existingIndex >= 0) {
-        _orderItems[existingIndex]['quantity']++;
+        if (_orderItems[existingIndex]['quantity'] < _maxItemQuantity) {
+          _orderItems[existingIndex]['quantity']++;
+        }
       } else {
         _orderItems.add({'food': food, 'quantity': 1});
       }
@@ -68,10 +72,8 @@ class _CashierHomePageState extends State<CashierHomePage> {
 
   void _increaseQuantity(int index) {
     setState(() {
-      if (_orderItems[index]['quantity'] < 50) {
+      if (_orderItems[index]['quantity'] < _maxItemQuantity) {
         _orderItems[index]['quantity']++;
-      } else {
-        _orderItems.add({'food': _orderItems[index]['food'], 'quantity': 1});
       }
     });
   }
@@ -157,11 +159,14 @@ class _CashierHomePageState extends State<CashierHomePage> {
   }
 
   Future<void> _checkout() async {
-    final subtotal = _orderItems.fold<double>(
-      0,
-      (sum, item) =>
-          sum + ((item['food']['price'] as num?)?.toDouble() ?? 0.0) * (item['quantity'] as int),
-    );
+    if (_isCheckingOut || _orderItems.isEmpty) return;
+    setState(() => _isCheckingOut = true);
+    try {
+      final subtotal = _orderItems.fold<double>(
+        0,
+        (sum, item) =>
+            sum + ((item['food']['price'] as num?)?.toDouble() ?? 0.0) * (item['quantity'] as int),
+      );
     // Let's assume price already includes tax or we aren't adding 12% in DB for this simple version.
     // We will just use subtotal as total for now.
     final total = subtotal;
@@ -216,7 +221,6 @@ class _CashierHomePageState extends State<CashierHomePage> {
       };
     }).toList();
 
-    try {
       final session = SessionManager();
       final currentUserId = session.userId ?? 1;
       final currentUsername = session.currentUser?['full_name'] ?? session.currentUser?['username'] ?? 'Cashier';
@@ -337,6 +341,10 @@ class _CashierHomePageState extends State<CashierHomePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error saving order: $e'), backgroundColor: Colors.red),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isCheckingOut = false);
+      }
     }
   }
 
@@ -552,6 +560,9 @@ class _CashierHomePageState extends State<CashierHomePage> {
                 border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
               ),
               child: TextField(
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(100),
+                ],
                 decoration: InputDecoration(
                   hintText: 'Search product here...',
                   hintStyle: const TextStyle(
@@ -989,6 +1000,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
   final _cashController = TextEditingController();
   final _orderNumberController = TextEditingController();
   String? _cashError;
+  bool _isSubmitting = false;
 
   double? get _cashReceived => double.tryParse(_cashController.text.trim());
 
@@ -1000,12 +1012,13 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
   }
 
   void _completeCheckout() {
+    if (_isSubmitting) return;
     if (_cashReceived == null || _cashReceived! < widget.total) {
       setState(() => _cashError = 'Enter an amount that covers the total');
       return;
     }
-    if (_cashReceived! > 100000000) {
-      setState(() => _cashError = 'Amount exceeds maximum limit (100,000,000)');
+    if (_cashReceived! > 999999.99) {
+      setState(() => _cashError = 'Amount exceeds maximum limit (₱999,999.99)');
       return;
     }
     int? customOrder;
@@ -1013,6 +1026,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
       customOrder = int.tryParse(_orderNumberController.text.trim());
     }
 
+    setState(() => _isSubmitting = true);
     Navigator.pop(context, {
       'amountReceived': _cashReceived!,
       'change': _cashReceived! - widget.total,
@@ -1101,12 +1115,16 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text(
-                              '₱${widget.total.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                color: AppColors.darkCharcoal,
-                                fontSize: 30,
-                                fontWeight: FontWeight.w800,
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                '₱${widget.total.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  color: AppColors.darkCharcoal,
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
                           ],
@@ -1132,6 +1150,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(6),
                         ],
                         decoration: const InputDecoration(
                           labelText: 'Custom Order Number (Optional)',
@@ -1147,7 +1166,8 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                           decimal: true,
                         ),
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                          LengthLimitingTextInputFormatter(9),
                         ],
                         decoration: InputDecoration(
                           labelText: 'Cash received',
@@ -1194,12 +1214,17 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                                 ),
                               ],
                             ),
-                            Text(
-                              '₱${change > 0 ? change.toStringAsFixed(2) : '0.00'}',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: change > 0 ? AppColors.forest : AppColors.darkCharcoal,
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                '₱${change > 0 ? change.toStringAsFixed(2) : '0.00'}',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: change > 0 ? AppColors.forest : AppColors.darkCharcoal,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -1235,7 +1260,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                     Expanded(
                       flex: 2,
                       child: FilledButton(
-                        onPressed: _completeCheckout,
+                        onPressed: _isSubmitting ? null : _completeCheckout,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.goldenYellow,
                           foregroundColor: AppColors.darkCharcoal,

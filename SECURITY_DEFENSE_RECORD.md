@@ -839,3 +839,63 @@ Evidence paths:
 
 
 
+
+## Input Spam, Numerical Overflow & UI Hardening Session — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T06:48:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Audit and mitigate spam, numerical overflow, and UI overlap vulnerabilities across cashier and administrative features:
+1. **Cashier Cash Received & Change Due UI Overlap (`home_page.dart`):**
+   - Added `LengthLimitingTextInputFormatter(9)` (max ₱999,999.99) and decimal regex `^\d+\.?\d{0,2}` to `_cashController`.
+   - Wrapped `Change due` and `TOTAL DUE` in `Flexible` / `FittedBox` with `TextOverflow.ellipsis` to eliminate `RenderFlex overflow`.
+2. **Order Number Limiter (`home_page.dart`):**
+   - Added `LengthLimitingTextInputFormatter(6)` to `_orderNumberController` preventing 64-bit integer overflow and receipt label truncation.
+3. **Cart Item Duplication & Quantity Spam (`home_page.dart`):**
+   - Defined `_maxItemQuantity = 99`.
+   - Eliminated logic flaw in `_addToOrder` and `_increaseQuantity` where tapping `+` past 50 spawned duplicate cart items.
+4. **Order Item & Summary Overlap Hardening (`order_item_widget.dart`, `order_summary_panel.dart`, `food_card.dart`):**
+   - Wrapped line totals, unit price calculation rows, and place-order button amounts in `Flexible` with `TextOverflow.ellipsis`.
+5. **Checkout Double-Submission / Replay Guard (`home_page.dart`):**
+   - Added `_isSubmitting` flag in `_CheckoutDialogState` and `_isCheckingOut` state lock in `_HomePageState`.
+6. **Food & Category Management Input Bounds (`food_management_page.dart`):**
+   - Added `LengthLimitingTextInputFormatter(50)` on food names.
+   - Added `LengthLimitingTextInputFormatter(8)` and decimal filter on food prices, with backend check `price > 0 && price <= 99999.99`.
+   - Added `LengthLimitingTextInputFormatter(30)` on category names.
+7. **User & Account Management Form Bounds (`account_management_page.dart`):**
+   - Full Name: `LengthLimitingTextInputFormatter(50)`.
+   - Username: Alphanumeric/underscore filter with `LengthLimitingTextInputFormatter(25)`.
+   - Passwords: `LengthLimitingTextInputFormatter(64)` preventing PBKDF2 (600,000 iterations) CPU thread exhaustion.
+8. **Authentication & Settings Inputs (`login_page.dart`, `force_change_password_dialog.dart`, `account_settings_page.dart`, `admin_account_settings_page.dart`):**
+   - Added length limits on credentials and password update dialogues.
+9. **Global Search Input Limiters:**
+   - Capped all search text fields (POS catalog, transaction history, activity logs, sales reports) between 50 and 100 characters.
+10. **Shared Component Hardening (`app_text_field.dart`):**
+    - Supported `inputFormatters` and `maxLength` properties.
+Rubric / risk / acceptance-test IDs: R08, R10, AT01, AT02, UI-01, SEC-01.
+Files changed:
+- `lib/features/cashier/presentation/pages/home_page.dart`
+- `lib/features/cashier/presentation/widgets/order_item_widget.dart`
+- `lib/features/cashier/presentation/widgets/order_summary_panel.dart`
+- `lib/features/cashier/presentation/widgets/food_card.dart`
+- `lib/features/cashier/presentation/pages/transaction_history_page.dart`
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `lib/features/admin/presentation/pages/account_management_page.dart`
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `lib/features/admin/presentation/pages/activity_logs_page.dart`
+- `lib/features/admin/presentation/pages/sales_reports_page.dart`
+- `lib/features/admin/presentation/widgets/food_icon_picker_dialog.dart`
+- `lib/features/admin/presentation/widgets/food_emoji_picker_dialog.dart`
+- `lib/features/auth/presentation/pages/login_page.dart`
+- `lib/features/auth/presentation/widgets/force_change_password_dialog.dart`
+- `lib/features/shared/widgets/app_text_field.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze`: 0 errors.
+- `flutter test test/security/`: 55/55 passed (100% pass rate).
+- `flutter test test/unit/`: 42/42 passed (100% pass rate).
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+- `lib/features/cashier/presentation/pages/home_page.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `lib/features/admin/presentation/pages/account_management_page.dart`

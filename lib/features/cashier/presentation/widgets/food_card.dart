@@ -155,6 +155,8 @@ class _FoodCardState extends State<FoodCard> with SingleTickerProviderStateMixin
                       fontSize: 14,
                       fontFeatures: [FontFeature.tabularFigures()],
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
 
