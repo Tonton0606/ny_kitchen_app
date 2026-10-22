@@ -28,13 +28,22 @@ class DatabaseHelper {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, _databaseName);
     
-    return await openDatabase(
+    final db = await openDatabase(
       path,
       version: _databaseVersion,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
     );
+
+    // Normalize legacy mock transaction statuses to 'Served'
+    try {
+      await db.rawUpdate(
+        "UPDATE transactions SET status = 'Served' WHERE status IN ('Taken', 'Ready', 'Completed', 'completed')",
+      );
+    } catch (_) {}
+
+    return db;
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {

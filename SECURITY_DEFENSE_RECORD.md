@@ -576,3 +576,39 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Seek user permission before running `git push origin main`.
 
+## Transaction Status Sanitation & Cashier Transaction Tab UI Principles — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T01:04:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+1. Verify and sanitize transaction statuses in Sales Reports and system database:
+   - Evaluated status dropdown containing: `All Statuses`, `Completed`, `Served`, `Voided`, `Refunded`, `Preparing`, `Taken`, `Ready`.
+   - Identified valid POS transaction lifecycle statuses: `Served` (fulfilled), `Preparing` (kitchen queue), `Voided` (cancelled), and `Refunded` (refunded).
+   - Removed obsolete mock statuses (`Taken`, `Ready`) and duplicate conflicting status (`Completed`).
+   - Added database-level normalization in `DatabaseHelper` mapping legacy `Completed`, `Taken`, `Ready` to `Served`.
+   - Sanitized `mock_data.dart` and `sales_reports_page.dart` dropdown filter to only expose valid system statuses.
+2. Resolve image codec and ListTile exceptions:
+   - Removed third-party `placehold.co` fallbacks in `food_management_page.dart` and bypassed `placehold.co` in `FoodImage` to eliminate `Invalid image data` exceptions.
+   - Removed `ListTile` inside decorated `Container` in `transaction_history_page.dart` to eliminate `ListTile background color or ink splashes may be invisible` warnings.
+3. Apply `UI_PRINCIPLES.md` to Cashier Transaction Tab (`transaction_history_page.dart`):
+   - Header: Standardized layout with record counter pill, real-time search input (receipt/order #), and status pills (`All`, `Served`, `Voided`).
+   - Cards: Modern `Material` + `InkWell` containers with 12px radius, visual hierarchy, tabular figures, and `AppStatusChip` badges.
+   - Empty State: Integrated `AppEmptyState` with `Reset Filters` action.
+   - Standardized receipt drawer and void confirmation dialog according to UI principles.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles compliance), SEC-01, AT10.
+Files changed:
+- `lib/core/database/database_helper.dart`
+- `lib/core/utils/mock_data.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `lib/features/admin/presentation/pages/sales_reports_page.dart`
+- `lib/features/cashier/presentation/pages/transaction_history_page.dart`
+- `lib/features/shared/widgets/food_image.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze`: 0 errors / 0 warnings across all modified files.
+- `flutter test test/security/`: 47/47 tests passed cleanly (0 regressions).
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Verify remote commits, commit cleanly, and ask for user permission before pushing to origin/main.
+
+

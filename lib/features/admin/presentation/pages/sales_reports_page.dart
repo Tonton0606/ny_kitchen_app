@@ -110,14 +110,7 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
   }
 
   List<String> get _availableStatuses {
-    final statuses = <String>{'All', 'Completed', 'Served', 'Voided', 'Refunded'};
-    for (final tx in _transactions) {
-      final s = tx['status'] as String?;
-      if (s != null && s.trim().isNotEmpty) {
-        statuses.add(s.trim());
-      }
-    }
-    return statuses.toList();
+    return const ['All', 'Served', 'Preparing', 'Voided', 'Refunded'];
   }
 
   List<Map<String, dynamic>> _getFilteredTransactions() {
@@ -159,7 +152,13 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
       // 2. Status filter
       if (_selectedStatus != 'All') {
         final status = (tx['status'] as String? ?? '').toLowerCase();
-        if (status != _selectedStatus.toLowerCase()) return false;
+        if (_selectedStatus == 'Served') {
+          if (status != 'served' && status != 'completed' && status != 'taken' && status != 'ready') {
+            return false;
+          }
+        } else if (status != _selectedStatus.toLowerCase()) {
+          return false;
+        }
       }
 
       // 3. Cashier filter
@@ -914,15 +913,20 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
             ),
           ],
           rows: filtered.map((tx) {
-            final status = (tx['status'] as String? ?? 'Completed').trim();
-            final statusLower = status.toLowerCase();
+            final rawStatus = (tx['status'] as String? ?? 'Served').trim();
+            final displayStatus = (rawStatus.toLowerCase() == 'completed' ||
+                    rawStatus.toLowerCase() == 'taken' ||
+                    rawStatus.toLowerCase() == 'ready')
+                ? 'Served'
+                : rawStatus;
+            final statusLower = displayStatus.toLowerCase();
 
             AppStatusType chipType;
-            if (statusLower == 'completed' || statusLower == 'served') {
+            if (statusLower == 'served') {
               chipType = AppStatusType.success;
             } else if (statusLower == 'voided' || statusLower == 'refunded') {
               chipType = AppStatusType.error;
-            } else if (statusLower == 'pending') {
+            } else if (statusLower == 'preparing') {
               chipType = AppStatusType.warning;
             } else {
               chipType = AppStatusType.info;
@@ -960,7 +964,7 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                 ),
                 DataCell(
                   AppStatusChip(
-                    label: status,
+                    label: displayStatus,
                     type: chipType,
                     isCompact: true,
                   ),

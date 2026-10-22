@@ -240,9 +240,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
       'category_id': _addCategoryId,
       'availability': _addIsAvailable ? 'available' : 'unavailable',
       'status': 'active',
-      'image_path':
-          _addImageUrl ??
-          'https://placehold.co/300x200/FFCA05/2B241A?text=New+Food&font=raleway',
+      'image_path': _addImageUrl ?? '',
     });
     if (!mounted) return;
     _closeAddFood();
