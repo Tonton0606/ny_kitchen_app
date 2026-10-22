@@ -81,8 +81,10 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
       if (!mounted) return;
 
       if (success) {
-        // Update local map
-        widget.user['must_change_password'] = 0;
+        // Update local map safely (in case it is an unmodifiable map from sqflite)
+        try {
+          widget.user['must_change_password'] = 0;
+        } catch (_) {}
         widget.onSuccess();
       } else {
         setState(() {

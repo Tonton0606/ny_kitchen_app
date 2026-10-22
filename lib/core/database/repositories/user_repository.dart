@@ -63,7 +63,7 @@ class UserRepository {
         whereArgs: [userId],
         limit: 1,
       );
-      return updatedMaps.first;
+      return Map<String, dynamic>.from(updatedMaps.first);
 
     } else {
       // Failed login attempt
