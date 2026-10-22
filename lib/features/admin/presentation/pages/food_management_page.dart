@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/database/repositories/food_repository.dart';
-import '../widgets/food_emoji_picker_dialog.dart';
+import '../widgets/food_icon_picker_dialog.dart';
 
 class FoodManagementPage extends StatefulWidget {
   final bool enableAutoRefresh;
@@ -81,11 +81,11 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   }
 
   Future<void> _loadDataSilent() async {
-    if (!mounted) return;
+    if (!mounted || _isEditingSelected || _showAddFood) return;
     final repo = FoodRepository();
     final foods = await repo.getAllFoodItems();
     final categories = await repo.getCategories();
-    if (!mounted) return;
+    if (!mounted || _isEditingSelected || _showAddFood) return;
     setState(() {
       _foods = foods;
       _categories = categories;
@@ -129,9 +129,10 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   void _openAddFood() {
     _addNameController.clear();
     _addPriceController.clear();
-    _addCategoryId = _categories.isNotEmpty
-        ? _categories.first['id'] as int
-        : null;
+    final matchingCat = _categories.where((c) => c['name'] == _selectedCategory);
+    _addCategoryId = matchingCat.isNotEmpty
+        ? matchingCat.first['id'] as int
+        : (_categories.isNotEmpty ? _categories.first['id'] as int : null);
     _addIsAvailable = true;
     _addImageUrl = null;
     setState(() {
@@ -390,7 +391,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     }
     final Map<String, String> catIcons = {
       for (final c in _categories)
-        c['name'] as String: (c['icon_url'] as String?) ?? '🍽️',
+        c['name'] as String: (c['icon_url'] as String?) ?? 'utensils',
     };
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
@@ -584,13 +585,13 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                             ),
                             ..._categories.map((c) {
                               final name = c['name'] as String;
-                              final icon = (c['icon_url'] as String?) ?? '🍽️';
+                              final icon = (c['icon_url'] as String?) ?? 'utensils';
                               return DropdownMenuItem(
                                 value: name,
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(icon, style: const TextStyle(fontSize: 14)),
+                                    buildCategoryIconWidget(icon, size: 14),
                                     const SizedBox(width: 8),
                                     Text(name),
                                   ],
@@ -818,12 +819,12 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                 const PopupMenuDivider(),
                                 ..._categories.map((c) {
                                   final name = c['name'] as String;
-                                  final icon = (c['icon_url'] as String?) ?? '🍽️';
+                                  final icon = (c['icon_url'] as String?) ?? 'utensils';
                                   return PopupMenuItem(
                                     value: name,
                                     child: Row(
                                       children: [
-                                        Text(icon, style: const TextStyle(fontSize: 14)),
+                                        buildCategoryIconWidget(icon, size: 14),
                                         const SizedBox(width: 8),
                                         Text(name),
                                       ],
@@ -868,12 +869,16 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     SizedBox(
                       width: 120,
                       child: Padding(
-                        padding: const EdgeInsets.only(right: 16),
+                        padding: const EdgeInsets.only(right: 8),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
-                              'Status',
-                              style: AppTypography.tableHeader,
+                            const Flexible(
+                              child: Text(
+                                'Status',
+                                style: AppTypography.tableHeader,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             const SizedBox(width: 4),
                             PopupMenuButton<String>(
@@ -881,6 +886,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                               initialValue: _selectedStatus,
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
+                              iconSize: 16,
                               icon: Icon(
                                 _selectedStatus != 'All' ? Icons.filter_alt : Icons.filter_alt_outlined,
                                 size: 16,
@@ -934,7 +940,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                           final isAvailable = food['availability'] == 'available';
                           final isSelected = _selectedFood != null && _selectedFood!['id'] == food['id'];
                           final catName = (food['category_name'] as String?) ?? 'Uncategorized';
-                          final catIcon = catIcons[catName] ?? '🍽️';
+                          final catIcon = catIcons[catName] ?? 'utensils';
                           final catIdx = _categories.indexWhere((c) => c['name'] == catName);
                           final chipColor = _chipColors[(catIdx < 0 ? 0 : catIdx) % _chipColors.length];
 
@@ -1004,7 +1010,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Text(catIcon, style: const TextStyle(fontSize: 13)),
+                                                buildCategoryIconWidget(catIcon, size: 13, color: chipColor),
                                                 const SizedBox(width: 5),
                                                 Flexible(
                                                   child: Text(
@@ -1275,8 +1281,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     final catName = (food['category_name'] as String?) ?? 'Uncategorized';
     final catIcon = _categories.firstWhere(
       (c) => c['name'] == catName,
-      orElse: () => {'icon_url': '🍽️'},
-    )['icon_url'] as String? ?? '🍽️';
+      orElse: () => {'icon_url': 'utensils'},
+    )['icon_url'] as String? ?? 'utensils';
 
     return Container(
       decoration: BoxDecoration(
@@ -1424,7 +1430,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(catIcon, style: const TextStyle(fontSize: 13)),
+                          buildCategoryIconWidget(catIcon, size: 13),
                           const SizedBox(width: 5),
                           Text(
                             catName,
@@ -1684,7 +1690,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
-                  initialValue: _editCategoryId,
+                  key: ValueKey('edit_cat_$_editCategoryId'),
+                  initialValue: _categories.any((c) => c['id'] == _editCategoryId) ? _editCategoryId : null,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(
@@ -1697,7 +1704,14 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       .map(
                         (c) => DropdownMenuItem<int>(
                           value: c['id'] as int,
-                          child: Text(c['name'] as String),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              buildCategoryIconWidget(c['icon_url'] as String?, size: 16),
+                              const SizedBox(width: 8),
+                              Text(c['name'] as String),
+                            ],
+                          ),
                         ),
                       )
                       .toList(),
@@ -1927,7 +1941,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
-                  initialValue: _addCategoryId,
+                  key: ValueKey('add_cat_$_addCategoryId'),
+                  initialValue: _categories.any((c) => c['id'] == _addCategoryId) ? _addCategoryId : null,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(
@@ -1940,7 +1955,14 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       .map(
                         (c) => DropdownMenuItem<int>(
                           value: c['id'] as int,
-                          child: Text(c['name'] as String),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              buildCategoryIconWidget(c['icon_url'] as String?, size: 16),
+                              const SizedBox(width: 8),
+                              Text(c['name'] as String),
+                            ],
+                          ),
                         ),
                       )
                       .toList(),
@@ -2110,7 +2132,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
 
   Future<void> _showManageCategoriesDialog() async {
     final repo = FoodRepository();
-    String newCategoryIcon = '🍽️';
+    String newCategoryIcon = 'utensils';
     final TextEditingController categoryController = TextEditingController();
 
     showDialog(
@@ -2143,8 +2165,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                           onTap: () async {
                             final selected = await showDialog<String>(
                               context: context,
-                              builder: (_) => FoodEmojiPickerDialog(
-                                currentEmoji: newCategoryIcon,
+                              builder: (_) => FoodIconPickerDialog(
+                                currentIcon: newCategoryIcon,
                               ),
                             );
                             if (selected != null) {
@@ -2164,10 +2186,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                               ),
                             ),
                             alignment: Alignment.center,
-                            child: Text(
-                              newCategoryIcon,
-                              style: const TextStyle(fontSize: 22),
-                            ),
+                            child: buildCategoryIconWidget(newCategoryIcon, size: 22),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -2209,7 +2228,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                 iconUrl: newCategoryIcon,
                               );
                               categoryController.clear();
-                              newCategoryIcon = '🍽️';
+                              newCategoryIcon = 'utensils';
                               if (!mounted) return;
                               _loadData();
                               setDialogState(() {});
@@ -2243,7 +2262,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                             itemCount: cats.length,
                             itemBuilder: (context, index) {
                               final cat = cats[index];
-                              final String iconStr = (cat['icon_url'] as String?) ?? '🍽️';
+                              final String iconStr = (cat['icon_url'] as String?) ?? 'utensils';
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 decoration: BoxDecoration(
@@ -2259,10 +2278,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(color: const Color(0xFFE2E8F0)),
                                     ),
-                                    child: Text(
-                                      iconStr,
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
+                                    child: buildCategoryIconWidget(iconStr, size: 20),
                                   ),
                                   title: Text(
                                     cat['name'],
@@ -2303,8 +2319,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                                       onTap: () async {
                                                         final picked = await showDialog<String>(
                                                           context: editCtx,
-                                                          builder: (_) => FoodEmojiPickerDialog(
-                                                            currentEmoji: editIcon,
+                                                          builder: (_) => FoodIconPickerDialog(
+                                                            currentIcon: editIcon,
                                                           ),
                                                         );
                                                         if (picked != null) {
@@ -2323,10 +2339,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                                           ),
                                                         ),
                                                         alignment: Alignment.center,
-                                                        child: Text(
-                                                          editIcon,
-                                                          style: const TextStyle(fontSize: 22),
-                                                        ),
+                                                        child: buildCategoryIconWidget(editIcon, size: 22),
                                                       ),
                                                     ),
                                                     const SizedBox(width: 10),
