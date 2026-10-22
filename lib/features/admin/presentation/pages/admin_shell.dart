@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ny_kitchen_app/features/auth/presentation/widgets/guarded_route.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/utils/responsive.dart';
 import '../widgets/navigation/admin_nav_rail.dart';
 import '../widgets/navigation/admin_drawer.dart';
@@ -131,7 +132,17 @@ class _AdminShellState extends State<AdminShell> {
                 ),
               ],
             ),
-            if (_showSettings && !isMobile) _buildSettingsOverlay(),
+            if (!isMobile)
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: !_showSettings,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 180),
+                    opacity: _showSettings ? 1.0 : 0.0,
+                    child: _buildSettingsOverlay(),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -146,49 +157,55 @@ class _AdminShellState extends State<AdminShell> {
   }
 
   Widget _buildSettingsOverlay() {
-    return Positioned.fill(
-      child: Row(
-        children: [
-          SizedBox(width: _isNavExpanded ? 220.0 : 80.0), // match AdminNavRail width
-          Container(
-            width: _panelWidth,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(left: BorderSide(color: AppColors.softBorder)),
-              boxShadow: const [
-                BoxShadow(color: Colors.black26, blurRadius: 12, offset: Offset(4, 0)),
-              ],
-            ),
-            child: Column(
-              children: [
-                _buildPanelHeader(),
-                const Expanded(child: AdminAccountSettingsPage()),
-              ],
-            ),
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: _closeSettings,
+            child: Container(color: Colors.black.withValues(alpha: 0.25)),
           ),
-          Expanded(
-            child: GestureDetector(
-              onTap: _closeSettings,
-              child: Container(color: Colors.black38),
-            ),
+        ),
+        Container(
+          width: _panelWidth,
+          decoration: const BoxDecoration(
+            color: AppColors.surfaceWhite,
+            border: Border(left: BorderSide(color: AppColors.softBorder)),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x14000000),
+                blurRadius: 16,
+                offset: Offset(-4, 0),
+              ),
+            ],
           ),
-        ],
-      ),
+          child: Column(
+            children: [
+              _buildPanelHeader(),
+              const Expanded(child: AdminAccountSettingsPage()),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildPanelHeader() {
     return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceWhite,
         border: Border(bottom: BorderSide(color: AppColors.softBorder)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          const Text(
+            'Settings',
+            style: AppTypography.heading,
+          ),
+          const Spacer(),
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(Icons.close, size: 20),
             color: AppColors.darkCharcoal,
             tooltip: 'Close settings',
             onPressed: _closeSettings,

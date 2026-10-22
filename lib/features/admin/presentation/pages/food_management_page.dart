@@ -346,14 +346,6 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     );
   }
 
-  static const _chipColors = [
-    Color(0xFFFF8C42),
-    Color(0xFF9B5DE5),
-    Color(0xFF00B4D8),
-    Color(0xFFFF6B6B),
-    Color(0xFF2EC4B6),
-    Color(0xFFFFBE0B),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -404,103 +396,218 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
               children: [
                 LayoutBuilder(
                   builder: (context, topConstraints) {
-                    final isCompact = topConstraints.maxWidth < 750;
-                    return Flex(
-                      direction: isCompact ? Axis.vertical : Axis.horizontal,
-                      crossAxisAlignment: isCompact ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    final isCompact = topConstraints.maxWidth < 900;
+                    return Wrap(
+                      spacing: 12,
+                      runSpacing: 10,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      alignment: WrapAlignment.spaceBetween,
                       children: [
-                        SizedBox(
-                          width: isCompact ? double.infinity : 340,
-                          height: 44,
-                          child: TextField(
-                            onChanged: (val) => setState(() {
-                              _searchQuery = val;
-                              _currentPage = 1;
-                            }),
-                            decoration: InputDecoration(
-                              hintText: 'Search foods...',
-                              hintStyle: const TextStyle(
-                                color: AppColors.mutedText,
-                                fontSize: 13,
-                              ),
-                              prefixIcon: const Icon(
-                                Icons.search,
-                                size: 20,
-                                color: AppColors.mutedText,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: AppColors.softBorder,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: AppColors.softBorder,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
-                          ),
-                        ),
-                        if (isCompact) const SizedBox(height: 12),
-                        Row(
-                          mainAxisSize: isCompact ? MainAxisSize.max : MainAxisSize.min,
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            Flexible(
-                              fit: isCompact ? FlexFit.tight : FlexFit.loose,
-                              child: OutlinedButton.icon(
-                                onPressed: _showManageCategoriesDialog,
-                                icon: const Icon(
-                                  Icons.category_outlined,
-                                  size: 17,
+                            // Search Field
+                            SizedBox(
+                              width: isCompact ? 220 : 280,
+                              height: 44,
+                              child: TextField(
+                                onChanged: (val) => setState(() {
+                                  _searchQuery = val;
+                                  _currentPage = 1;
+                                }),
+                                decoration: InputDecoration(
+                                  hintText: 'Search foods...',
+                                  hintStyle: AppTypography.bodyMuted.copyWith(fontSize: 13),
+                                  prefixIcon: const Icon(
+                                    Icons.search,
+                                    size: 18,
+                                    color: AppColors.mutedSlate,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                                    borderSide: const BorderSide(color: AppColors.softBorder),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                                    borderSide: const BorderSide(color: AppColors.softBorder),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                                  filled: true,
+                                  fillColor: AppColors.surfaceWhite,
                                 ),
-                                label: const Text('Categories'),
+                              ),
+                            ),
+                            // Category Filter Dropdown
+                            Container(
+                              height: 44,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceWhite,
+                                borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                                border: Border.all(
+                                  color: _selectedCategory != 'All'
+                                      ? AppColors.goldenYellow
+                                      : AppColors.softBorder,
+                                  width: _selectedCategory != 'All' ? 1.5 : 1,
+                                ),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _categories.any((c) => c['name'] == _selectedCategory) || _selectedCategory == 'All'
+                                      ? _selectedCategory
+                                      : 'All',
+                                  icon: const Icon(Icons.arrow_drop_down, color: AppColors.mutedSlate),
+                                  style: AppTypography.body.copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  onChanged: (val) => setState(() {
+                                    _selectedCategory = val ?? 'All';
+                                    _currentPage = 1;
+                                  }),
+                                  items: [
+                                    const DropdownMenuItem(
+                                      value: 'All',
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.category_outlined, size: 16, color: AppColors.mutedSlate),
+                                          SizedBox(width: 8),
+                                          Text('All Categories'),
+                                        ],
+                                      ),
+                                    ),
+                                    ..._categories.map((c) {
+                                      final name = c['name'] as String;
+                                      final icon = (c['icon_url'] as String?) ?? 'utensils';
+                                      return DropdownMenuItem(
+                                        value: name,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            buildCategoryIconWidget(icon, size: 14),
+                                            const SizedBox(width: 8),
+                                            Text(name),
+                                          ],
+                                        ),
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Status Filter Dropdown
+                            Container(
+                              height: 44,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceWhite,
+                                borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                                border: Border.all(
+                                  color: _selectedStatus != 'All'
+                                      ? AppColors.goldenYellow
+                                      : AppColors.softBorder,
+                                  width: _selectedStatus != 'All' ? 1.5 : 1,
+                                ),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedStatus,
+                                  icon: const Icon(Icons.arrow_drop_down, color: AppColors.mutedSlate),
+                                  style: AppTypography.body.copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  onChanged: (val) => setState(() {
+                                    _selectedStatus = val ?? 'All';
+                                    _currentPage = 1;
+                                  }),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'All',
+                                      child: Text('All Statuses'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'available',
+                                      child: Text('Available'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'unavailable',
+                                      child: Text('Unavailable'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Clear Filters Button
+                            if (_selectedCategory != 'All' || _selectedStatus != 'All' || _searchQuery.isNotEmpty)
+                              OutlinedButton.icon(
+                                onPressed: () => setState(() {
+                                  _selectedCategory = 'All';
+                                  _selectedStatus = 'All';
+                                  _searchQuery = '';
+                                  _sortBy = 'none';
+                                  _currentPage = 1;
+                                }),
+                                icon: const Icon(Icons.clear_all, size: 16),
+                                label: const Text('Clear Filters'),
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppColors.darkCharcoal,
-                                  side: const BorderSide(
-                                    color: AppColors.softBorder,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppColors.brandRed,
+                                  side: BorderSide(color: AppColors.brandRed.withValues(alpha: 0.4)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDesignTokens.radius12)),
                                 ),
+                              ),
+                          ],
+                        ),
+                        // Action Buttons
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: _showManageCategoriesDialog,
+                              icon: const Icon(
+                                Icons.category_outlined,
+                                size: 17,
+                              ),
+                              label: const Text('Categories'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.darkCharcoal,
+                                side: const BorderSide(
+                                  color: AppColors.softBorder,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                                ),
+                                backgroundColor: AppColors.surfaceWhite,
                               ),
                             ),
                             const SizedBox(width: 10),
-                            Flexible(
-                              fit: isCompact ? FlexFit.tight : FlexFit.loose,
-                              child: ElevatedButton.icon(
-                                onPressed: _openAddFood,
-                                icon: const Icon(Icons.add, size: 18),
-                                label: const Text(
-                                  'Add Food',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            ElevatedButton.icon(
+                              onPressed: _openAddFood,
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text(
+                                'Add Food',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.goldenYellow,
-                                  foregroundColor: Colors.black,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.goldenYellow,
+                                foregroundColor: AppColors.darkCharcoal,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
                                 ),
                               ),
                             ),
@@ -510,92 +617,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     );
                   },
                 ),
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 10,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    // Category Filter Dropdown
-                    Container(
-                      height: 48,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _selectedCategory != 'All'
-                              ? AppColors.goldenYellow
-                              : AppColors.softBorder,
-                          width: _selectedCategory != 'All' ? 1.5 : 1,
-                        ),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _categories.any((c) => c['name'] == _selectedCategory) || _selectedCategory == 'All'
-                              ? _selectedCategory
-                              : 'All',
-                          icon: const Icon(Icons.arrow_drop_down, color: AppColors.mutedText),
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.darkCharcoal,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          onChanged: (val) => setState(() {
-                            _selectedCategory = val ?? 'All';
-                            _currentPage = 1;
-                          }),
-                          items: [
-                            const DropdownMenuItem(
-                              value: 'All',
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.category_outlined, size: 16, color: AppColors.mutedText),
-                                  SizedBox(width: 8),
-                                  Text('All Categories'),
-                                ],
-                              ),
-                            ),
-                            ..._categories.map((c) {
-                              final name = c['name'] as String;
-                              final icon = (c['icon_url'] as String?) ?? 'utensils';
-                              return DropdownMenuItem(
-                                value: name,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    buildCategoryIconWidget(icon, size: 14),
-                                    const SizedBox(width: 8),
-                                    Text(name),
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (_selectedCategory != 'All' || _selectedStatus != 'All' || _searchQuery.isNotEmpty)
-                      OutlinedButton.icon(
-                        onPressed: () => setState(() {
-                          _selectedCategory = 'All';
-                          _selectedStatus = 'All';
-                          _searchQuery = '';
-                          _sortBy = 'none';
-                          _currentPage = 1;
-                        }),
-                        icon: const Icon(Icons.clear_all, size: 16),
-                        label: const Text('Clear Filters'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.brandRed,
-                          side: BorderSide(color: AppColors.brandRed.withValues(alpha: 0.4)),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                  ],
-                ),
+                const SizedBox(height: 16),
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, bodyConstraints) {
@@ -760,54 +782,10 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       flex: 2,
                       child: Padding(
                         padding: const EdgeInsets.only(right: 16),
-                        child: Row(
-                          children: [
-                            Text(
-                              _selectedCategory == 'All' ? 'Category' : 'Category: $_selectedCategory',
-                              style: AppTypography.tableHeader.copyWith(
-                                color: _selectedCategory != 'All' ? AppColors.darkCharcoal : null,
-                                fontWeight: _selectedCategory != 'All' ? FontWeight.w800 : null,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(width: 4),
-                            PopupMenuButton<String>(
-                              tooltip: 'Filter by Category',
-                              initialValue: _selectedCategory,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              icon: Icon(
-                                _selectedCategory != 'All' ? Icons.filter_alt : Icons.filter_alt_outlined,
-                                size: 16,
-                                color: _selectedCategory != 'All' ? AppColors.goldenYellow : AppColors.mutedText,
-                              ),
-                              onSelected: (cat) => setState(() {
-                                _selectedCategory = cat;
-                                _currentPage = 1;
-                              }),
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'All',
-                                  child: Text('All Categories', style: TextStyle(fontWeight: FontWeight.bold)),
-                                ),
-                                const PopupMenuDivider(),
-                                ..._categories.map((c) {
-                                  final name = c['name'] as String;
-                                  final icon = (c['icon_url'] as String?) ?? 'utensils';
-                                  return PopupMenuItem(
-                                    value: name,
-                                    child: Row(
-                                      children: [
-                                        buildCategoryIconWidget(icon, size: 14),
-                                        const SizedBox(width: 8),
-                                        Text(name),
-                                      ],
-                                    ),
-                                  );
-                                }),
-                              ],
-                            ),
-                          ],
+                        child: Text(
+                          'Category',
+                          style: AppTypography.tableHeader,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -844,43 +822,10 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       width: 120,
                       child: Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Flexible(
-                              child: Text(
-                                'Status',
-                                style: AppTypography.tableHeader,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            PopupMenuButton<String>(
-                              tooltip: 'Filter by Status',
-                              initialValue: _selectedStatus,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              iconSize: 16,
-                              icon: Icon(
-                                _selectedStatus != 'All' ? Icons.filter_alt : Icons.filter_alt_outlined,
-                                size: 16,
-                                color: _selectedStatus != 'All' ? AppColors.goldenYellow : AppColors.mutedText,
-                              ),
-                              onSelected: (st) => setState(() {
-                                _selectedStatus = st;
-                                _currentPage = 1;
-                              }),
-                              itemBuilder: (context) => const [
-                                PopupMenuItem(
-                                  value: 'All',
-                                  child: Text('All Statuses', style: TextStyle(fontWeight: FontWeight.bold)),
-                                ),
-                                PopupMenuDivider(),
-                                PopupMenuItem(value: 'available', child: Text('Available')),
-                                PopupMenuItem(value: 'unavailable', child: Text('Unavailable')),
-                              ],
-                            ),
-                          ],
+                        child: Text(
+                          'Status',
+                          style: AppTypography.tableHeader,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -915,8 +860,6 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                           final isSelected = _selectedFood != null && _selectedFood!['id'] == food['id'];
                           final catName = (food['category_name'] as String?) ?? 'Uncategorized';
                           final catIcon = catIcons[catName] ?? 'utensils';
-                          final catIdx = _categories.indexWhere((c) => c['name'] == catName);
-                          final chipColor = _chipColors[(catIdx < 0 ? 0 : catIdx) % _chipColors.length];
 
                           return InkWell(
                             onTap: () => _selectFood(food),
@@ -975,23 +918,23 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 10,
-                                              vertical: 5,
+                                              vertical: 4,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: chipColor.withValues(alpha: 0.12),
-                                              borderRadius: BorderRadius.circular(20),
+                                              color: AppColors.pageBackground,
+                                              borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                                              border: Border.all(color: AppColors.softBorder),
                                             ),
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                buildCategoryIconWidget(catIcon, size: 13, color: chipColor),
+                                                buildCategoryIconWidget(catIcon, size: 13, color: AppColors.mutedSlate),
                                                 const SizedBox(width: 5),
                                                 Flexible(
                                                   child: Text(
                                                     catName,
-                                                    style: TextStyle(
-                                                      color: chipColor,
-                                                      fontSize: 12,
+                                                    style: AppTypography.caption.copyWith(
+                                                      color: AppColors.darkCharcoal,
                                                       fontWeight: FontWeight.w600,
                                                     ),
                                                     maxLines: 1,
