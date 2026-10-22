@@ -576,3 +576,44 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Seek user permission before running `git push origin main`.
 
+## Cross-device cashier sale ID collision investigation — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T01:13:07+08:00 (Asia/Manila)
+Session owner (self-reported): Ralston Villamin
+Requested task and scope: Investigate two cashier-device screenshots where one friend's sale appeared after sync but dashboard rows and totals differed. Preserve offline SQLite and Supabase synchronization; do not change the web/Ubuntu architecture.
+Rubric / risk / acceptance-test IDs: R10; K02 / SEC-02; AT10. No score assigned.
+
+Evidence received:
+- Screenshot from the friend's device shows two sales: order `#3` at ₱1,000 and order `#1` at ₱2,145, total ₱3,145.
+- Screenshot from the owner's device shows order `#3` at ₱1,000 and order `#1` at ₱505, total ₱1,505. The `#1` receipts and times differ between devices.
+- Attachment paths: `C:/Users/tonton/AppData/Local/Temp/codex-clipboard-dc0a6f3b-2383-4cfa-800b-1f9148221456.png` and `C:/Users/tonton/AppData/Local/Temp/codex-clipboard-71cb9bb1-ef89-412c-8ede-974c8a7408ce.png`.
+- Source inspection confirms local `transactions.id` and `transaction_items.id` use independent SQLite `AUTOINCREMENT` values. Supabase uploads upsert by `id`, and downloads replace local rows by `id`. Thus distinct offline sales assigned the same ID can replace each other; the differing dashboard totals match that failure mode.
+
+Changes made:
+- Added `SyncIdGenerator`, which stores a random installation namespace and monotonic counter in local-only `app_settings` and emits signed 63-bit IDs for new sales and line items.
+- New receipt numbers include the generated transaction ID suffix. Daily `order_number` remains a local sequence, so the queue now also shows each receipt number to distinguish repeated order numbers.
+- Before Supabase transaction upserts and during pulls, code compares same-ID sales by receipt, timestamp, amount, discount, and payment method. A different local sale is rekeyed together with its line items before the cloud sale is inserted.
+- Added `docs/security/supabase_transaction_id_diagnostic.sql` to confirm the cloud ID fields are `bigint` before deploying this client change.
+- Updated synchronization policy, architecture, handoff, project state, TODO, changelog, and ADR-014 notes. No rubric pass is claimed.
+
+Files changed:
+- `lib/core/utils/sync_id_generator.dart`
+- `lib/core/database/repositories/transaction_repository.dart`
+- `lib/core/services/sync_service.dart`
+- `lib/features/cashier/presentation/pages/orders_page.dart`
+- `docs/security/supabase_transaction_id_diagnostic.sql`
+- `docs/SYNC_CONFLICT_POLICY.md`, `docs/DATA_SYNCHRONIZATION.md`, `docs/SUPABASE_ARCHITECTURE.md`, `DECISIONS.md`
+- `AI_SESSION_HANDOFF.md`, `PROJECT_STATE.md`, `TODO.md`, `CHANGELOG.md`, and this record
+
+Checks actually run and actual results:
+- Read-only source inspection identified local auto-increment transaction/item keys and Supabase ID-based upsert/replace behavior.
+- No tests, analyzer, app launch, Supabase request, or database write was run.
+
+Unverified items / remaining risks:
+- Supabase `transactions.id`, `transaction_items.id`, and `transaction_items.transaction_id` types have not been inspected; confirm they are `bigint` in a development project first.
+- No two-device sync was run. Existing overwritten data can only be recovered if some device still retains the distinct local transaction.
+- Device namespaces are random, not authentication credentials. Restoring/cloning a full SQLite database could copy the namespace; restore behavior needs a future rotation rule.
+- Same-day `order_number` values may still repeat across offline devices; unique receipts are the stable reference.
+
+Next concrete step: Run the read-only ID-type diagnostic in development, deploy the updated client to two devices with retained local test data, and run repeated synthetic-sale sync cycles. Confirm both distinct receipts, amounts, and line items remain on both devices before evaluating Production.
+

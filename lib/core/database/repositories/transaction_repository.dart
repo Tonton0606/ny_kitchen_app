@@ -1,5 +1,6 @@
 import '../database_helper.dart';
 import '../../services/sync_service.dart';
+import '../../utils/sync_id_generator.dart';
 import 'audit_repository.dart';
 
 class TransactionRepository {
@@ -28,8 +29,9 @@ class TransactionRepository {
       final now = DateTime.now();
       final dateStr = '${now.year.toString().substring(2)}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
       final timeStr = '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
-      final receiptNumber = '$dateStr-$timeStr';
-      finalReceiptNumber = receiptNumber;
+      transactionId = await SyncIdGenerator.nextId(txn);
+      finalReceiptNumber =
+          '$dateStr-$timeStr-${transactionId.toRadixString(36).toUpperCase()}';
 
       // Calculate daily order number
       if (customOrderNumber != null) {
@@ -43,8 +45,9 @@ class TransactionRepository {
         orderNumber = (countResult.first['count'] as int? ?? 0) + 1;
       }
 
-      transactionId = await txn.insert('transactions', {
-        'receipt_number': receiptNumber,
+      await txn.insert('transactions', {
+        'id': transactionId,
+        'receipt_number': finalReceiptNumber,
         'order_number': orderNumber,
         'user_id': userId,
         'total_amount': totalAmount,
@@ -58,6 +61,7 @@ class TransactionRepository {
 
       for (var item in items) {
         await txn.insert('transaction_items', {
+          'id': await SyncIdGenerator.nextId(txn),
           'transaction_id': transactionId,
           'food_item_id': item['food_item_id'],
           'food_name': item['food_name'],

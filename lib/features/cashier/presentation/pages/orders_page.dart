@@ -47,9 +47,13 @@ class _OrdersPageState extends State<OrdersPage> {
       final items = await _transactionRepo.getTransactionItems(
         txn['id'] as int,
       );
+      final receiptNumber = txn['receipt_number']?.toString() ?? '';
       loadedOrders.add({
         'id': txn['id'],
-        'orderNo': txn['order_number'] != null ? '#${txn['order_number']}' : txn['receipt_number'],
+        'orderNo': txn['order_number'] != null
+            ? '#${txn['order_number']}'
+            : receiptNumber,
+        'receipt': receiptNumber,
         'status': txn['status'],
         'total': txn['total_amount'],
         'customer': txn['cashier_name'] ?? 'User ${txn['user_id']}',
@@ -625,6 +629,11 @@ class _OrdersPageState extends State<OrdersPage> {
                                         Text(order['customer'], style: AppTypography.bodyMuted),
                                         _dot(),
                                         Text(order['time'], style: AppTypography.bodyMuted),
+                                        _dot(),
+                                        Text(
+                                          'Receipt ${order['receipt']}',
+                                          style: AppTypography.bodyMuted,
+                                        ),
                                         _dot(),
                                         Text(order['payment'], style: AppTypography.bodyMuted),
                                         if (order['notes'] != null &&

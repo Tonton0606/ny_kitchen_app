@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../database/database_helper.dart';
+import '../utils/sync_id_generator.dart';
 import '../utils/security_utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as path;
@@ -60,6 +61,7 @@ class SyncService {
   Future<bool>? _activeFullSync;
   String? _lastUploadFailure;
   String? _lastDownloadFailure;
+  int _legacyTransactionIdsRepaired = 0;
 
   Future<T> _enqueue<T>(Future<T> Function() operation) {
     final result = _operationQueue.then((_) => operation());
@@ -83,6 +85,146 @@ class SyncService {
       if (column != null) return '$code ($column required)';
     }
     return code ?? error.runtimeType.toString();
+  }
+
+  static const _transactionIdentityColumns =
+      'id, receipt_number, created_at, total_amount, discount, payment_method';
+
+  static bool _sameSaleIdentity(
+    Map<String, dynamic> local,
+    Map<String, dynamic> cloud,
+  ) {
+    final localReceipt = local['receipt_number']?.toString();
+    final cloudReceipt = cloud['receipt_number']?.toString();
+    if (localReceipt == null || localReceipt.isEmpty || localReceipt != cloudReceipt) {
+      return false;
+    }
+
+    double? number(Object? value) => value is num
+        ? value.toDouble()
+        : double.tryParse(value?.toString() ?? '');
+    bool sameNumber(Object? left, Object? right, {double fallback = 0}) {
+      final leftNumber = number(left) ?? fallback;
+      final rightNumber = number(right) ?? fallback;
+      return (leftNumber - rightNumber).abs() < 0.005;
+    }
+
+    if (!sameNumber(local['total_amount'], cloud['total_amount']) ||
+        !sameNumber(local['discount'], cloud['discount']) ||
+        local['payment_method']?.toString() !=
+            cloud['payment_method']?.toString()) {
+      return false;
+    }
+
+    final localTime = DateTime.tryParse(local['created_at']?.toString() ?? '');
+    final cloudTime = DateTime.tryParse(cloud['created_at']?.toString() ?? '');
+    if (localTime != null && cloudTime != null) {
+      return localTime.isAtSameMomentAs(cloudTime);
+    }
+    return local['created_at']?.toString() == cloud['created_at']?.toString();
+  }
+
+  Future<int> _repairLegacyTransactionIdCollisions(
+    SupabaseClient client,
+    Database db,
+  ) async {
+    final localRows = await db.query(
+      'transactions',
+      columns: [
+        'id',
+        'receipt_number',
+        'created_at',
+        'total_amount',
+        'discount',
+        'payment_method',
+      ],
+    );
+    if (localRows.isEmpty) return 0;
+
+    final cloudById = <int, Map<String, dynamic>>{};
+    const batchSize = 100;
+    for (var start = 0; start < localRows.length; start += batchSize) {
+      final end = start + batchSize < localRows.length
+          ? start + batchSize
+          : localRows.length;
+      final ids = localRows
+          .sublist(start, end)
+          .map((row) => row['id'] as int)
+          .toList();
+      final cloudRows = await client
+          .from('transactions')
+          .select(_transactionIdentityColumns)
+          .inFilter('id', ids);
+      for (final row in cloudRows) {
+        final id = int.tryParse(row['id']?.toString() ?? '');
+        if (id != null) cloudById[id] = Map<String, dynamic>.from(row);
+      }
+    }
+
+    final conflicts = localRows.where((local) {
+      final cloud = cloudById[local['id'] as int];
+      return cloud != null && !_sameSaleIdentity(local, cloud);
+    }).map((row) => row['id'] as int).toList();
+    if (conflicts.isEmpty) return 0;
+
+    return db.transaction((txn) async {
+      var repaired = 0;
+      for (final oldId in conflicts) {
+        final currentRows = await txn.query(
+          'transactions',
+          where: 'id = ?',
+          whereArgs: [oldId],
+          limit: 1,
+        );
+        final cloud = cloudById[oldId];
+        if (currentRows.isEmpty ||
+            cloud == null ||
+            _sameSaleIdentity(currentRows.first, cloud)) {
+          continue;
+        }
+        await _rekeyLocalTransaction(txn, oldId);
+        repaired++;
+      }
+      return repaired;
+    });
+  }
+
+  Future<void> _rekeyLocalTransaction(Transaction txn, int oldId) async {
+    final rows = await txn.query(
+      'transactions',
+      where: 'id = ?',
+      whereArgs: [oldId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return;
+
+    final transaction = Map<String, dynamic>.from(rows.first);
+    final items = await txn.query(
+      'transaction_items',
+      where: 'transaction_id = ?',
+      whereArgs: [oldId],
+      orderBy: 'id',
+    );
+
+    // Move the child rows before removing the old parent, then reinsert the
+    // sale and its items under IDs that cannot collide with another device.
+    await txn.delete(
+      'transaction_items',
+      where: 'transaction_id = ?',
+      whereArgs: [oldId],
+    );
+    await txn.delete('transactions', where: 'id = ?', whereArgs: [oldId]);
+
+    final newId = await SyncIdGenerator.nextId(txn);
+    transaction['id'] = newId;
+    await txn.insert('transactions', transaction);
+
+    for (final item in items) {
+      final movedItem = Map<String, dynamic>.from(item)
+        ..['id'] = await SyncIdGenerator.nextId(txn)
+        ..['transaction_id'] = newId;
+      await txn.insert('transaction_items', movedItem);
+    }
   }
 
   /// Loads saved sync mode from app_settings and starts timer if set to automatic
@@ -270,15 +412,26 @@ class SyncService {
 
     final failedTables = <String>[];
     _lastUploadFailure = null;
+    _legacyTransactionIdsRepaired = 0;
     try {
       final db = await _dbHelper.database;
 
       for (String table in _tables) {
         try {
           // 1. Fetch all local records
-          final List<Map<String, dynamic>> localData = await db.query(table);
+          var localData = await db.query(table);
 
           if (localData.isNotEmpty) {
+            if (table == 'transactions') {
+              // Older installs used SQLite AUTOINCREMENT IDs independently,
+              // so two offline devices could create different sales with id 1.
+              // Preserve the local sale and its items before an upsert can
+              // overwrite the other device's cloud row.
+              _legacyTransactionIdsRepaired +=
+                  await _repairLegacyTransactionIdCollisions(client, db);
+              localData = await db.query(table);
+            }
+
             final List<Map<String, dynamic>> dataToSync = [];
             for (var record in localData) {
               final mutableRecord = Map<String, dynamic>.from(record);
@@ -333,7 +486,9 @@ class SyncService {
       syncStatusNotifier.value = 'Upload incomplete: $_lastUploadFailure';
       return false;
     }
-    syncStatusNotifier.value = 'Upload complete';
+    syncStatusNotifier.value = _legacyTransactionIdsRepaired > 0
+        ? 'Upload complete; preserved $_legacyTransactionIdsRepaired conflicting sale(s)'
+        : 'Upload complete';
     return true;
   }
 
@@ -384,10 +539,33 @@ class SyncService {
 
               // Using REPLACE in SQLite handles upserts while keeping URL in local DB
               if (table == 'transactions') {
-                final existing = await db.query('transactions', where: 'id = ?', whereArgs: [record['id']]);
-                if (existing.isNotEmpty) {
+                final existing = await db.query(
+                  'transactions',
+                  where: 'id = ?',
+                  whereArgs: [record['id']],
+                  limit: 1,
+                );
+                if (existing.isNotEmpty &&
+                    !_sameSaleIdentity(existing.first, record)) {
+                  final id = int.tryParse(record['id']?.toString() ?? '');
+                  if (id != null) {
+                    await db.transaction(
+                      (txn) => _rekeyLocalTransaction(txn, id),
+                    );
+                    _legacyTransactionIdsRepaired++;
+                    // The local sale now has a new ID; the cloud sale can be
+                    // inserted under its original ID without replacing it.
+                  }
+                }
+                final current = await db.query(
+                  'transactions',
+                  where: 'id = ?',
+                  whereArgs: [record['id']],
+                  limit: 1,
+                );
+                if (current.isNotEmpty) {
                   // If local transaction is "Served" but cloud is "Preparing", don't overwrite with older cloud status!
-                  final localStatus = existing.first['status'] as String;
+                  final localStatus = current.first['status'] as String;
                   final cloudStatus = record['status'] as String;
                   
                   // Only allow cloud to overwrite if cloud is moving forward or local is same.
@@ -395,11 +573,11 @@ class SyncService {
                      record['status'] = 'Served'; // Preserve local served status
                   }
                   
-                  record['order_number'] = record['order_number'] ?? existing.first['order_number'];
-                  record['amount_received'] = record['amount_received'] ?? existing.first['amount_received'];
-                  record['change'] = record['change'] ?? existing.first['change'];
-                  record['void_reason'] = record['void_reason'] ?? existing.first['void_reason'];
-                  record['refund_reason'] = record['refund_reason'] ?? existing.first['refund_reason'];
+                  record['order_number'] = record['order_number'] ?? current.first['order_number'];
+                  record['amount_received'] = record['amount_received'] ?? current.first['amount_received'];
+                  record['change'] = record['change'] ?? current.first['change'];
+                  record['void_reason'] = record['void_reason'] ?? current.first['void_reason'];
+                  record['refund_reason'] = record['refund_reason'] ?? current.first['refund_reason'];
                 }
               }
               if (table == 'users') {
@@ -475,7 +653,9 @@ class SyncService {
         final downloaded = await _syncFromSupabase();
         succeeded = uploaded && downloaded;
         if (succeeded) {
-          syncStatusNotifier.value = 'Cloud sync complete';
+          syncStatusNotifier.value = _legacyTransactionIdsRepaired > 0
+              ? 'Cloud sync complete; preserved $_legacyTransactionIdsRepaired conflicting sale(s)'
+              : 'Cloud sync complete';
         } else {
           final failures = <String>[];
           if (_lastUploadFailure != null) {
