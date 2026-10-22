@@ -98,18 +98,45 @@ class _AppStatusStripState extends State<AppStatusStrip> {
     });
     try {
       final success = await SyncService().fullSync();
-      if (mounted) {
-        setState(() {
-          _isSyncing = false;
-          _hasSyncError = !success;
-        });
-      }
+      if (!mounted) return;
+
+      final status = SyncService.syncStatusNotifier.value;
+      setState(() {
+        _isSyncing = false;
+        _hasSyncError = !success;
+      });
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              status,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            backgroundColor: success ? AppColors.forest : AppColors.goldInk,
+            duration: const Duration(seconds: 5),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
     } catch (_) {
       if (mounted) {
         setState(() {
           _isSyncing = false;
           _hasSyncError = true;
         });
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: const Text('Cloud sync failed unexpectedly. Please retry.'),
+              backgroundColor: AppColors.brandRed,
+              duration: const Duration(seconds: 5),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          );
       }
     }
   }

@@ -323,3 +323,56 @@ Unverified items / remaining risks:
 - A secure multi-table sync design must bind writes to a verified identity and least-privilege policies. The separate Ubuntu API currently supports one-way sales replication only.
 
 Next concrete step: Run the read-only diagnostic in the Supabase SQL Editor and share its result (policy names/roles/commands and grants only). Then select and implement the appropriate secure auth/backend design before retesting with synthetic records.
+
+### Supabase policy metadata follow-up — 2026-10-22
+
+Evidence received: user-provided Supabase dashboard screenshots of the diagnostic result (`C:/Users/tonton/AppData/Local/Temp/codex-clipboard-1882b6e1-ee57-49f2-a177-9280405e62a4.png`, `C:/Users/tonton/AppData/Local/Temp/codex-clipboard-2a81fc7c-1d8a-45b3-8aef-82520ac6f317.png`, `C:/Users/tonton/AppData/Local/Temp/codex-clipboard-efc3e253-e1c2-4e6b-ac8a-c13feb359b70.png`, `C:/Users/tonton/AppData/Local/Temp/codex-clipboard-6d429419-26a8-4096-a47d-6f10d5f75174.png`). The first shows RLS enabled (`true`) and not forced (`false`) on all seven sync tables, with one `ALL` policy per table named `Enforce device secret on <table>` and role `public`. Later screenshots show the policy condition indicators, PERMISSIVE mode, and grants.
+
+Interpretation: the failure is not explained by a missing policy. The reported `new row violates row-level security policy` points to an unsatisfied row `WITH CHECK` condition; missing table grants are still unverified. Because the policy is named for the device secret and the Flutter client sends `x-device-secret`, a missing/stale/different client secret is a plausible cause, not a confirmed one. The existing secret-rotation evidence dates to 2026-10-15/16 and does not establish the current client/configuration state.
+
+The expanded screenshots show, for all seven tables: `policy_modes=PERMISSIVE`, `has_using_condition=true`, `has_with_check_condition=false`, `using_calls_device_secret_check=true`, `with_check_calls_device_secret_check=false`, and `references_request_headers=false`; the displayed anon/authenticated SELECT/INSERT/UPDATE grants are true. The header-reference flag checks policy text only; the helper function may read `request.headers` internally. PostgreSQL documentation confirms an `ALL` policy's USING expression is the default write check when WITH CHECK is omitted. Therefore the reported new-row RLS error means the permissive policy's device-secret condition rejects the request. Likely causes include a missing/different header or stale server-side helper value; the exact mismatch is not established.
+
+No secret values or policy expressions are needed. No live database request or write was made.
+
+Next concrete step: compare the local `.env` `SUPABASE_DEVICE_SECRET` with the value used by the deployed helper without sharing either value. Check for a stale process-level override: `lib/main.dart` applies environment variables after loading `.env`, so process values take precedence. Fully restart Flutter after correcting configuration. Test only with synthetic data in a development project, not by syncing production records.
+
+## Windows sync status and settings assertion follow-up — 2026-10-22 (Asia/Manila)
+
+Date/time and timezone: 2026-10-22 23:44 (Asia/Manila)
+Session owner (self-reported): Ralston Villamin
+Requested task and scope: Pull the current main branch, fix the repeated Flutter settings assertion and the still-failing manual Supabase sync visibility, then push the reviewed changes. No cloud policy or credential change was authorized.
+Rubric / risk / acceptance-test IDs: R08, R09, R10, R13, R14, R19; K02, K05; AT10. No score assigned.
+
+Evidence received:
+- User-provided Windows `flutter run -d windows` output reports Supabase initialization completed, repeated “ListTile background color or ink splashes may be invisible” assertions, and `Lost connection to device`. It does not contain a fresh Supabase table/error code.
+- User-provided dashboard screenshot shows the app online with a generic `Sync error` chip.
+- The owner reports the local device-secret setting differed from the comparison in the Supabase helper, changed it privately, and still sees sync failure. No secret value or full helper body was recorded.
+
+Findings and changes:
+- The Flutter assertion is consistent with the Manual/Automatic `RadioListTile` controls inside opaque white rounded settings cards. Both Admin and Cashier controls now have a transparent `Material` surface for visible selection/ink effects.
+- The top-bar manual sync action previously changed the chip to a generic error without showing `SyncService.syncStatusNotifier`. It now shows the sanitized result, which can include the affected table and safe error code; unexpected exceptions get a generic message.
+- These changes improve the UI warning and diagnostic visibility. They do not establish that Supabase sync now succeeds or that the shared header secret is a secure device identity.
+
+Files changed:
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/shared/widgets/app_status_strip.dart`
+- `PROJECT_STATE.md`, `TODO.md`, `CHANGELOG.md`, `docs/SUPABASE_ARCHITECTURE.md`, `AI_SESSION_HANDOFF.md`, and this record
+- The pre-existing read-only RLS diagnostic/documentation edits from this conversation are preserved for the requested push.
+
+Checks actually run and actual results:
+- `git fetch origin` completed; origin exposed a newer `ui-refinements` branch. `git pull --ff-only origin main` reported “Already up to date.” The separate branch was not merged.
+- `dart format` was tried, but it expanded unrelated formatting across the existing pages; those formatting-only changes were discarded and the targeted edits kept in the repository's original style.
+- Targeted `dart analyze` on the final three changed Dart files completed with exit code 0 and 8 informational `RadioListTile.groupValue` / `onChanged` deprecation notices; no analyzer errors were reported.
+- `flutter analyze` was attempted but produced no output for about 90 seconds and was interrupted; direct targeted Dart analysis completed as noted above.
+- `git diff --check` completed without whitespace errors before the final documentation update; rerun before commit.
+- No Flutter tests, app launch, Supabase request, or production data sync was run in this session.
+
+Evidence paths: user attachment `C:/Users/tonton/AppData/Local/Temp/codex-clipboard-db52d3eb-7c1c-4cc5-b21c-40c15dcd35f9.png`; changed source files listed above; sanitized status is to be captured on the next manual sync.
+
+Unverified items / remaining risks:
+- The owner still reports sync failure. The exact failing table and fresh safe database code have not been captured, so no sync pass is claimed.
+- A shared literal checked by a Flutter-supplied header is extractable and should not be treated as strong authentication. Long-term multi-table sync needs authenticated identities/least-privilege RLS or a reviewed backend path.
+- The `Lost connection to device` line has not been reproduced; the screenshot shows the app still open, so it is not attributed to the settings assertion.
+
+Next concrete step: restart the updated Windows app, tap the top-bar sync control once in a development project using synthetic data, and record only the snackbar status (no secrets). Do not full-sync the Production project.

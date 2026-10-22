@@ -11,15 +11,18 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ### Added — 2026-10-22
 
-- Added a read-only Supabase RLS/grant diagnostic query that omits policy expressions and business rows.
+- Added a read-only Supabase RLS/grant diagnostic query with secret-safe condition indicators; it omits policy expressions and business rows.
 
 ### Security notes — 2026-10-22
 
 - Recorded the user-provided `42501` write-denial trace and the current architecture gap: local SQLite POS authentication does not establish a Supabase Auth identity, while `x-device-secret` is only a custom header unless explicitly verified by server-side policy logic.
 - No permissive RLS policy was added. Secure multi-table sync requires a reviewed cloud identity and policy design; the Ubuntu backend currently supports one-way sales replication only.
+- Expanded dashboard output confirms the seven policies are PERMISSIVE, each `USING` condition calls `check_device_secret`, and the displayed anon/authenticated SELECT/INSERT/UPDATE grants are true. The owner later reported that the local device-secret setting differed from the helper and changed it privately; sync still reports an error, so the precise current request failure remains unverified.
 
 ### Fixed — 2026-10-22
 
+- Wrapped Admin and Cashier cloud-sync `RadioListTile` groups in transparent Material surfaces so card decorations do not obscure selection and ink effects.
+- The top status bar now displays the sanitized sync status after a manual attempt, including affected table names and safe database error codes.
 - Manual and automatic sync now fail visibly when a Supabase table upload/download fails; status includes the affected table and safe database error code.
 - Supabase upserts no longer request returned rows, avoiding an unnecessary SELECT policy requirement.
 - Sync operations are serialized and overlapping full-sync requests share one operation. Ubuntu mode now awaits a single one-way upload during full sync.

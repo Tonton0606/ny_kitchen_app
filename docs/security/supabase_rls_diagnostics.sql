@@ -26,9 +26,32 @@ SELECT
     '(none)'
   ) AS policy_commands,
   COALESCE(
+    STRING_AGG(DISTINCT policy.permissive, ', ' ORDER BY policy.permissive),
+    '(none)'
+  ) AS policy_modes,
+  COALESCE(
     STRING_AGG(DISTINCT ARRAY_TO_STRING(policy.roles, ', '), '; '),
     '(none)'
   ) AS policy_roles,
+  COALESCE(BOOL_OR(policy.qual IS NOT NULL), FALSE) AS has_using_condition,
+  COALESCE(BOOL_OR(policy.with_check IS NOT NULL), FALSE) AS has_with_check_condition,
+  COALESCE(
+    BOOL_OR(POSITION('check_device_secret' IN LOWER(COALESCE(policy.qual, ''))) > 0),
+    FALSE
+  ) AS using_calls_device_secret_check,
+  COALESCE(
+    BOOL_OR(POSITION('check_device_secret' IN LOWER(COALESCE(policy.with_check, ''))) > 0),
+    FALSE
+  ) AS with_check_calls_device_secret_check,
+  COALESCE(
+    BOOL_OR(
+      POSITION(
+        'request.headers'
+        IN LOWER(COALESCE(policy.qual, '') || ' ' || COALESCE(policy.with_check, ''))
+      ) > 0
+    ),
+    FALSE
+  ) AS references_request_headers,
   CASE WHEN relation.oid IS NULL THEN NULL ELSE
     HAS_TABLE_PRIVILEGE('anon', relation.oid, 'SELECT') END AS anon_select_grant,
   CASE WHEN relation.oid IS NULL THEN NULL ELSE

@@ -1,7 +1,7 @@
 # PROJECT_STATE.md
 # N.Y Kitchen — Project State Tracker
 
-> 2026-10-22 update: Rubric remains mapped in `docs/SECURITY_IMPLEMENTATION_PLAN.md`. A user-provided trace reports Supabase RLS write denials (`42501`) across the sync tables. Flutter-side failure reporting is present; deployed policies and a secure cloud identity path remain unresolved. No sync pass is claimed.
+> 2026-10-22 update: Rubric remains mapped in `docs/SECURITY_IMPLEMENTATION_PLAN.md`. User screenshots confirm RLS is enabled, all seven device-secret policies are PERMISSIVE, and anon/authenticated table grants are present. The owner privately found and changed a local/device-secret mismatch, but reports sync still fails. No successful sync is claimed; capture the sanitized table/error status after a manual attempt.
 
 > This file must be updated after every approved work session.
 > Do not claim features are complete unless they have been implemented and verified.
@@ -15,7 +15,7 @@
 |---|---|
 | **Project Name** | N.Y Kitchen Secure Order and Sales Management System |
 | **Current Phase** | Security defense preparation and cloud synchronization repair |
-| **Current Status** | Flutter/SQLite retained; manual and automatic sync paths report failures; Supabase writes are reportedly denied by RLS (`42501`) pending policy/auth review |
+| **Current Status** | Flutter/SQLite retained; Supabase initialization succeeds, but owner still sees Sync error after changing the local device-secret setting; fresh failure code/table not captured |
 | **Last Updated** | 2026-10-22 |
 | **Updated By** | Ralston Villamin session (self-reported) |
 
@@ -345,6 +345,10 @@ The percentages describe implementation scope, not production readiness. Securit
 ## Current sync repair — 2026-10-22
 
 `SyncService` previously swallowed table-level upload/download errors, allowing `fullSync()` and the manual button to report success despite failed tables. Upload used `.upsert(...).select()`, which unnecessarily required SELECT permission for returned rows. The repair removes the return-row request, returns failure when any table fails, serializes sync work, and exposes status for manual and automatic modes. Ubuntu mode now awaits one upload operation per full sync. No tests or live cloud requests were run for this repair.
+
+## Sync follow-up — 2026-10-22
+
+The owner reports the local `SUPABASE_DEVICE_SECRET` did not match the fixed comparison shown in the Supabase helper and has been changed privately; synchronization still reports an error. The latest Windows run shows Supabase initialization succeeded, while the terminal output contains no sync table/error code. A Flutter `RadioListTile` assertion came from cloud-sync settings rendered inside opaque decorated cards. Material surfaces were added around the Admin and Cashier sync-mode controls, and the top-bar manual sync action now displays the sanitized `syncStatusNotifier` result. Reopen the app and capture that snackbar status before diagnosing the remaining cloud failure. Do not use a full sync on Production.
 
 ## AI Notes
 

@@ -145,44 +145,47 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                     ValueListenableBuilder<String>(
                       valueListenable: SyncService.syncModeNotifier,
                       builder: (context, currentMode, _) {
-                        return Column(
-                          children: [
-                            RadioListTile<String>(
-                              title: const Text(
-                                'Manual Cloud Sync',
-                                style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkCharcoal),
+                        return Material(
+                          color: Colors.transparent,
+                          child: Column(
+                            children: [
+                              RadioListTile<String>(
+                                title: const Text(
+                                  'Manual Cloud Sync',
+                                  style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkCharcoal),
+                                ),
+                                subtitle: const Text(
+                                  'Shows a single "Cloud Sync" button in the top bar. Syncs transactions and menu on demand.',
+                                  style: TextStyle(color: AppColors.mutedText, fontSize: 13),
+                                ),
+                                value: 'manual',
+                                groupValue: currentMode,
+                                activeColor: AppColors.goldenYellow,
+                                contentPadding: EdgeInsets.zero,
+                                onChanged: (val) {
+                                  if (val != null) SyncService().setSyncMode(val);
+                                },
                               ),
-                              subtitle: const Text(
-                                'Shows a single "Cloud Sync" button in the top bar. Syncs transactions and menu on demand.',
-                                style: TextStyle(color: AppColors.mutedText, fontSize: 13),
+                              const Divider(height: 16, color: AppColors.softBorder),
+                              RadioListTile<String>(
+                                title: const Text(
+                                  'Automatic Cloud Sync',
+                                  style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkCharcoal),
+                                ),
+                                subtitle: const Text(
+                                  'Continuously synchronizes sales transactions and menu changes automatically across all connected devices in the background.',
+                                  style: TextStyle(color: AppColors.mutedText, fontSize: 13),
+                                ),
+                                value: 'automatic',
+                                groupValue: currentMode,
+                                activeColor: AppColors.goldenYellow,
+                                contentPadding: EdgeInsets.zero,
+                                onChanged: (val) {
+                                  if (val != null) SyncService().setSyncMode(val);
+                                },
                               ),
-                              value: 'manual',
-                              groupValue: currentMode,
-                              activeColor: AppColors.goldenYellow,
-                              contentPadding: EdgeInsets.zero,
-                              onChanged: (val) {
-                                if (val != null) SyncService().setSyncMode(val);
-                              },
-                            ),
-                            const Divider(height: 16, color: AppColors.softBorder),
-                            RadioListTile<String>(
-                              title: const Text(
-                                'Automatic Cloud Sync',
-                                style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.darkCharcoal),
-                              ),
-                              subtitle: const Text(
-                                'Continuously synchronizes sales transactions and menu changes automatically across all connected devices in the background.',
-                                style: TextStyle(color: AppColors.mutedText, fontSize: 13),
-                              ),
-                              value: 'automatic',
-                              groupValue: currentMode,
-                              activeColor: AppColors.goldenYellow,
-                              contentPadding: EdgeInsets.zero,
-                              onChanged: (val) {
-                                if (val != null) SyncService().setSyncMode(val);
-                              },
-                            ),
-                          ],
+                            ],
+                          ),
                         );
                       },
                     ),
