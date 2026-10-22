@@ -121,15 +121,30 @@ Skipping this reading order is not permitted.
 
 ## 8. UI Rules
 
-UI work must follow /UI_PRINCIPLES.md only. Ignore docs/archive/.
-- Use the design system defined in `docs/DESIGN_SYSTEM.md`.
-- Follow the color palette: Yellow, Red, White, Black (Material 3 compatible).
-- Maintain accessible color contrast ratios.
-- Provide loading states, empty states, error states, and unauthorized pages.
-- Implement confirmation dialogs for destructive actions.
-- Follow the responsive guidelines in `docs/RESPONSIVE_GUIDELINES.md`.
-- Implement large touch targets for mobile and tablet.
-- Support both light and dark themes.
+- **Follow the System UI Principles** defined in `UI_PRINCIPLES.md`, `docs/UI_GUIDELINES.md`, and `docs/DESIGN_SYSTEM.md`. Ignore `docs/archive/`.
+- **Canvas & Surface Hierarchy**:
+  - Canvas page background must be `Color(0xFFF8FAFC)` (`AppColors.canvasBackground`).
+  - Containers, cards, sheets, and modals must be solid pure white (`#FFFFFF` / `AppColors.surfaceWhite`). Never use colored card backgrounds or ad-hoc gradients.
+  - Cards and containers must use hairline borders: `Border.all(color: Color(0xFFE2E8F0), width: 1.0)`.
+  - Corner radii: 16dp for primary cards/modals, 12dp for inputs/action tiles, 20-24dp for pills/badges.
+  - Drop shadows must be ultra-subtle ambient elevation (`blurRadius: 10`, alpha: 0.03). Avoid heavy shadows.
+- **Color Accents & Intentionality**:
+  - `AppColors.goldenYellow` (`#FFCA05` / `#FFC107`) is reserved exclusively for primary CTAs ("Add Item", "Checkout"), active navigation pills, and top rank badges.
+  - Primary text must use `AppColors.darkCharcoal` (`#1E293B` / `#2B241A`).
+  - Subtitles, metadata, and overlines must use `AppColors.mutedText` (`#64748B`).
+  - Dividers and card borders must use `AppColors.softBorder` (`#E2E8F0`).
+- **Typography & Tabular Data**:
+  - Use `AppTypography` token hierarchy across all pages.
+  - All numerical counts, monetary amounts, and tabular data must use tabular figures (`FontFeature.tabularFigures()`).
+- **Component & Scrollbar Hygiene**:
+  - Maintain accessible color contrast ratios.
+  - Provide loading states, empty states, error states, and unauthorized pages.
+  - Implement confirmation dialogs for destructive actions (pure white modal, hairline `#E2E8F0` border).
+  - Follow responsive guidelines in `docs/RESPONSIVE_GUIDELINES.md` with minimum 48dp touch targets.
+  - Every `Scrollbar(thumbVisibility: true)` wrapping a `SingleChildScrollView` must have an explicit `ScrollController` attached to both.
+- **Icons**:
+  - Use local vector icons (`LucideIcons` or `Icons`). Never use network emoji libraries or broken image URLs.
+
 
 ---
 

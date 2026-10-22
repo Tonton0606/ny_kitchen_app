@@ -13,11 +13,14 @@ class AppColors {
   static const Color inkBlue = Color(0xFF2F6F8F);        // Info, syncing
   static const Color goldTint = Color(0xFFFFF1C2);       // Warning surface (low stock, pending sync)
   static const Color creamBackground = Color(0xFFF5F6F8);// Page surface (crisp light-neutral surface, replaces #FFF8E7)
-  static const Color pageBackground = creamBackground;
-  static const Color lightBackground = creamBackground;
+  static const Color canvasBackground = Color(0xFFF8FAFC);// Clean slate-50 canvas background
+  static const Color pageBackground = canvasBackground;
+  static const Color lightBackground = canvasBackground;
   static const Color surfaceWhite = Color(0xFFFFFFFF);   // Flat cards
-  static const Color softBorder = Color(0xFFE7DCCB);     // 1px flat card borders and dividers
-  static const Color mutedBrown = Color(0xFF6B5E4B);     // Secondary text
+  static const Color slateBorder = Color(0xFFE2E8F0);     // 1px subtle hairline slate border
+  static const Color softBorder = slateBorder;           // 1px flat card borders and dividers
+  static const Color mutedSlate = Color(0xFF64748B);      // Secondary / muted slate text
+  static const Color mutedBrown = mutedSlate;            // Secondary text
   static const Color disabled = Color(0xFFB9AE9B);       // Disabled controls only
 
   // Tactile 3D Depth Edges
