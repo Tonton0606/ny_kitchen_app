@@ -3,6 +3,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../../core/services/export_service.dart';
+import '../../../../../core/services/sync_service.dart';
 import 'package:intl/intl.dart';
 
 class SalesReportsPage extends StatefulWidget {
@@ -26,6 +27,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
     _loadData();
+    SyncService.onSyncCompletedNotifier.addListener(_loadData);
   }
 
   Future<void> _loadData() async {
@@ -55,6 +57,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
 
   @override
   void dispose() {
+    SyncService.onSyncCompletedNotifier.removeListener(_loadData);
     _tabController.dispose();
     super.dispose();
   }

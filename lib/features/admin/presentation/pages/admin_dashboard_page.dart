@@ -9,8 +9,9 @@ import '../../../../../core/database/repositories/audit_repository.dart';
 import '../../../shared/widgets/responsive_data_table.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/ny_watermark.dart';
-import '../../../shared/widgets/food_image.dart';
 import '../shared/widgets/sales_chart.dart';
+import '../../../shared/widgets/food_image.dart';
+import '../../../../../core/services/sync_service.dart';
 import 'package:intl/intl.dart';
 
 class AdminDashboardPage extends StatefulWidget {
@@ -47,6 +48,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void initState() {
     super.initState();
     _loadDashboardData();
+    SyncService.onSyncCompletedNotifier.addListener(_loadDashboardData);
     _timer = Timer.periodic(const Duration(seconds: 5), (_) {
       _loadDashboardData();
     });
@@ -54,6 +56,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   @override
   void dispose() {
+    SyncService.onSyncCompletedNotifier.removeListener(_loadDashboardData);
     _timer?.cancel();
     super.dispose();
   }

@@ -107,8 +107,15 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isCompact) {
-      return Tooltip(
+    return ValueListenableBuilder<String>(
+      valueListenable: SyncService.syncModeNotifier,
+      builder: (context, mode, child) {
+        if (mode != 'manual') {
+          return const SizedBox.shrink();
+        }
+
+        if (widget.isCompact) {
+          return Tooltip(
         message: _isSyncing ? 'Syncing with cloud...' : 'Sync with Cloud (2-Way)',
         child: Material(
           color: Colors.transparent,
@@ -188,6 +195,8 @@ class _ManualSyncButtonState extends State<ManualSyncButton>
           ),
         ),
       ),
+    );
+      },
     );
   }
 }

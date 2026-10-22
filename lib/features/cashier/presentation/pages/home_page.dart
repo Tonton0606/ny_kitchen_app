@@ -8,7 +8,6 @@ import '../widgets/order_summary_panel.dart';
 import '../../../../../core/database/repositories/food_repository.dart';
 import '../../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../../core/session/session_manager.dart';
-import '../../../shared/widgets/manual_sync_button.dart';
 
 class CashierHomePage extends StatefulWidget {
   const CashierHomePage({super.key});
@@ -542,12 +541,6 @@ class _CashierHomePageState extends State<CashierHomePage> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
-          // Manual Cloud Sync Button
-          ManualSyncButton(
-            isCompact: false,
-            onSyncCompleted: () => _loadData(),
-          ),
-          const SizedBox(width: 12),
           // Search Product Pill
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 320),

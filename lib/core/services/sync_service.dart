@@ -8,10 +8,24 @@ import 'package:path/path.dart' as path;
 import 'backend_sync_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 
 class SyncService {
+  // Singleton pattern
+  static final SyncService _instance = SyncService._internal();
+  factory SyncService() => _instance;
+  SyncService._internal();
+
   // Selected once at startup. A failed backend setup must not fall back to cloud.
   static bool backendMode = false;
+
+  /// Sync mode: 'manual' (default) or 'automatic'
+  static String syncMode = 'manual';
+  static final ValueNotifier<String> syncModeNotifier = ValueNotifier<String>('manual');
+
+  /// Event notifier triggered when a full sync finishes so UI pages can auto-refresh
+  static final ValueNotifier<int> onSyncCompletedNotifier = ValueNotifier<int>(0);
+
   SupabaseClient? get _supabase {
     try {
       return Supabase.instance.client;
@@ -35,20 +49,70 @@ class SyncService {
 
   Timer? _syncTimer;
 
-  /// Starts an automatic periodic sync from the cloud to keep local data fresh
-  void startAutomaticSync({int intervalSeconds = 10}) {
+  /// Loads saved sync mode from app_settings and starts timer if set to automatic
+  Future<void> initSyncMode() async {
+    try {
+      final db = await _dbHelper.database;
+      final maps = await db.query(
+        'app_settings',
+        where: 'key = ?',
+        whereArgs: ['sync_mode'],
+        limit: 1,
+      );
+      if (maps.isNotEmpty) {
+        final mode = maps.first['value'] as String? ?? 'manual';
+        setSyncMode(mode, persist: false);
+      } else {
+        setSyncMode('manual', persist: false);
+      }
+    } catch (_) {
+      setSyncMode('manual', persist: false);
+    }
+  }
+
+  /// Sets the sync mode ('manual' or 'automatic') and updates persistent storage
+  Future<void> setSyncMode(String mode, {bool persist = true}) async {
+    syncMode = mode;
+    syncModeNotifier.value = mode;
+
+    if (mode == 'automatic') {
+      startAutomaticSync(intervalSeconds: 15);
+    } else {
+      stopAutomaticSync();
+    }
+
+    if (persist) {
+      try {
+        final db = await _dbHelper.database;
+        await db.insert(
+          'app_settings',
+          {
+            'key': 'sync_mode',
+            'value': mode,
+            'updated_at': DateTime.now().toIso8601String(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      } catch (e) {
+        print('Failed to persist sync_mode: $e');
+      }
+    }
+  }
+
+  /// Starts an automatic periodic 2-way sync across all devices
+  void startAutomaticSync({int intervalSeconds = 15}) {
     _syncTimer?.cancel();
-    // Run immediately first
-    syncFromCloud();
+    // Run initial 2-way sync immediately
+    fullSync();
     // Then repeat periodically
-    _syncTimer?.cancel();
     _syncTimer = Timer.periodic(Duration(seconds: intervalSeconds), (timer) {
-      syncFromCloud();
+      fullSync();
     });
   }
 
   void stopAutomaticSync() {
     _syncTimer?.cancel();
+    _syncTimer = null;
   }
 
   /// Strips sensitive credentials (password_hash and biometric face_encoding) before syncing to cloud.
@@ -264,6 +328,7 @@ class SyncService {
     try {
       await syncToCloud();
       await syncFromCloud();
+      onSyncCompletedNotifier.value++;
       return true;
     } catch (e) {
       print('Manual fullSync error: $e');

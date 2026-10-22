@@ -143,6 +143,10 @@ void main() async {
       debugPrint('Cloud initialization unavailable; continuing with local storage.');
     }
   }
+
+  // Load configured sync mode preference (Manual vs Automatic)
+  await SyncService().initSyncMode();
+
   runApp(const NYKitchenApp());
 }
 
