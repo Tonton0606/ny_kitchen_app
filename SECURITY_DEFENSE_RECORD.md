@@ -474,3 +474,42 @@ Checks actually run and actual results:
 Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Seek user permission to push merged main to origin/main.
+
+## UI Principles Refactoring: Cashier Queue, User Logs & Backup Restore Session — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T00:18:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+1. Apply `UI_PRINCIPLES.md` to Cashier Queue / Orders tab (`orders_page.dart`):
+   - Switch default tab from 'All' to 'Preparing' to display active queue immediately.
+   - Segmented filter controls with live counts (`Preparing`, `Served`, `All`).
+   - Establish visual hierarchy: bold tabular order figures, `AppStatusChip` with semantic status types, and clean card dividers.
+   - Standardize dialogs (Advance Order, Cancel Order) to 12px radius and high contrast buttons.
+   - Clean empty state with `AppEmptyState`.
+2. Apply `UI_PRINCIPLES.md` to Admin User Log tab (`activity_logs_page.dart`):
+   - Replace inline `TextStyle` literals with standard 5 typography roles (`AppTypography.tableHeader`, `tableCellPrimary`, `tableCellSecondary`, `label`, `figureSmall`).
+   - Role badges with high contrast fills (Admin -> ink blue tint, Cashier -> golden yellow tint).
+   - Status badges with `AppStatusChip` (Success -> success, Failed -> error, Other -> info).
+   - Standardize filters, date picker button, export dropdown, and pagination controls with 12px radius and `AppColors.softBorder`.
+3. Apply `UI_PRINCIPLES.md` to Admin Backup & Restore tab (`backup_restore_page.dart`):
+   - Wrap Export and Restore sections into standardized `AppCard` widgets.
+   - Standard typography roles (`AppTypography.headingLarge`, `body`, `bodyMuted`, `label`).
+   - Standard action buttons: `AppPrimaryButton` for "Create Backup Now" with loading indicator; `AppSecondaryButton` for "Restore from File" (coming soon).
+   - Standard status chip for completed backup file path.
+4. Follow operator Git procedure: verify remote tracking, commit cleanly, and seek explicit permission before pushing.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles compliance), SEC-01 (Clean error messages & data integrity), AT10 (Sync & resilience).
+Files changed:
+- `lib/features/cashier/presentation/pages/orders_page.dart`
+- `lib/features/admin/presentation/pages/activity_logs_page.dart`
+- `lib/features/admin/presentation/pages/backup_restore_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/features/cashier/presentation/pages/orders_page.dart`: No issues found!
+- `flutter analyze lib/features/admin/presentation/pages/activity_logs_page.dart`: No issues found!
+- `flutter analyze lib/features/admin/presentation/pages/backup_restore_page.dart`: No issues found!
+- `flutter test test/security/`: 47/47 tests passed cleanly.
+- `git fetch origin main`: up to date, 0 incoming commits.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Request user permission before running `git push`.
+

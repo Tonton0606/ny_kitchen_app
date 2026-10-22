@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/database/repositories/transaction_repository.dart';
+import '../../../shared/widgets/app_buttons.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_status_chip.dart';
+import '../../../shared/widgets/app_state_placeholders.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -11,12 +16,8 @@ class OrdersPage extends StatefulWidget {
 }
 
 class _OrdersPageState extends State<OrdersPage> {
-  String _statusFilter = 'All';
-
-  static const _statusColors = <String, Color>{
-    'Preparing': AppColors.goldenYellow,
-    'Served': AppColors.mutedText,
-  };
+  // UI Principles: Active queue 'Preparing' is default instead of 'All'
+  String _statusFilter = 'Preparing';
 
   static const _flow = ['Preparing', 'Served'];
 
@@ -41,7 +42,6 @@ class _OrdersPageState extends State<OrdersPage> {
   Future<void> _loadOrders() async {
     final activeTxns = await _transactionRepo.getActiveTransactions();
 
-    // For each transaction, get items
     List<Map<String, dynamic>> loadedOrders = [];
     for (var txn in activeTxns) {
       final items = await _transactionRepo.getTransactionItems(
@@ -52,7 +52,7 @@ class _OrdersPageState extends State<OrdersPage> {
         'orderNo': txn['order_number'] != null ? '#${txn['order_number']}' : txn['receipt_number'],
         'status': txn['status'],
         'total': txn['total_amount'],
-        'customer': 'User ${txn['user_id']}',
+        'customer': txn['cashier_name'] ?? 'User ${txn['user_id']}',
         'time': txn['created_at'],
         'items': items
             .map(
@@ -76,12 +76,12 @@ class _OrdersPageState extends State<OrdersPage> {
   }
 
   List<Map<String, dynamic>> get _filteredOrders {
-    if (_statusFilter == 'All') return _orders.where((o) => o['status'] != 'Served').toList();
+    if (_statusFilter == 'All') return _orders;
     return _orders.where((o) => o['status'] == _statusFilter).toList();
   }
 
   int get _inProgressCount =>
-      _orders.where((o) => o['status'] != 'Served').length;
+      _orders.where((o) => o['status'] == 'Preparing').length;
 
   Future<void> _advanceStatus(Map<String, dynamic> order) async {
     final currentIdx = _flow.indexOf(order['status']);
@@ -92,40 +92,37 @@ class _OrdersPageState extends State<OrdersPage> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surfaceWhite,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+          side: const BorderSide(color: AppColors.softBorder),
         ),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         title: Row(
           children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _statusColors[nextStatus]!.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  nextStatus == 'Served' ? Icons.done_all : Icons.restaurant,
-                  color: _statusColors[nextStatus],
-                  size: 22,
-                ),
+            Container(
+              padding: const EdgeInsets.all(AppDesignTokens.space8),
+              decoration: BoxDecoration(
+                color: AppColors.forest.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
               ),
-            const SizedBox(width: 12),
+              child: const Icon(
+                Icons.check_circle_outline,
+                color: AppColors.forest,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: AppDesignTokens.space12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Advance Order',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
+                  const Text('Advance Order', style: AppTypography.dialogTitle),
                   const SizedBox(height: 2),
-                  Text(
-                    order['orderNo'],
-                    style: const TextStyle(fontSize: 13, color: AppColors.mutedText),
-                  ),
+                  Text(order['orderNo'], style: AppTypography.bodyMuted),
                 ],
               ),
             ),
@@ -136,11 +133,11 @@ class _OrdersPageState extends State<OrdersPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(AppDesignTokens.space12),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                color: AppColors.surfaceWhite,
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                border: Border.all(color: AppColors.softBorder),
               ),
               child: Row(
                 children: [
@@ -148,60 +145,60 @@ class _OrdersPageState extends State<OrdersPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(order['customer'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                        Text(order['customer'], style: AppTypography.body),
                         const SizedBox(height: 2),
-                        Text(order['time'], style: const TextStyle(fontSize: 12, color: AppColors.mutedText)),
+                        Text(order['time'], style: AppTypography.label),
                       ],
                     ),
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(order['payment'], style: const TextStyle(fontSize: 12, color: AppColors.mutedText, fontWeight: FontWeight.w500)),
+                      Text(order['payment'], style: AppTypography.label),
                       const SizedBox(height: 2),
                       Text(
                         '₱${((order['total'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.darkCharcoal),
+                        style: AppTypography.figure,
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppDesignTokens.space12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _statusChip(order['status'] as String, _statusColors[order['status']]!),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Icon(Icons.arrow_forward, size: 16, color: AppColors.mutedText),
+                AppStatusChip(
+                  label: order['status'] as String,
+                  type: order['status'] == 'Served' ? AppStatusType.success : AppStatusType.warning,
+                  icon: order['status'] == 'Served' ? Icons.check_circle_outline : Icons.soup_kitchen_outlined,
                 ),
-                _statusChip(nextStatus, _statusColors[nextStatus]!),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppDesignTokens.space8),
+                  child: Icon(Icons.arrow_forward, size: 16, color: AppColors.mutedSlate),
+                ),
+                AppStatusChip(
+                  label: nextStatus,
+                  type: nextStatus == 'Served' ? AppStatusType.success : AppStatusType.warning,
+                  icon: nextStatus == 'Served' ? Icons.check_circle_outline : Icons.soup_kitchen_outlined,
+                ),
               ],
             ),
             if (order['items'] != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppDesignTokens.space12),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  color: AppColors.surfaceWhite,
+                  borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                  border: Border.all(color: AppColors.softBorder),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
-                      child: Text(
-                        'Items',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.mutedText,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(14, 10, 14, 4),
+                      child: Text('ORDER ITEMS', style: AppTypography.label),
                     ),
                     ConstrainedBox(
                       constraints: const BoxConstraints(maxHeight: 160),
@@ -215,10 +212,21 @@ class _OrdersPageState extends State<OrdersPage> {
                               padding: const EdgeInsets.symmetric(vertical: 3),
                               child: Row(
                                 children: [
-                                  Text('$itemQty×', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13, color: AppColors.darkCharcoal)),
-                                  const SizedBox(width: 6),
-                                  Expanded(child: Text(item['name'], style: const TextStyle(fontSize: 13, color: AppColors.darkCharcoal))),
-                                  Text('₱${(itemPrice * itemQty).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.darkCharcoal)),
+                                  Text(
+                                    '$itemQty×',
+                                    style: AppTypography.figureSmall,
+                                  ),
+                                  const SizedBox(width: AppDesignTokens.space8),
+                                  Expanded(
+                                    child: Text(
+                                      item['name'],
+                                      style: AppTypography.body,
+                                    ),
+                                  ),
+                                  Text(
+                                    '₱${(itemPrice * itemQty).toStringAsFixed(2)}',
+                                    style: AppTypography.figureSmall,
+                                  ),
                                 ],
                               ),
                             );
@@ -233,22 +241,14 @@ class _OrdersPageState extends State<OrdersPage> {
           ],
         ),
         actions: [
-          OutlinedButton(
+          AppSecondaryButton(
+            text: 'Cancel',
             onPressed: () => Navigator.pop(ctx, false),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.mutedText,
-              side: BorderSide(color: AppColors.softBorder),
-            ),
-            child: const Text('Cancel'),
           ),
-          const SizedBox(width: 8),
-          FilledButton(
+          AppPrimaryButton(
+            text: 'Confirm & $nextStatus',
+            icon: Icons.check_circle_outline,
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.success,
-              foregroundColor: Colors.white,
-            ),
-            child: Text('Confirm & $nextStatus'),
           ),
         ],
       ),
@@ -267,14 +267,14 @@ class _OrdersPageState extends State<OrdersPage> {
         ..clearSnackBars()
         ..showSnackBar(
           SnackBar(
-            content: Text('${order['orderNo']} moved to $nextStatus'),
+            content: Text('${order['orderNo']} marked as $nextStatus'),
             behavior: SnackBarBehavior.floating,
           ),
         );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.brandRed),
       );
     }
   }
@@ -284,19 +284,22 @@ class _OrdersPageState extends State<OrdersPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surfaceWhite,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+          side: const BorderSide(color: AppColors.softBorder),
         ),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppDesignTokens.space8),
               decoration: BoxDecoration(
                 color: AppColors.brandRed.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
               ),
               child: const Icon(
                 Icons.cancel_outlined,
@@ -304,11 +307,11 @@ class _OrdersPageState extends State<OrdersPage> {
                 size: 24,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppDesignTokens.space12),
             const Expanded(
               child: Text(
                 'Cancel Order',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: AppTypography.dialogTitle,
               ),
             ),
           ],
@@ -318,56 +321,42 @@ class _OrdersPageState extends State<OrdersPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppDesignTokens.space12),
               decoration: BoxDecoration(
-                color: const Color(0xFFFEF2F2),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFFECACA)),
+                color: AppColors.brandRed.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.25)),
               ),
               child: const Row(
                 children: [
                   Icon(Icons.warning_amber_rounded, color: AppColors.brandRed, size: 20),
-                  SizedBox(width: 8),
+                  SizedBox(width: AppDesignTokens.space8),
                   Expanded(
                     child: Text(
-                      'Please verify with the customer that this is the correct order to cancel.',
-                      style: TextStyle(
-                        color: AppColors.brandRed,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                      ),
+                      'Please verify with the customer before cancelling this order.',
+                      style: AppTypography.body,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 14),
-            Text(
-              order['orderNo'],
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Customer: ${order['customer']}',
-              style: const TextStyle(color: AppColors.mutedText, fontSize: 13),
-            ),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppDesignTokens.space12),
+            Text(order['orderNo'], style: AppTypography.heading),
+            const SizedBox(height: 2),
+            Text('Customer: ${order['customer']}', style: AppTypography.bodyMuted),
+            const Divider(height: 24, color: AppColors.softBorder),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                color: AppColors.surfaceWhite,
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                border: Border.all(color: AppColors.softBorder),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
-                    child: Text(
-                      'Items',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: AppColors.mutedText),
-                    ),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(14, 10, 14, 4),
+                    child: Text('ITEMS', style: AppTypography.label),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
@@ -380,13 +369,16 @@ class _OrdersPageState extends State<OrdersPage> {
                           child: Row(
                             children: [
                               Text(
-                                '${itemQty}x ',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                                '$itemQty×',
+                                style: AppTypography.figureSmall,
                               ),
-                              Expanded(child: Text(item['name'], style: const TextStyle(fontSize: 13))),
+                              const SizedBox(width: AppDesignTokens.space8),
+                              Expanded(
+                                child: Text(item['name'], style: AppTypography.body),
+                              ),
                               Text(
                                 '₱${(itemPrice * itemQty).toStringAsFixed(2)}',
-                                style: const TextStyle(fontSize: 13, color: AppColors.mutedText),
+                                style: AppTypography.figureSmall,
                               ),
                             ],
                           ),
@@ -397,33 +389,30 @@ class _OrdersPageState extends State<OrdersPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppDesignTokens.space12),
             const Divider(height: 1, color: AppColors.softBorder),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppDesignTokens.space8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                const Text('Total to void:', style: AppTypography.body),
                 Text(
                   '₱${((order['total'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.brandRed),
+                  style: AppTypography.figure.copyWith(color: AppColors.brandRed),
                 ),
               ],
             ),
           ],
         ),
         actions: [
-          TextButton(
+          AppSecondaryButton(
+            text: 'Keep order',
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Keep order'),
           ),
-          FilledButton(
+          AppDestructiveButton(
+            text: 'Cancel order',
+            icon: Icons.delete_outline,
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.brandRed,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Cancel order'),
           ),
         ],
       ),
@@ -459,31 +448,19 @@ class _OrdersPageState extends State<OrdersPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.brandRed),
       );
     }
-  }
-
-  Widget _statusChip(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: color, fontWeight: FontWeight.bold),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.creamBackground,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Bar adhering to UI Principles
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: const BoxDecoration(
@@ -496,53 +473,38 @@ class _OrdersPageState extends State<OrdersPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Queue',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                        color: AppColors.darkCharcoal,
-                      ),
+                      'Kitchen Queue',
+                      style: AppTypography.headingLarge,
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.creamBackground,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.softBorder, width: 1),
-                      ),
-                      child: Text(
-                        '$_inProgressCount in progress',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.mutedBrown,
-                        ),
-                      ),
+                    const SizedBox(width: AppDesignTokens.space12),
+                    AppStatusChip(
+                      label: '$_inProgressCount PREPARING',
+                      type: AppStatusType.warning,
+                      icon: Icons.soup_kitchen_outlined,
+                      isCompact: true,
                     ),
                   ],
                 ),
                 const Spacer(),
-                // Filter pills
+                // Segmented Filter Tabs (Default is 'Preparing', not 'All')
                 Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: ['All', 'Preparing', 'Served'].map((f) {
+                  children: ['Preparing', 'Served', 'All'].map((f) {
                     final isSelected = _statusFilter == f;
                     final count = f == 'All'
-                        ? _orders.where((o) => o['status'] != 'Served').length
+                        ? _orders.length
                         : _orders.where((o) => o['status'] == f).length;
                     return Padding(
-                      padding: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.only(left: AppDesignTokens.space8),
                       child: InkWell(
                         onTap: () => setState(() => _statusFilter = f),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          duration: AppDesignTokens.motionFast,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.goldenYellow : AppColors.creamBackground,
-                            borderRadius: BorderRadius.circular(20),
+                            color: isSelected ? AppColors.goldenYellow : AppColors.surfaceWhite,
+                            borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                             border: Border.all(
                               color: isSelected ? AppColors.goldenYellow : AppColors.softBorder,
                               width: 1,
@@ -553,26 +515,28 @@ class _OrdersPageState extends State<OrdersPage> {
                             children: [
                               Text(
                                 f,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                style: AppTypography.buttonSmall.copyWith(
                                   color: AppColors.darkCharcoal,
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(width: 5),
+                              const SizedBox(width: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? Colors.white.withValues(alpha: 0.8)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
+                                      ? AppColors.surfaceWhite
+                                      : AppColors.creamBackground,
+                                  borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                                  border: isSelected
+                                      ? null
+                                      : Border.all(color: AppColors.softBorder, width: 0.5),
                                 ),
                                 child: Text(
                                   '$count',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
+                                  style: AppTypography.figureCustom(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
                                     color: AppColors.darkCharcoal,
                                   ),
                                 ),
@@ -589,243 +553,186 @@ class _OrdersPageState extends State<OrdersPage> {
           ),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredOrders.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.receipt_long,
-                          size: 48,
-                          color: Colors.grey.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          _statusFilter == 'All'
-                              ? 'No orders yet'
-                              : 'No $_statusFilter orders',
-                          style: const TextStyle(
-                            color: AppColors.mutedText,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.darkCharcoal),
                     ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _filteredOrders.length,
-                    itemBuilder: (context, index) {
-                      final order = _filteredOrders[index];
-                      final status = order['status'] as String;
-                      final statusColor = _statusColors[status] ?? Colors.grey;
-                      final items = order['items'] as List;
+                : _filteredOrders.isEmpty
+                    ? AppEmptyState(
+                        icon: Icons.soup_kitchen_outlined,
+                        title: _statusFilter == 'All'
+                            ? 'No orders in queue'
+                            : 'No $_statusFilter orders',
+                        subtitle: 'New orders will automatically appear here once punched in by the cashier.',
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(AppDesignTokens.space16),
+                        itemCount: _filteredOrders.length,
+                        itemBuilder: (context, index) {
+                          final order = _filteredOrders[index];
+                          final status = order['status'] as String;
+                          final items = order['items'] as List;
+                          final isServed = status == 'Served';
 
-                      final isServed = status == 'Served';
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceWhite,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.softBorder, width: 1),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: AppDesignTokens.space12),
+                            child: AppCard(
+                              padding: const EdgeInsets.all(AppDesignTokens.space16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    order['orderNo'],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: statusColor,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    status,
-                                    style: TextStyle(
-                                      color: statusColor,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    '₱${((order['total'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              ...items.map<Widget>((item) {
-                                final itemPrice =
-                                    (item['price'] as num?)?.toDouble() ?? 0;
-                                final itemQuantity =
-                                    (item['qty'] as num?)?.toInt() ?? 0;
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 3),
-                                  child: Row(
+                                  // Order Header Row
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
                                       Text(
-                                        '${itemQuantity}x',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.mutedText,
-                                        ),
+                                        order['orderNo'],
+                                        style: AppTypography.heading,
                                       ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          item['name'],
-                                          style: const TextStyle(fontSize: 13),
-                                        ),
+                                      const SizedBox(width: AppDesignTokens.space8),
+                                      AppStatusChip(
+                                        label: status,
+                                        type: isServed ? AppStatusType.success : AppStatusType.warning,
+                                        icon: isServed ? Icons.check_circle_outline : Icons.soup_kitchen_outlined,
+                                        isCompact: true,
                                       ),
+                                      const Spacer(),
                                       Text(
-                                        '₱${(itemPrice * itemQuantity).toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: AppColors.mutedText,
-                                        ),
+                                        '₱${((order['total'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
+                                        style: AppTypography.figure,
                                       ),
                                     ],
                                   ),
-                                );
-                              }),
-                              const SizedBox(height: 8),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    _meta(order['customer']),
-                                    _dot(),
-                                    _meta(order['time']),
-                                    _dot(),
-                                    _meta(order['payment']),
-                                    if (order['notes'] != null &&
-                                        (order['notes'] as String)
-                                            .isNotEmpty) ...[
-                                      _dot(),
-                                      Icon(
-                                        Icons.notes,
-                                        size: 13,
-                                        color: AppColors.goldenYellow,
+                                  const SizedBox(height: AppDesignTokens.space8),
+                                  // Metadata Row
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        Text(order['customer'], style: AppTypography.bodyMuted),
+                                        _dot(),
+                                        Text(order['time'], style: AppTypography.bodyMuted),
+                                        _dot(),
+                                        Text(order['payment'], style: AppTypography.bodyMuted),
+                                        if (order['notes'] != null &&
+                                            (order['notes'] as String).isNotEmpty) ...[
+                                          _dot(),
+                                          const Icon(
+                                            Icons.sticky_note_2_outlined,
+                                            size: 14,
+                                            color: AppColors.darkCharcoal,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            order['notes'],
+                                            style: AppTypography.body.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                  const Divider(height: 20, color: AppColors.softBorder),
+                                  // Items section
+                                  const Text('ITEMS', style: AppTypography.label),
+                                  const SizedBox(height: AppDesignTokens.space4),
+                                  ...items.map<Widget>((item) {
+                                    final itemPrice = (item['price'] as num?)?.toDouble() ?? 0;
+                                    final itemQuantity = (item['qty'] as num?)?.toInt() ?? 0;
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2.5),
+                                      child: Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 32,
+                                            child: Text(
+                                              '$itemQuantity×',
+                                              style: AppTypography.figureSmall,
+                                            ),
+                                          ),
+                                          const SizedBox(width: AppDesignTokens.space8),
+                                          Expanded(
+                                            child: Text(
+                                              item['name'],
+                                              style: AppTypography.body,
+                                            ),
+                                          ),
+                                          Text(
+                                            '₱${(itemPrice * itemQuantity).toStringAsFixed(2)}',
+                                            style: AppTypography.figureSmall,
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        order['notes'],
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.goldenYellow,
-                                        ),
+                                    );
+                                  }),
+                                  const SizedBox(height: AppDesignTokens.space8),
+                                  // Footer Action Row
+                                  if (isServed)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: AppDesignTokens.space8),
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.check_circle,
+                                            size: 16,
+                                            color: AppColors.forest,
+                                          ),
+                                          const SizedBox(width: AppDesignTokens.space8),
+                                          Text(
+                                            'Order completed and served',
+                                            style: AppTypography.body.copyWith(
+                                              color: AppColors.forest,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              if (isServed)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 10),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.check_circle,
-                                        size: 16,
-                                        color: Colors.green.withValues(
-                                          alpha: 0.6,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        'Order completed',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.green.withValues(
-                                            alpha: 0.6,
+                                    ),
+                                  if (!isServed) ...[
+                                    const Divider(height: 20, color: AppColors.softBorder),
+                                    Row(
+                                      children: [
+                                        TextButton.icon(
+                                          onPressed: () => _cancelOrder(order),
+                                          icon: const Icon(Icons.cancel_outlined, size: 16),
+                                          label: const Text('Cancel Order'),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: AppColors.brandRed,
+                                            textStyle: AppTypography.buttonSmall,
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              if (!isServed) ...[
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    TextButton.icon(
-                                      onPressed: () => _cancelOrder(order),
-                                      icon: const Icon(Icons.cancel_outlined, size: 16),
-                                      label: const Text('Cancel'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: AppColors.brandRed,
-                                        visualDensity: VisualDensity.compact,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    TextButton.icon(
-                                      onPressed: () => _advanceStatus(order),
-                                      icon: const Icon(
-                                        Icons.done_all,
-                                        size: 18,
-                                      ),
-                                      label: const Text('Serve'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: statusColor,
-                                        visualDensity: VisualDensity.compact,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
+                                        const Spacer(),
+                                        AppPrimaryButton(
+                                          text: 'Mark as Served',
+                                          icon: Icons.check_circle_outline,
+                                          onPressed: () => _advanceStatus(order),
                                         ),
-                                      ),
+                                      ],
                                     ),
                                   ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
     );
   }
 
-  Widget _meta(String text) {
-    return Text(
-      text,
-      style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
-    );
-  }
-
   Widget _dot() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 8),
       child: Text(
         '·',
-        style: TextStyle(
-          fontSize: 12,
-          color: Colors.grey.withValues(alpha: 0.4),
-        ),
+        style: AppTypography.label,
       ),
     );
   }
 }
+

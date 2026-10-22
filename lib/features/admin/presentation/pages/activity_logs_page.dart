@@ -4,6 +4,8 @@ import '../../../../../core/database/repositories/audit_repository.dart';
 import '../../../../../core/services/export_service.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
+import '../../../shared/widgets/app_status_chip.dart';
+import '../../../shared/widgets/app_state_placeholders.dart';
 
 class ActivityLogsPage extends StatefulWidget {
   const ActivityLogsPage({super.key});
@@ -59,12 +61,13 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Filters are now handled in the repository, so we just use _logs
     final filteredLogs = _logs;
     return Scaffold(
+      backgroundColor: AppColors.creamBackground,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Filter Bar
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
             child: Row(
@@ -77,27 +80,31 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                         setState(() => _searchQuery = val);
                         _onFilterChanged();
                       },
+                      style: AppTypography.body,
                       decoration: InputDecoration(
                         hintText: 'Search users, actions, or modules...',
-                        prefixIcon: const Icon(Icons.search, size: 20),
+                        hintStyle: AppTypography.bodyMuted,
+                        prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.mutedSlate),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                          borderSide: const BorderSide(color: AppColors.softBorder),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                          borderSide: const BorderSide(color: AppColors.softBorder),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                          borderSide: const BorderSide(color: AppColors.darkCharcoal, width: 1.5),
                         ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: AppColors.surfaceWhite,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppDesignTokens.space12),
                 _buildFilterDropdown(
                   value: _roleFilter,
                   icon: Icons.person_outline,
@@ -107,7 +114,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     _onFilterChanged();
                   },
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppDesignTokens.space12),
                 OutlinedButton.icon(
                   onPressed: () async {
                     final picked = await showDateRangePicker(
@@ -121,7 +128,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                             colorScheme: const ColorScheme.light(
                               primary: AppColors.goldenYellow,
                               onPrimary: AppColors.darkCharcoal,
-                              surface: Colors.white,
+                              surface: AppColors.surfaceWhite,
                               onSurface: AppColors.darkCharcoal,
                             ),
                           ),
@@ -141,19 +148,19 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     _selectedDateRange != null 
                         ? '${DateFormat('MM/dd/yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MM/dd/yyyy').format(_selectedDateRange!.end)}'
                         : 'Filter Date',
-                    style: const TextStyle(color: AppColors.darkCharcoal, fontSize: 13),
+                    style: AppTypography.buttonSmall,
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.softBorder),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
                     ),
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppColors.surfaceWhite,
                   ),
                 ),
                 if (_selectedDateRange != null) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppDesignTokens.space8),
                   IconButton(
                     icon: const Icon(Icons.clear, color: AppColors.brandRed),
                     onPressed: () {
@@ -165,7 +172,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     tooltip: 'Clear Date Filter',
                   ),
                 ],
-                const SizedBox(width: 16),
+                const SizedBox(width: AppDesignTokens.space16),
                 OutlinedButton.icon(
                   onPressed: () {
                     if (_isLoading) return;
@@ -177,24 +184,21 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     }
                     ExportService.printLogsPDF(filteredLogs);
                   },
-                  icon: const Icon(Icons.print, size: 18),
-                  label: const Text('Print'),
+                  icon: const Icon(Icons.print_outlined, size: 18),
+                  label: const Text('Print', style: AppTypography.buttonSmall),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.darkCharcoal,
                     side: const BorderSide(color: AppColors.softBorder),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
                     ),
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppColors.surfaceWhite,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppDesignTokens.space8),
                 PopupMenuButton<String>(
-                  offset: const Offset(0, 40),
+                  offset: const Offset(0, 42),
                   onSelected: (value) {
                     if (_isLoading) return;
                     if (filteredLogs.isEmpty) {
@@ -209,28 +213,28 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                       ExportService.exportLogsToPDF(filteredLogs, context);
                     }
                   },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
                       value: 'excel',
-                      child: Text('Export as Excel (.xlsx)'),
+                      child: Text('Export as Excel (.xlsx)', style: AppTypography.body),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'pdf',
-                      child: Text('Export as PDF (.pdf)'),
+                      child: Text('Export as PDF (.pdf)', style: AppTypography.body),
                     ),
                   ],
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                     decoration: BoxDecoration(
                       color: AppColors.goldenYellow,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.download, size: 18, color: Colors.black),
+                      children: [
+                        Icon(Icons.download_rounded, size: 18, color: AppColors.darkCharcoal),
                         SizedBox(width: 8),
-                        Text('Export', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500)),
+                        Text('Export', style: AppTypography.buttonSmall),
                       ],
                     ),
                   ),
@@ -238,9 +242,14 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
               ],
             ),
           ),
+          // Table & Data Panel
           Expanded(
             child: _isLoading 
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.darkCharcoal),
+                  ),
+                )
               : Builder(
                   builder: (context) {
                     final totalLogs = filteredLogs.length;
@@ -254,19 +263,18 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                       margin: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        color: AppColors.surfaceWhite,
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
                         border: Border.all(color: AppColors.softBorder),
                       ),
                       child: Column(
                         children: [
                           Expanded(
                             child: filteredLogs.isEmpty
-                                ? const Center(
-                                    child: Text(
-                                      'No activity logs found matching your filters.',
-                                      style: TextStyle(color: AppColors.mutedText, fontSize: 14),
-                                    ),
+                                ? const AppEmptyState(
+                                    icon: Icons.history_rounded,
+                                    title: 'No activity logs found',
+                                    subtitle: 'Adjust your search or date filters to find matching records.',
                                   )
                                 : LayoutBuilder(
                                     builder: (context, constraints) {
@@ -281,8 +289,8 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                             child: ConstrainedBox(
                                               constraints: BoxConstraints(minWidth: constraints.maxWidth),
                                               child: DataTable(
-                                                headingRowColor: WidgetStateProperty.all(const Color(0xFFFAF8F5)),
-                                                headingRowHeight: 48,
+                                                headingRowColor: WidgetStateProperty.all(AppColors.creamBackground),
+                                                headingRowHeight: 46,
                                                 dataRowMinHeight: 44,
                                                 dataRowMaxHeight: 52,
                                                 columnSpacing: 24,
@@ -340,14 +348,6 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                                   final status = log['status'] as String? ?? 'Unknown';
                                                   final isSuccess = status == 'Success';
                                                   final isFailed = status == 'Failed';
-                                                  Color statusColor;
-                                                  if (isSuccess) {
-                                                    statusColor = AppColors.success;
-                                                  } else if (isFailed) {
-                                                    statusColor = AppColors.brandRed;
-                                                  } else {
-                                                    statusColor = AppColors.tertiary;
-                                                  }
                                                   
                                                   final dateStr = log['created_at'] ?? '';
                                                   String formattedDate = '';
@@ -383,22 +383,18 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                                           ),
                                                           decoration: BoxDecoration(
                                                             color: roleDisplay == 'Admin'
-                                                                ? AppColors.tertiary.withValues(alpha: 0.12)
+                                                                ? AppColors.inkBlue.withValues(alpha: 0.12)
                                                                 : (roleDisplay == 'Cashier'
                                                                       ? AppColors.goldenYellow
-                                                                      : AppColors.mutedText.withValues(alpha: 0.1)),
-                                                            borderRadius: BorderRadius.circular(6),
+                                                                      : AppColors.mutedSlate.withValues(alpha: 0.1)),
+                                                            borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                                                           ),
                                                           child: Text(
                                                             roleDisplay,
-                                                            style: TextStyle(
+                                                            style: AppTypography.label.copyWith(
                                                               color: roleDisplay == 'Admin'
-                                                                  ? AppColors.tertiary
-                                                                  : (roleDisplay == 'Cashier'
-                                                                        ? AppColors.darkCharcoal
-                                                                        : AppColors.mutedText),
-                                                              fontSize: 12,
-                                                              fontWeight: FontWeight.bold,
+                                                                  ? AppColors.inkBlue
+                                                                  : AppColors.darkCharcoal,
                                                             ),
                                                           ),
                                                         ),
@@ -410,15 +406,13 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                                             vertical: 3,
                                                           ),
                                                           decoration: BoxDecoration(
-                                                            color: Theme.of(
-                                                              context,
-                                                            ).colorScheme.primary.withValues(alpha: 0.08),
-                                                            borderRadius: BorderRadius.circular(6),
+                                                            color: AppColors.creamBackground,
+                                                            borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                                                            border: Border.all(color: AppColors.softBorder),
                                                           ),
                                                           child: Text(
                                                             log['module'] ?? '',
-                                                            style: const TextStyle(
-                                                              color: AppColors.darkCharcoal,
+                                                            style: AppTypography.bodyMuted.copyWith(
                                                               fontSize: 12,
                                                               fontWeight: FontWeight.w500,
                                                             ),
@@ -432,23 +426,14 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                                         ),
                                                       ),
                                                       DataCell(
-                                                        Container(
-                                                          padding: const EdgeInsets.symmetric(
-                                                            horizontal: 8,
-                                                            vertical: 4,
-                                                          ),
-                                                          decoration: BoxDecoration(
-                                                            color: statusColor.withValues(alpha: 0.1),
-                                                            borderRadius: BorderRadius.circular(6),
-                                                          ),
-                                                          child: Text(
-                                                            status,
-                                                            style: TextStyle(
-                                                              color: statusColor,
-                                                              fontSize: 12,
-                                                              fontWeight: FontWeight.bold,
-                                                            ),
-                                                          ),
+                                                        AppStatusChip(
+                                                          label: status,
+                                                          type: isSuccess
+                                                              ? AppStatusType.success
+                                                              : (isFailed
+                                                                  ? AppStatusType.error
+                                                                  : AppStatusType.info),
+                                                          isCompact: true,
                                                         ),
                                                       ),
                                                       DataCell(
@@ -464,15 +449,15 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                                             vertical: 3,
                                                           ),
                                                           decoration: BoxDecoration(
-                                                            color: AppColors.softBorder.withValues(alpha: 0.5),
-                                                            borderRadius: BorderRadius.circular(6),
+                                                            color: AppColors.creamBackground,
+                                                            borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                                                           ),
                                                           child: const Text(
                                                             '127.0.0.1',
                                                             style: TextStyle(
                                                               fontFamily: 'monospace',
                                                               fontSize: 12,
-                                                              color: AppColors.mutedText,
+                                                              color: AppColors.mutedSlate,
                                                             ),
                                                           ),
                                                         ),
@@ -488,6 +473,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                     },
                                   ),
                           ),
+                          // Pagination Controls
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             decoration: const BoxDecoration(
@@ -499,11 +485,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                   filteredLogs.isEmpty
                                       ? 'Showing 0 logs'
                                       : 'Showing ${startIndex + 1}–$endIndex of $totalLogs logs',
-                                  style: const TextStyle(
-                                    color: AppColors.mutedText,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  style: AppTypography.label12.copyWith(color: AppColors.mutedSlate),
                                 ),
                                 const Spacer(),
                                 if (totalPages > 1)
@@ -516,9 +498,8 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                     );
                   },
                 ),
-          ), // Expanded
-        ], // Column
-
+          ),
+        ],
       ),
     );
   }
@@ -532,20 +513,18 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
         border: Border.all(color: AppColors.softBorder),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          icon:  const Icon(
+          icon: const Icon(
             Icons.arrow_drop_down,
-            color: AppColors.mutedText,
+            color: AppColors.mutedSlate,
           ),
-          style: const TextStyle(
-            color: AppColors.darkCharcoal,
-            fontSize: 13,
-          ),
+          style: AppTypography.buttonSmall,
           onChanged: onChanged,
           items: items
               .map(
@@ -557,7 +536,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                       Icon(
                         icon,
                         size: 18,
-                        color: AppColors.mutedText,
+                        color: AppColors.mutedSlate,
                       ),
                       const SizedBox(width: 8),
                       Text(item),
@@ -612,7 +591,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
               : null,
           icon: const Icon(Icons.chevron_left, size: 20),
           color: AppColors.darkCharcoal,
-          disabledColor: AppColors.mutedText.withValues(alpha: 0.35),
+          disabledColor: AppColors.mutedSlate.withValues(alpha: 0.35),
           tooltip: 'Previous page',
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32, maxWidth: 32, maxHeight: 32),
           padding: EdgeInsets.zero,
@@ -627,10 +606,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
               child: Center(
                 child: Text(
                   '...',
-                  style: TextStyle(
-                    color: AppColors.mutedText,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: AppTypography.label,
                 ),
               ),
             );
@@ -639,15 +615,15 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: InkWell(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
               onTap: () => setState(() => _currentPage = p),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
+                duration: AppDesignTokens.motionFast,
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.goldenYellow : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                   border: isSelected
                       ? null
                       : Border.all(color: AppColors.softBorder),
@@ -655,10 +631,10 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                 child: Center(
                   child: Text(
                     '$p',
-                    style: TextStyle(
+                    style: AppTypography.figureSmall.copyWith(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                      color: isSelected ? Colors.black : AppColors.darkCharcoal,
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                      color: AppColors.darkCharcoal,
                     ),
                   ),
                 ),
@@ -673,7 +649,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
               : null,
           icon: const Icon(Icons.chevron_right, size: 20),
           color: AppColors.darkCharcoal,
-          disabledColor: AppColors.mutedText.withValues(alpha: 0.35),
+          disabledColor: AppColors.mutedSlate.withValues(alpha: 0.35),
           tooltip: 'Next page',
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32, maxWidth: 32, maxHeight: 32),
           padding: EdgeInsets.zero,
@@ -683,3 +659,4 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
     );
   }
 }
+

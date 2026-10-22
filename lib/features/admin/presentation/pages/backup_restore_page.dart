@@ -3,6 +3,9 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/database/repositories/backup_repository.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_buttons.dart';
+import '../../../shared/widgets/app_status_chip.dart';
 
 class BackupRestorePage extends StatefulWidget {
   const BackupRestorePage({super.key});
@@ -30,15 +33,15 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
       });
 
       if (file != null) {
-        // Trigger the cross-platform native share dialog
+        // ignore: deprecated_member_use
         await Share.shareXFiles(
           [XFile(file.path)], 
-          text: 'NY Kitchen MySQL Database Backup'
+          text: 'NY Kitchen MySQL Database Backup',
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Failed to backup database.', style: TextStyle(color: Colors.white)),
+            content: Text('Failed to backup database.', style: AppTypography.body),
             backgroundColor: AppColors.brandRed,
             behavior: SnackBarBehavior.floating,
           ),
@@ -50,70 +53,76 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.creamBackground,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(AppDesignTokens.space24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            // Export Section
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.softBorder),
-              ),
+            // Export Section Card
+            AppCard(
+              padding: const EdgeInsets.all(AppDesignTokens.space24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.download_rounded, color: AppColors.goldenYellow, size: 28),
-                      SizedBox(width: 12),
-                      Text(
+                      Container(
+                        padding: const EdgeInsets.all(AppDesignTokens.space8),
+                        decoration: BoxDecoration(
+                          color: AppColors.goldTint,
+                          borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                        ),
+                        child: const Icon(
+                          Icons.download_rounded,
+                          color: AppColors.darkCharcoal,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: AppDesignTokens.space12),
+                      const Text(
                         'Export Database',
-                        style: AppTypography.sectionTitle,
+                        style: AppTypography.headingLarge,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppDesignTokens.space12),
                   const Text(
                     'Creates a complete snapshot of all transactions, food items, users, and audit logs. The file will be saved directly to your Downloads or Documents folder.',
-                    style: TextStyle(fontSize: 14, color: AppColors.mutedText),
+                    style: AppTypography.bodyMuted,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppDesignTokens.space24),
                   if (_lastBackupPath != null) ...[
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppDesignTokens.space12),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                        color: AppColors.creamBackground,
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                        border: Border.all(color: AppColors.softBorder),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle, color: AppColors.success, size: 20),
-                          const SizedBox(width: 12),
+                          const AppStatusChip(
+                            label: 'BACKUP READY',
+                            type: AppStatusType.success,
+                            icon: Icons.check_circle_outline,
+                            isCompact: true,
+                          ),
+                          const SizedBox(width: AppDesignTokens.space12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'Last Backup Location:',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.success,
-                                  ),
+                                  'Last Backup File Path:',
+                                  style: AppTypography.label,
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 2),
                                 SelectableText(
                                   _lastBackupPath!,
-                                  style: const TextStyle(
-                                    fontSize: 13,
+                                  style: AppTypography.body.copyWith(
+                                    fontSize: 12,
                                     fontFamily: 'monospace',
-                                    color: AppColors.darkCharcoal,
                                   ),
                                 ),
                               ],
@@ -122,87 +131,87 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppDesignTokens.space24),
                   ],
                   SizedBox(
                     width: double.infinity,
-                    height: 48,
-                    child: FilledButton.icon(
+                    child: AppPrimaryButton(
+                      text: _isExporting ? 'Exporting...' : 'Create Backup Now',
+                      icon: Icons.backup_rounded,
+                      isLoading: _isExporting,
                       onPressed: _isExporting ? null : _handleExport,
-                      icon: _isExporting 
-                          ? const SizedBox(
-                              width: 20, 
-                              height: 20, 
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                            )
-                          : const Icon(Icons.backup_rounded),
-                      label: Text(
-                        _isExporting ? 'Exporting...' : 'Create Backup Now',
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.goldenYellow,
-                        foregroundColor: AppColors.darkCharcoal,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: AppDesignTokens.space24),
 
-            // Import Section (Placeholder for now)
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.softBorder),
-              ),
+            // Restore Section Card
+            AppCard(
+              padding: const EdgeInsets.all(AppDesignTokens.space24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.upload_rounded, color: AppColors.tertiary, size: 28),
-                      SizedBox(width: 12),
-                      Text(
-                        'Restore Database',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.darkCharcoal,
+                      Container(
+                        padding: const EdgeInsets.all(AppDesignTokens.space8),
+                        decoration: BoxDecoration(
+                          color: AppColors.creamBackground,
+                          borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                         ),
+                        child: const Icon(
+                          Icons.upload_rounded,
+                          color: AppColors.darkCharcoal,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: AppDesignTokens.space12),
+                      const Text(
+                        'Restore Database',
+                        style: AppTypography.headingLarge,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppDesignTokens.space12),
                   const Text(
-                    'Restore the system from a previous backup file (.db). WARNING: This will overwrite all current data in the system and cannot be undone.',
-                    style: TextStyle(fontSize: 14, color: AppColors.mutedText),
+                    'Restore the system from a previous backup file (.db). This operation restores previous state, replaces the local database, and triggers replication.',
+                    style: AppTypography.bodyMuted,
                   ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: OutlinedButton.icon(
-                      onPressed: null, // Disabled for Phase 3, pending Phase 4 security
-                      icon: const Icon(Icons.restore_rounded),
-                      label: const Text(
-                        'Restore from File (Coming Soon)',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.tertiary,
-                        side: const BorderSide(color: AppColors.tertiary),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: AppDesignTokens.space16),
+                  Container(
+                    padding: const EdgeInsets.all(AppDesignTokens.space12),
+                    decoration: BoxDecoration(
+                      color: AppColors.brandRed.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                      border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.25)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: AppColors.brandRed,
+                          size: 18,
                         ),
-                      ),
+                        SizedBox(width: AppDesignTokens.space8),
+                        Expanded(
+                          child: Text(
+                            'Warning: Restoring will overwrite existing data. Action is disabled pending Phase 4 security protocol.',
+                            style: AppTypography.body,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppDesignTokens.space24),
+                  const SizedBox(
+                    width: double.infinity,
+                    child: AppSecondaryButton(
+                      text: 'Restore from File (Coming Soon)',
+                      icon: Icons.restore_rounded,
+                      onPressed: null,
                     ),
                   ),
                 ],
@@ -214,3 +223,4 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
     );
   }
 }
+
