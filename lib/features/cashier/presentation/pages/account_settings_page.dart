@@ -3,6 +3,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/utils/security_utils.dart';
+import '../../../../core/services/sync_service.dart';
 import 'cashier_activity_logs_page.dart';
 
 class AccountSettingsPage extends StatefulWidget {
@@ -103,6 +104,87 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 icon: Icons.lock_outline,
                 title: 'Change Password',
                 onTap: () => _showChangePasswordDialog(context),
+              ),
+              // Cloud Syncing Preference Section for Cashier
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.softBorder),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.goldenYellow,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.cloud_sync_outlined, color: AppColors.darkCharcoal, size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Cloud Syncing',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.darkCharcoal,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ValueListenableBuilder<String>(
+                      valueListenable: SyncService.syncModeNotifier,
+                      builder: (context, currentMode, _) {
+                        return Column(
+                          children: [
+                            RadioListTile<String>(
+                              title: const Text(
+                                'Manual Cloud Sync',
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.darkCharcoal),
+                              ),
+                              subtitle: const Text(
+                                'Displays the "Cloud Sync" button at the top. Syncs on demand.',
+                                style: TextStyle(color: AppColors.mutedText, fontSize: 12),
+                              ),
+                              value: 'manual',
+                              groupValue: currentMode,
+                              activeColor: AppColors.goldenYellow,
+                              contentPadding: EdgeInsets.zero,
+                              onChanged: (val) {
+                                if (val != null) SyncService().setSyncMode(val);
+                              },
+                            ),
+                            const Divider(height: 12, color: AppColors.softBorder),
+                            RadioListTile<String>(
+                              title: const Text(
+                                'Automatic Cloud Sync',
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.darkCharcoal),
+                              ),
+                              subtitle: const Text(
+                                'Automatically synchronizes transactions and menu across all devices.',
+                                style: TextStyle(color: AppColors.mutedText, fontSize: 12),
+                              ),
+                              value: 'automatic',
+                              groupValue: currentMode,
+                              activeColor: AppColors.goldenYellow,
+                              contentPadding: EdgeInsets.zero,
+                              onChanged: (val) {
+                                if (val != null) SyncService().setSyncMode(val);
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
               _buildTile(
                 icon: Icons.print_outlined,

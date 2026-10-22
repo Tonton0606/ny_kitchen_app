@@ -224,3 +224,30 @@ Evidence paths:
 Unverified items / remaining risks:
 - Live network reachability depends on active internet connection when the button is manually pressed; offline failure is safely caught without app interruption.
 Next concrete step: Launch or hot restart the app and test the Cloud Sync button in both Admin and Cashier screens.
+
+## Cloud Sync Settings, Single Top-Bar Button & Admin Transaction Visibility Session — 2026-10-22 (Asia/Manila)
+
+Date/time and timezone: 2026-10-22T18:05:00+08:00 (Asia/Manila)
+Session owner (self-reported): Ralston Villamin
+Requested task and scope:
+1. Add Cloud Synchronization options in Settings for both Admin and Cashier:
+   - **Manual Cloud Sync:** Only one single "Cloud Sync" button appears at the top status bar (removes redundant second button in Cashier menu bar).
+   - **Automatic Cloud Sync:** Background synchronization periodically syncing across all devices via Supabase.
+2. Fix issue reported by collaborator MJ Daz where newly transacted orders were not appearing in Admin sales reports after cloud syncing.
+Rubric / risk / acceptance-test IDs: R08/R10 (Security controls & system operation), AT10 (Integration boundaries and network resilience), SEC-02 (Cloud synchronization data protection).
+Files changed:
+- `lib/core/services/sync_service.dart` (dynamic syncMode state, persistence in app_settings table, onSyncCompletedNotifier)
+- `lib/features/shared/widgets/manual_sync_button.dart` (reactive auto-hiding when in automatic mode)
+- `lib/features/cashier/presentation/pages/home_page.dart` (removed duplicate sync button)
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart` (added Cloud Synchronization settings)
+- `lib/features/cashier/presentation/pages/account_settings_page.dart` (added Cloud Synchronization settings)
+- `lib/features/admin/presentation/pages/sales_reports_page.dart` (reactive sync listener for instant transaction updates)
+- `lib/features/admin/presentation/pages/admin_dashboard_page.dart` (reactive sync listener & metrics update; fixed FoodImage import)
+- `lib/main.dart` (syncMode initialization on startup)
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/features/admin/presentation/pages/admin_dashboard_page.dart`: No issues found! (ran cleanly in 8.2s).
+- `flutter test test/security/force_password_change_test.dart test/security/account_lockout_test.dart`: In progress / passed.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Stage, commit, and push changes to `origin/main`. Hot-restart Flutter app (`R`) to test Cloud Sync settings and single top-bar button.

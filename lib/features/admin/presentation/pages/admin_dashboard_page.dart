@@ -12,6 +12,8 @@ import '../../../shared/widgets/status_badge.dart';
 import '../../../shared/widgets/food_image.dart';
 import '../../../cashier/presentation/pages/cashier_shell.dart';
 import '../shared/widgets/sales_chart.dart';
+import '../../../../../core/services/sync_service.dart';
+
 
 class AdminDashboardPage extends StatefulWidget {
   final void Function(int index)? onNavigate;
@@ -55,6 +57,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void initState() {
     super.initState();
     _loadDashboardData();
+    SyncService.onSyncCompletedNotifier.addListener(_loadDashboardData);
     _timer = Timer.periodic(const Duration(seconds: 5), (_) {
       _loadDashboardData();
     });
@@ -62,6 +65,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   @override
   void dispose() {
+    SyncService.onSyncCompletedNotifier.removeListener(_loadDashboardData);
     _timer?.cancel();
     super.dispose();
   }
