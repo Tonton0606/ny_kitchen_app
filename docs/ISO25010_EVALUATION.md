@@ -1,4 +1,6 @@
 # docs/ISO25010_EVALUATION.md
+
+> 2026-10-20 reconciliation: Use SECURITY_IMPLEMENTATION_PLAN.md R16 and AT01–AT10 for measurable evidence. Checklist entries below are evaluation targets, not verified properties. Local audit records alone do not prove non-repudiation, and no certification is claimed.
 # N.Y Kitchen — ISO/IEC 25010:2023 Quality Evaluation
 
 > Source of Truth: PROJECT_BLUEPRINT.md Section 13.4

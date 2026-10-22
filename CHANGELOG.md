@@ -9,6 +9,14 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ## [Unreleased]
 
+### Documentation — 2026-10-20
+
+- Read the supplied security rubric without modifying it; created `docs/SECURITY_IMPLEMENTATION_PLAN.md` with all 20 criteria, risk ratings, controls, acceptance tests, tool decisions, privacy/recovery planning and a defense script.
+- Corrected primary architecture/authentication/authorization/session/backup/security/testing/presentation guides and README. Marked older proposed layouts, routing, cloud designs and historical results explicitly.
+- Updated project state, TODO, decisions and session history. No application changes, package installation, VM setup, active scanning or test execution.
+
+- Added `SECURITY_DEFENSE_RECORD.md` with the project map, observed controls, initial security findings, documentation conflicts, and a pending rubric evidence table. Application code was not changed or tested in this session.
+
 ### Added
 
 - `RULES.md` — Immutable project rules governing all development.
@@ -111,3 +119,18 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 *This changelog will be updated as phases are completed and features are implemented.*
 *Do not add feature entries until the corresponding implementation exists and is verified.*
+
+### Scope confirmation — 2026-10-20
+
+- Owner confirmed hybrid offline/online operation with online synchronization. Updated blueprint, rules, ADR-002, README, cloud/architecture plan, TODO and session record. No application behavior changed.
+
+## 2026-10-22 — Ubuntu backend preparation
+
+- Added device-authenticated sales replication API with separate Admin reads, append-only revision history, strict payloads, size/rate limits and audit events. Added offline provisioning and systemd/Caddy deployment templates.
+- Added Flutter HTTPS client with acknowledged checkpoints, retry from local SQLite, explicit exclusive backend mode and status footer. Moved desktop database platform setup before sync startup; caught optional Supabase initialization failures.
+- Verified 11 backend tests and 4 Flutter sync tests on synthetic fixtures. VM deployment and existing local permission findings remain pending. See `backend/README.md` and the new verification record.
+
+## 2026-10-22 — AI session handoff
+
+- Added mandatory root AI entry instructions and a detailed handoff covering session attribution, approved Flutter/Ubuntu architecture, rubric mapping, verified results, limitations and next steps.
+- Linked README and AI development rules; updated session/state/task records. Requested by Ralston Villamin (self-reported). Documentation only.

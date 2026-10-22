@@ -1,38 +1,11 @@
-﻿# docs/DEFENSE_PLAN.md
-# N.Y Kitchen — Final Defense Plan
+# Defense plan — October 22, 2026
 
----
+Target date is inferred from the owner's Thursday defense statement. Updated October 20.
 
-## Purpose
-Prepare for the academic final defense presentation.
+Use the ten-minute sequence in [SECURITY_IMPLEMENTATION_PLAN.md](SECURITY_IMPLEMENTATION_PLAN.md): architecture and assets, framework-linked risk, authorized sale and denied action, lockout/audit, offline sale, reproduced vulnerability before/after, validated recovery, then rubric coverage and remaining risks.
 
----
+Demonstrate Windows first. Include Android, cloud or face recognition only with evidence for that actual setup. A Linux VM or Docker installation is not required. ZAP is an optional supporting API report.
 
-## Defense Structure (Proposed)
-1. Introduction — Project overview and motivation
-2. Problem Statement — Why manual order recording is insufficient
-3. Project Objectives — What the system accomplishes
-4. System Architecture — Offline-first, feature-first, SQLite + Supabase (optional)
-5. Security Framework — CIA Triad, OWASP, ISO/IEC 25010
-6. Feature Walkthrough — Live demonstration
-7. Technical Implementation — Flutter, Dart, SQLite, Material 3
-8. Testing and Quality — Testing approach, security testing results
-9. ISO/IEC 25010 Evaluation — Scores and evaluation
-10. Conclusion and Future Enhancements
-11. Q&A
+Prepare a synthetic demo database, separate test accounts, a known build, a validated backup and labeled recordings from the same build. Present the 20 rubric criteria with evidence references and actual results. Leave scores unassigned until reviewed. Do not claim that a clean scanner report means the entire application is secure.
 
-## Anticipated Q&A Topics
-- Why use SQLite instead of a cloud database?
-- How is security enforced (CIA Triad implementation)?
-- How are activity logs protected from tampering?
-- How does the offline-first architecture work?
-- What happens when a Cashier tries to access Admin features?
-- How are passwords secured?
-- What is the difference between Admin and Cashier roles?
-- What are the planned future enhancements?
-
----
-
-## TODO
-- [ ] Prepare defense slides in Phase 11
-- [ ] Conduct practice defense before final presentation
+Expected questions: Why SQLite? How are direct repository calls protected? What can an OS administrator still change? How are credentials and backups protected? What happens when internet/cloud fails? How was recovery measured? Which framework controls were actually verified?

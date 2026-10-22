@@ -1,5 +1,7 @@
 # PROJECT_BLUEPRINT_PART1.md
 
+> 2026-10-20 reconciliation: Current implementation and rubric alignment are documented in docs/SECURITY_IMPLEMENTATION_PLAN.md. The owner confirmed hybrid offline/online operation with online synchronization on 2026-10-20. Synchronization is approved scope; security verification remains pending.
+
 # 1. Project Overview
 
 ## Project Name
@@ -67,6 +69,7 @@ The application includes:
 - Reports
 - Account Settings
 - Backup and Restore
+- Online Synchronization (Supabase), with SQLite supporting offline operation
 
 The following are intentionally excluded:
 
@@ -75,7 +78,6 @@ The following are intentionally excluded:
 - Customer Accounts
 - Delivery Tracking
 - Online Ordering
-- Cloud Synchronization
 - Multi-branch Support
 
 The application will run on:
@@ -1074,6 +1076,7 @@ The application shall support:
 - Offline Operation
 - Local SQLite Database
 - Backup and Restore
+- Online Synchronization (Supabase), with SQLite supporting offline operation
 - Error Recovery
 - Stable Performance
 - Cross Platform Support
@@ -1831,6 +1834,7 @@ The completed application shall provide:
 - Activity Logs
 - Reports
 - Backup and Restore
+- Online Synchronization (Supabase), with SQLite supporting offline operation
 - Local SQLite Database
 - Offline Operation
 - Password Hashing
@@ -1868,3 +1872,6 @@ The following rules are mandatory:
 This document is the single source of truth for the N.Y Kitchen Secure Order and Sales Management System.
 
 Any future enhancement shall extend this document rather than contradict it.
+## Approved Ubuntu backend addition — 2026-10-22
+
+The owner selected keeping the Flutter POS and adding a secured backend on an Ubuntu VM. The prepared first version synchronizes sales one way to a separate server revision store. It does not introduce inventory, a browser POS, remote account administration or new human roles. Backend device credentials are machine identities; the Admin reader credential is an operator identity. Existing Supabase sync remains a separate configuration mode. VM deployment is pending. See `backend/README.md`.

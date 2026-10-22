@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../../core/utils/security_utils.dart';
 import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/database/repositories/user_repository.dart';
-import '../../../../core/session/session_manager.dart';
+import '../../../../core/utils/security_utils.dart';
 
 class AccountManagementPage extends StatefulWidget {
   const AccountManagementPage({super.key});
@@ -92,14 +90,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
       );
       return;
     }
-    // Validate password policy
-    if (!SecurityUtils.isPasswordValid(_addPasswordController.text.trim())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(SecurityUtils.passwordPolicyMessage)),
-      );
-      return;
-
-    }
 
     try {
       await _userRepo.createUser({
@@ -108,7 +98,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
         'password_hash': SecurityUtils.hashPassword(_addPasswordController.text.trim()),
         'role': _addRole,
         'status': 'active',
-        'must_change_password': 1,
       });
       if (!mounted) return;
       _closeAddCashier();
@@ -142,19 +131,19 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.goldenYellow,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.edit_outlined,
-                  color: AppColors.darkCharcoal,
+                    color: AppColors.goldenYellow.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.goldenYellow,
                   size: 28,
                 ),
               ),
               const SizedBox(width: 16),
               Text(
                 'Edit ${user['full_name']}',
-                style: AppTypography.dialogTitle,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -289,7 +278,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             const SizedBox(width: 16),
             Text(
               'Reset Password',
-              style: AppTypography.dialogTitle,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -350,16 +339,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                 );
                 return;
               }
-              if (!SecurityUtils.isPasswordValid(passwordController.text.trim())) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text(SecurityUtils.passwordPolicyMessage)),
-                );
-                return;
-              }
               try {
                 await _userRepo.updateUser(user['id'], {
                   'password_hash': SecurityUtils.hashPassword(passwordController.text.trim()),
-                  'must_change_password': 1,
                 });
                 if (!context.mounted) return;
                 Navigator.pop(ctx);
@@ -421,7 +403,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             const SizedBox(width: 16),
             Text(
               '${isActive ? 'Disable' : 'Enable'} Account',
-              style: AppTypography.dialogTitle,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -481,86 +463,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     );
   }
 
-  void _showUnlockDialog(BuildContext context, Map<String, dynamic> user) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.lock_open,
-                color: Colors.orange,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            const Text(
-              'Unlock Account',
-              style: AppTypography.dialogTitle,
-            ),
-          ],
-        ),
-        content: Text(
-          'Are you sure you want to unlock ${user['full_name']}\'s account?',
-          style: const TextStyle(
-            fontSize: 15,
-            color: AppColors.mutedText,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                final adminName = SessionManager().fullName ?? 'Admin';
-                await _userRepo.unlockUser(user['id'], adminName);
-                if (!context.mounted) return;
-                Navigator.pop(ctx);
-                _loadUsers();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Account unlocked successfully')),
-                );
-              } catch (e) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error unlocking account: $e')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text(
-              'Unlock',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -575,7 +477,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.pageBackground,
+      backgroundColor: const Color(0xFFF8F5F0),
       body: Stack(
         children: [
           Padding(
@@ -584,52 +486,76 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 LayoutBuilder(builder: (context, topConstraints) {
-                  final isCompact = topConstraints.maxWidth < 650;
-                  final titleWidget = const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Account Management',
-                        style: AppTypography.pageTitle,
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Manage cashier accounts and permissions',
-                        style: AppTypography.pageSubtitle,
-                      ),
-                    ],
-                  );
-
-                  final addButton = ElevatedButton.icon(
-                    onPressed: _openAddCashier,
-                    icon: const Icon(Icons.person_add, size: 18),
-                    label: const Text('Add Cashier', style: TextStyle(fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.goldenYellow,
-                      foregroundColor: Colors.black,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  );
-
-                  if (isCompact) {
+                  final isMobileOrNarrow = topConstraints.maxWidth < 650;
+                  if (isMobileOrNarrow) {
                     return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        titleWidget,
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Account Management',
+                              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Manage cashier accounts and permissions',
+                              style: TextStyle(color: AppColors.mutedText, fontSize: 13),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 12),
-                        addButton,
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _openAddCashier,
+                            icon: const Icon(Icons.person_add, size: 18),
+                            label: const Text('Add Cashier', style: TextStyle(fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.goldenYellow,
+                              foregroundColor: Colors.black,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ),
                       ],
                     );
                   }
-
                   return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      titleWidget,
-                      addButton,
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Account Management',
+                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Manage cashier accounts and permissions',
+                            style: TextStyle(color: AppColors.mutedText, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      ElevatedButton.icon(
+                        onPressed: _openAddCashier,
+                        icon: const Icon(Icons.person_add, size: 18),
+                        label: const Text('Add Cashier', style: TextStyle(fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.goldenYellow,
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
                     ],
                   );
                 }),
@@ -659,234 +585,208 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                 const SizedBox(height: 16),
                 Expanded(
                   child: LayoutBuilder(builder: (context, bodyConstraints) {
-                    final double minTableWidth = 820.0;
-                    final double tableWidth = bodyConstraints.maxWidth < minTableWidth
-                        ? minTableWidth
-                        : bodyConstraints.maxWidth;
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.softBorder),
-                      ),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: SizedBox(
-                          width: tableWidth,
-                          height: bodyConstraints.maxHeight,
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.pageBackground,
-                                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                                  border: Border(bottom: BorderSide(color: AppColors.softBorder)),
-                                ),
-                                child: const Row(
+                    final showSideCard = bodyConstraints.maxWidth >= 950;
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.softBorder)),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SizedBox(
+                                width: showSideCard
+                                    ? (bodyConstraints.maxWidth - 240 < 750.0 ? 750.0 : bodyConstraints.maxWidth - 240)
+                                    : (bodyConstraints.maxWidth < 750.0 ? 750.0 : bodyConstraints.maxWidth),
+                                height: bodyConstraints.maxHeight,
+                                child: Column(
                                   children: [
-                                    SizedBox(width: 48, child: Text('Avatar', style: AppTypography.tableHeader)),
-                                    SizedBox(width: 16),
-                                    Expanded(
-                                      flex: 3,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(right: 16),
-                                        child: Text('Name', style: AppTypography.tableHeader),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFFAF8F5),
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                                        border: Border(bottom: BorderSide(color: AppColors.softBorder)),
+                                      ),
+                                      child: const Row(
+                                        children: [
+                                          SizedBox(width: 48, child: Text('Avatar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          SizedBox(width: 16),
+                                          Expanded(flex: 3, child: Text('Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          Expanded(flex: 2, child: Text('Username', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          SizedBox(width: 90, child: Text('Role', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          SizedBox(width: 90, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                          SizedBox(width: 160, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.mutedText))),
+                                        ],
                                       ),
                                     ),
                                     Expanded(
-                                      flex: 2,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(right: 16),
-                                        child: Text('Username', style: AppTypography.tableHeader),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 120,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(right: 16),
-                                        child: Text('Role', style: AppTypography.tableHeader),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 120,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(right: 16),
-                                        child: Text('Status', style: AppTypography.tableHeader),
-                                      ),
-                                    ),
-                                    SizedBox(width: 140, child: Text('Actions', style: AppTypography.tableHeader)),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                child: filteredUsers.isEmpty
-                                    ? const Center(child: Text('No users found.', style: TextStyle(color: AppColors.mutedText)))
-                                    : ListView.separated(
-                                        padding: EdgeInsets.zero,
-                                        itemCount: filteredUsers.length,
-                                        separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
-                                        itemBuilder: (context, index) {
-                                          final user = filteredUsers[index];
-                                          final isActive = user['status'] == 'active';
-                                          final isLocked = user['status'] == 'locked';
-                                          final role = user['role'] == 'admin' ? 'Admin' : 'Cashier';
-                                          return Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                            child: Row(
-                                              children: [
-                                                SizedBox(
-                                                  width: 48,
-                                                  height: 48,
-                                                  child: CircleAvatar(
-                                                    radius: 24,
-                                                    backgroundColor: AppColors.goldenYellow,
-                                                    child: Text(
-                                                      (user['full_name'] as String).isNotEmpty
-                                                          ? (user['full_name'] as String)[0].toUpperCase()
-                                                          : '?',
-                                                      style: const TextStyle(
-                                                        color: AppColors.darkCharcoal,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 16),
-                                                Expanded(
-                                                  flex: 3,
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.only(right: 16),
-                                                    child: Text(
-                                                      user['full_name'],
-                                                      style: AppTypography.tableCellPrimary,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  flex: 2,
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.only(right: 16),
-                                                    child: Text(
-                                                      user['username'],
-                                                      style: AppTypography.tableCellSecondary,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  width: 120,
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.only(right: 16),
-                                                    child: Align(
-                                                      alignment: Alignment.centerLeft,
-                                                      child: Container(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                                        decoration: BoxDecoration(
-                                                          color: role == 'Admin'
-                                                              ? AppColors.tertiary.withValues(alpha: 0.12)
-                                                              : AppColors.goldenYellow,
-                                                          borderRadius: BorderRadius.circular(6),
-                                                        ),
-                                                        child: Text(
-                                                          role,
-                                                          textAlign: TextAlign.center,
-                                                          style: TextStyle(
-                                                            color: role == 'Admin' ? AppColors.tertiary : AppColors.darkCharcoal,
-                                                            fontSize: 12,
-                                                            fontWeight: FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  width: 120,
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.only(right: 16),
-                                                    child: Row(
-                                                      children: [
-                                                        Container(
-                                                          width: 7,
-                                                          height: 7,
-                                                          decoration: BoxDecoration(
-                                                            color: isLocked ? Colors.orange : (isActive ? AppColors.success : AppColors.brandRed),
-                                                            shape: BoxShape.circle,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(width: 6),
-                                                        Flexible(
-                                                          child: Text(
-                                                            isLocked ? 'Locked' : (isActive ? 'Active' : 'Inactive'),
-                                                            style: TextStyle(
-                                                              color: isLocked ? Colors.orange : (isActive ? AppColors.success : AppColors.brandRed),
-                                                              fontWeight: FontWeight.w600,
-                                                              fontSize: 12,
-                                                            ),
-                                                            overflow: TextOverflow.ellipsis,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  width: 140,
+                                      child: filteredUsers.isEmpty
+                                          ? const Center(child: Text('No users found.', style: TextStyle(color: AppColors.mutedText)))
+                                          : ListView.separated(
+                                              padding: EdgeInsets.zero,
+                                              itemCount: filteredUsers.length,
+                                              separatorBuilder: (_, _) => const Divider(height: 1, color: AppColors.softBorder),
+                                              itemBuilder: (context, index) {
+                                                final user = filteredUsers[index];
+                                                final isActive = user['status'] == 'active';
+                                                final role = user['role'] == 'admin' ? 'Admin' : 'Cashier';
+                                                return Padding(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                                                   child: Row(
                                                     children: [
-                                                      _buildActionButton(
-                                                        icon: Icons.edit_outlined,
-                                                        color: AppColors.goldenYellow,
-                                                        tooltip: 'Edit',
-                                                        onPressed: () => _showEditCashierDialog(context, user),
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      _buildActionButton(
-                                                        icon: Icons.lock_reset,
-                                                        color: AppColors.tertiary,
-                                                        tooltip: 'Reset Password',
-                                                        onPressed: () => _showResetPasswordDialog(context, user),
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      if (isLocked)
-                                                        _buildActionButton(
-                                                          icon: Icons.lock_open,
-                                                          color: Colors.orange,
-                                                          tooltip: 'Unlock Account',
-                                                          onPressed: () => _showUnlockDialog(context, user),
-                                                        )
-                                                      else
-                                                        _buildActionButton(
-                                                          icon: isActive ? Icons.block : Icons.check_circle,
-                                                          color: isActive ? AppColors.brandRed : AppColors.success,
-                                                          tooltip: isActive ? 'Disable' : 'Enable',
-                                                          onPressed: () => _showDisableDialog(context, user),
+                                                      SizedBox(
+                                                        width: 48,
+                                                        height: 48,
+                                                        child: CircleAvatar(
+                                                          radius: 24,
+                                                          backgroundColor: AppColors.goldenYellow.withValues(alpha: 0.2),
+                                                          child: Text(
+                                                            (user['full_name'] as String).isNotEmpty
+                                                                ? (user['full_name'] as String)[0].toUpperCase()
+                                                                : '?',
+                                                            style: const TextStyle(
+                                                              color: AppColors.goldenYellow,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
                                                         ),
+                                                      ),
+                                                      const SizedBox(width: 16),
+                                                      Expanded(
+                                                        flex: 3,
+                                                        child: Text(
+                                                          user['full_name'],
+                                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.darkCharcoal),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        flex: 2,
+                                                        child: Text(
+                                                          user['username'],
+                                                          style: const TextStyle(fontSize: 14),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 90,
+                                                        child: Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                          decoration: BoxDecoration(
+                                                            color: role == 'Admin'
+                                                                ? AppColors.tertiary.withValues(alpha: 0.1)
+                                                                : AppColors.goldenYellow.withValues(alpha: 0.1),
+                                                            borderRadius: BorderRadius.circular(6),
+                                                          ),
+                                                          child: Text(
+                                                            role,
+                                                            textAlign: TextAlign.center,
+                                                            style: TextStyle(
+                                                              color: role == 'Admin' ? AppColors.tertiary : AppColors.goldenYellow,
+                                                              fontSize: 12,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 90,
+                                                        child: Row(
+                                                          children: [
+                                                            Container(
+                                                              width: 7,
+                                                              height: 7,
+                                                              decoration: BoxDecoration(
+                                                                color: isActive ? AppColors.success : AppColors.brandRed,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(width: 6),
+                                                            Text(
+                                                              isActive ? 'Active' : 'Inactive',
+                                                              style: TextStyle(
+                                                                color: isActive ? AppColors.success : AppColors.brandRed,
+                                                                fontWeight: FontWeight.w600,
+                                                                fontSize: 12,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 160,
+                                                        child: Row(
+                                                          children: [
+                                                            _buildActionButton(
+                                                              icon: Icons.edit_outlined,
+                                                              color: AppColors.goldenYellow,
+                                                              tooltip: 'Edit',
+                                                              onPressed: () => _showEditCashierDialog(context, user),
+                                                            ),
+                                                            const SizedBox(width: 6),
+                                                            _buildActionButton(
+                                                              icon: Icons.lock_reset,
+                                                              color: AppColors.tertiary,
+                                                              tooltip: 'Reset Password',
+                                                              onPressed: () => _showResetPasswordDialog(context, user),
+                                                            ),
+                                                            const SizedBox(width: 6),
+                                                            _buildActionButton(
+                                                              icon: isActive ? Icons.block : Icons.check_circle,
+                                                              color: isActive ? AppColors.brandRed : AppColors.success,
+                                                              tooltip: isActive ? 'Disable' : 'Enable',
+                                                              onPressed: () => _showDisableDialog(context, user),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
                                                     ],
                                                   ),
-                                                ),
-                                              ],
+                                                );
+                                              },
                                             ),
-                                          );
-                                        },
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                      decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.softBorder))),
+                                      child: Row(
+                                        children: [
+                                          Text('Showing ${filteredUsers.length} of ${_users.length} accounts',
+                                              style: const TextStyle(color: AppColors.mutedText, fontSize: 13)),
+                                        ],
                                       ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.softBorder))),
-                                child: Row(
-                                  children: [
-                                    Text('Showing ${filteredUsers.length} of ${_users.length} accounts',
-                                        style: const TextStyle(color: AppColors.mutedText, fontSize: 13)),
+                                    ),
                                   ],
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
+                        if (showSideCard) ...[
+                          const SizedBox(width: 20),
+                          SizedBox(
+                            width: 190,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF8E7),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFFFE8A3)),
+                              ),
+                              padding: const EdgeInsets.all(20),
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('👨‍💼', style: TextStyle(fontSize: 52)),
+                                  SizedBox(height: 16),
+                                  Text('Team Security,', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.darkCharcoal)),
+                                  Text('Organized & Safe!', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.goldenYellow, fontStyle: FontStyle.italic)),
+                                  SizedBox(height: 10),
+                                  Text('Manage permissions and keep your operations running smoothly.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.mutedText, height: 1.5)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     );
                   }),
                 ),
@@ -924,7 +824,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                       Container(
                         height: 120,
                         decoration: BoxDecoration(
-                          color: AppColors.pageBackground,
+                          color: AppColors.goldenYellow.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Center(
@@ -972,7 +872,23 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         ),
                         obscureText: true,
                       ),
-                      // Role is automatically set to 'cashier'
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        initialValue: _addRole,
+                        decoration: const InputDecoration(
+                          labelText: 'Role',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                          DropdownMenuItem(value: 'cashier', child: Text('Cashier')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _addRole = val);
+                        },
+                      ),
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
@@ -1017,10 +933,10 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.goldenYellow,
+              color: AppColors.goldenYellow.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.person_add, color: AppColors.darkCharcoal, size: 20),
+            child: const Icon(Icons.person_add, color: AppColors.goldenYellow, size: 20),
           ),
           const SizedBox(width: 12),
           const Text('Add Cashier', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppColors.darkCharcoal)),

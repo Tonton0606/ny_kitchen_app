@@ -1,4 +1,6 @@
 ﻿# docs/ROUTING.md
+
+> 2026-10-20 reconciliation: The paths and go_router design below are historical proposals. Current source uses MaterialApp, Navigator and MaterialPageRoute with GuardedRoute. See AUTHORIZATION.md for current gaps; these proposed URL paths are not verified runtime routes.
 # N.Y Kitchen — Routing and Navigation
 
 > Technology: go_router (see DECISIONS.md ADR-005 - Proposed)

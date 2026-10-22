@@ -1,47 +1,13 @@
-﻿# docs/SECURITY_TESTING.md
-# N.Y Kitchen — Security Testing Plan
+# Security verification plan
 
----
+Updated 2026-10-20. The authoritative current test procedures and measurable outcomes are AT01–AT10 in [SECURITY_IMPLEMENTATION_PLAN.md](SECURITY_IMPLEMENTATION_PLAN.md). All are planned; this documentation session did not execute security tests.
 
-## Purpose
-Define security testing procedures for N.Y Kitchen.
+Test on disposable fixtures and the platforms actually claimed: Windows first, then Android if demonstrated. Use direct repository integration tests for authorization and database integrity, UI/device tests for sessions and offline behavior, Python API tests for the face service, and isolated cloud policy tests if cloud is included.
 
----
+The app uses native Flutter navigation, so URL manipulation is not the primary route-guard test. Instantiate guarded screens and directly exercise protected operations as unauthorized callers. Verify own-record restrictions and zero prohibited mutations.
 
-## Security Tests
+ZAP is optional for the HTTP API. Record authenticated endpoint coverage, include valid multipart requests, triage findings, and retain limitations. A scan of only rejected requests does not verify internal API behavior. Flutter/local SQLite controls need separate tests.
 
-### Authentication Testing
-- [ ] Attempt login with incorrect password — verify error message does not reveal username existence
-- [ ] Attempt login with non-existent username — verify same error message
-- [ ] Trigger account lockout — verify threshold, lockout message, Activity Log
-- [ ] Attempt login with locked account — verify rejection
-- [ ] Test session expiration — verify automatic logout
+For each result record rubric/risk/test IDs, selected framework version/control, build revision and local changes, platform, prerequisites, expected and actual result, date, reviewer and sanitized evidence path. New evidence belongs under `docs/security/evidence/2026-10-defense/` when generated. Do not treat earlier saved results as current passes.
 
-### Authorization Testing
-- [ ] Attempt to access Admin routes as Cashier — verify redirect to /unauthorized and Activity Log
-- [ ] Attempt to access Admin routes without login — verify redirect to /login
-- [ ] Verify Cashier cannot view Admin Dashboard, Reports, Activity Logs, User Management
-- [ ] Verify route guards cannot be bypassed by URL manipulation
-
-### Injection Testing
-- [ ] Attempt SQL injection through search fields
-- [ ] Attempt SQL injection through login fields
-- [ ] Attempt SQL injection through food name/description fields
-- [ ] Verify all queries use parameterized statements
-
-### Data Integrity Testing
-- [ ] Attempt to delete a completed transaction — verify rejection
-- [ ] Attempt to edit an activity log — verify rejection
-- [ ] Verify void/refund requires Admin authorization and reason
-- [ ] Verify archived food items do not appear in new order menu
-
-### Secret Handling Testing
-- [ ] Verify no credentials exist in source code
-- [ ] Verify no Supabase keys in Flutter client
-- [ ] Verify database file does not contain plain-text passwords
-
----
-
-## TODO
-- [ ] Perform security testing during Phase 10
-- [ ] Document all findings and resolutions
+Secret review must distinguish a public client identifier from privileged service/device secrets. Never place a service-role key in Flutter. Inspect history and rotate exposed secrets rather than relying only on ignore rules.

@@ -1,4 +1,6 @@
 ﻿# docs/CLIENT_DEMO_PLAN.md
+
+> 2026-10-20 reconciliation: For security defense use DEFENSE_PLAN.md and SECURITY_IMPLEMENTATION_PLAN.md. Demonstrate backup restore only after AT08 passes; do not present an SQL export as verified recovery.
 # N.Y Kitchen — Client Demo Plan
 
 ---

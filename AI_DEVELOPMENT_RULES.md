@@ -1,4 +1,8 @@
 # AI_DEVELOPMENT_RULES.md
+
+> **Session entry requirement (2026-10-22):** Follow root `AGENTS.md` and read `AI_SESSION_HANDOFF.md` completely. Ask whether the current collaborator is Ralston Villamin, MJ Daz, or Hancr Gonzales before project work; reuse an explicit answer within the same conversation. This is self-reported attribution, not authentication. Then follow the project reading order below.
+
+> 2026-10-20 reconciliation: Current defense work is tracked in docs/SECURITY_IMPLEMENTATION_PLAN.md and SECURITY_DEFENSE_RECORD.md. Distinguish observed implementation from older Provider/go_router and phase proposals below. Never infer current security passes from historical DONE labels.
 # N.Y Kitchen — AI Development Rules
 
 > **Authority Level: HIGH**

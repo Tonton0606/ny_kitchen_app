@@ -1,33 +1,9 @@
-﻿# docs/PRESENTATION.md
-# N.Y Kitchen — Presentation Guide
+# Presentation guide
 
----
+Updated 2026-10-20. Use [DEFENSE_PLAN.md](DEFENSE_PLAN.md) and the rubric mapping in [SECURITY_IMPLEMENTATION_PLAN.md](SECURITY_IMPLEMENTATION_PLAN.md).
 
-## Purpose
-Provide guidance for presenting N.Y Kitchen to clients and evaluators.
+Suggested slides: business problem/scope; assets and boundaries; applicable frameworks; prioritized risks; controls linked to risks; demonstration; measured test evidence; privacy/recovery/incident handling; rubric coverage and remaining limitations.
 
----
+Explain every security claim with its threat, implementation and test. State whether a result is source inspection, automated execution, device demonstration or planned work. Avoid absolute claims such as tamper-proof logs, guaranteed cloud recovery, or certified compliance.
 
-## Audience
-- Academic supervisor / panel
-- Client (food stall owner)
-- Technical evaluators
-
-## Key Messages to Emphasize
-- Security-first design using CIA Triad, OWASP, and ISO/IEC 25010.
-- Offline-first operation — works without internet.
-- Role separation between Admin and Cashier.
-- Immutable audit trail and transaction preservation.
-- Responsive cross-platform design.
-
-## Demonstration Flow
-See: docs/CLIENT_DEMO_PLAN.md
-
-## Defense Preparation
-See: docs/DEFENSE_PLAN.md
-
----
-
-## TODO
-- [ ] Finalize presentation slides in Phase 11
-- [ ] Practice full demo walkthrough before defense
+Prepare evidence for Windows and separately for Android if claimed. Show a real reproduced weakness from a disposable baseline and the same test after correction. Keep keys, hashes, biometric data and real employee records out of the presentation.

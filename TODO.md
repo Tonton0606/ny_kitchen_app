@@ -3,11 +3,18 @@
 
 > Update this file whenever a task status changes.
 > Authority: `PROJECT_BLUEPRINT.md` → `RULES.md` → `AI_DEVELOPMENT_RULES.md`
-> Current Phase: **Pre-Phase 5 Cloud Sync Validation; SQLite remains the offline source of truth**
+> Current Phase: **Security defense planning; rubric mapped, implementation and verification pending**
 
 ---
 
 ## Documentation
+
+- [x] Create `SECURITY_DEFENSE_RECORD.md` for the October 20 defense preparation session.
+- [x] Map all 20 defense rubric criteria to required implementation and verification evidence.
+- [x] Reconcile primary architecture, authentication, session, security, backup and defense documents with observed source.
+- [ ] Implement and verify the prioritized stages in `docs/SECURITY_IMPLEMENTATION_PLAN.md`.
+- [ ] Resolve face defense scope and historical architecture decisions.
+- [ ] Capture AT01–AT10 results, score the rubric with evidence, and rehearse.
 
 - [x] Create `RULES.md`
 - [x] Create `AI_DEVELOPMENT_RULES.md`
@@ -29,7 +36,7 @@
 - [x] Confirm session expiration policy
 - [x] Confirm account lockout threshold
 - [ ] **Review and approve all generated documentation** (Owner/Supervisor)
-- [ ] Confirm Supabase integration scope (open decision — see `DECISIONS.md` ADR-002)
+- [x] Confirm hybrid offline/online synchronization scope (owner confirmation, 2026-10-20; ADR-002).
 
 ---
 
@@ -388,3 +395,19 @@
 - [ ] Practice demo walkthrough
 - [ ] Prepare Q&A responses for security topics
 - [ ] Prepare Q&A responses for architecture decisions
+
+## Ubuntu backend — 2026-10-22
+
+- [x] Prepare isolated sales API, provisioner and Ubuntu deployment configuration.
+- [x] Connect Flutter backend mode with safe retries and no concurrent Supabase sync.
+- [x] Run targeted backend and Flutter tests (11 + 4 passed).
+- [ ] Install Ubuntu VM and deploy with trusted HTTPS and firewall controls.
+- [ ] Demonstrate real Flutter offline/reconnect sync and server role denial.
+- [ ] Verify credential rotation, server recovery and dependency vulnerabilities.
+- [ ] Resolve local repository authorization findings separately.
+
+## AI session continuity
+
+- [x] Add root `AGENTS.md` and required `AI_SESSION_HANDOFF.md`.
+- [x] Record current self-reported session owner: Ralston Villamin.
+- [ ] Keep the handoff and evidence status current after future implementation sessions.

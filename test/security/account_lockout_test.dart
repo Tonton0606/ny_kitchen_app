@@ -55,7 +55,7 @@ void main() {
               ''');
 
               // Seed a test user
-              final hash = await SecurityUtils.hashPassword('password123');
+              final hash = SecurityUtils.hashPassword('password123');
               await db.insert('users', {
                 'full_name': 'Test User',
                 'username': 'testuser',

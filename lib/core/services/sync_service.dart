@@ -4,9 +4,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../database/database_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as path;
+import 'backend_sync_service.dart';
 import 'package:path_provider/path_provider.dart';
 
 class SyncService {
+  // Selected once at startup. A failed backend setup must not fall back to cloud.
+  static bool backendMode = false;
   SupabaseClient? get _supabase {
     try {
       return Supabase.instance.client;
@@ -32,6 +35,7 @@ class SyncService {
 
   /// Starts an automatic periodic sync from the cloud to keep local data fresh
   void startAutomaticSync({int intervalSeconds = 10}) {
+    _syncTimer?.cancel();
     // Run immediately first
     syncFromCloud();
     // Then repeat periodically
@@ -47,6 +51,7 @@ class SyncService {
 
   /// Uploads a local image file to Supabase Storage and returns the public URL
   Future<String?> uploadImage(String localPath) async {
+    if (backendMode) return localPath;
     try {
       if (localPath.startsWith('http')) return localPath; // Already a URL
       if (localPath.isEmpty) return null;
@@ -94,6 +99,11 @@ class SyncService {
 
   /// Runs a full background sync from SQLite (Primary) to Supabase (Backup)
   Future<void> syncToCloud() async {
+    if (backendMode) {
+      // Checkout has already committed locally; never await network on this path.
+      unawaited(BackendSyncService.instance?.sync() ?? Future<void>.value());
+      return;
+    }
     try {
       final db = await _dbHelper.database;
 
@@ -159,6 +169,10 @@ class SyncService {
 
   /// Downloads changes from Cloud to Local (For multi-device setups)
   Future<void> syncFromCloud() async {
+    if (backendMode) {
+      await BackendSyncService.instance?.sync();
+      return;
+    }
     try {
       final db = await _dbHelper.database;
 

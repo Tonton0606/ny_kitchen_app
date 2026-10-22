@@ -1,52 +1,19 @@
-﻿# docs/AUTHORIZATION.md
-# N.Y Kitchen — Authorization
+# Authorization — required policy and current gaps
 
----
+Updated 2026-10-20. Required policy is not a claim of complete enforcement.
 
-## Purpose
-Define authorization rules for each user role and how access control is enforced.
+| Operation | Admin | Cashier |
+|---|---|---|
+| Manage users, roles, unlock/reset another account | Allowed | Denied |
+| Manage menu/categories | Allowed | Denied |
+| View business reports and all audit/transaction records | Allowed | Denied |
+| Create orders; view own history and own allowed activity | According to shell workflow | Allowed |
+| Change own password | Allowed with identity verification | Allowed with identity verification |
+| Void/refund completed sales | Allowed with reason and audit | Denied |
+| Backup/restore or database export | Allowed | Denied |
 
----
+`SessionManager` stores the authenticated role. `GuardedRoute` checks session, forced-change flag, and role after the first frame, then navigates rejected users to login. It currently renders its child while checking. This is not go_router routing.
 
-## Authorization Approach
-- Role-Based Access Control (RBAC).
-- Role is stored in the SQLite users table.
-- Role is loaded into the AuthProvider at login.
-- go_router route guards check the role before allowing navigation.
-- Service layer re-validates role for sensitive operations.
+Inspected user mutation and transaction status methods do not independently establish the acting user's authority. Caller-supplied role/user identifiers are not authorization. Own-record filtering, account revocation and denied-action logs require full caller review.
 
-## Admin Authorized Operations
-- Full access to all modules listed in docs/USER_ROLES.md.
-- Void and refund transactions.
-- Manage user accounts.
-- View all Activity Logs.
-- Access Backup and Restore.
-
-## Cashier Authorized Operations
-- New order / POS screen.
-- Own transaction history only.
-- Account settings (change own password only).
-- Reprint own receipts (with Activity Log).
-
-## Enforcement Layers
-1. go_router route guards (UI layer).
-2. Service layer role checks (logic layer).
-3. SQLite queries filtered by user_id where applicable.
-
-## Unauthorized Access Handling
-- Redirect to /unauthorized page.
-- Generate an Activity Log entry for the unauthorized access attempt.
-- Never silently ignore unauthorized access.
-
----
-
-## Rules
-- Do NOT rely solely on UI route guards for security.
-- Always enforce authorization at the service/logic layer as well.
-- Do not use hidden UI elements as the only access control mechanism.
-
----
-
-## TODO
-- [ ] Implement route guards in Phase 4
-- [ ] Implement service-layer role checks in Phases 5-9
+Plan: central deny-by-default permission checks in business/repository operations, authoritative actor attribution, allowlisted fields, ownership filters, state-transition rules, and pre-render UI guards. Verify direct calls as unauthenticated, Cashier, expired, disabled, and forged-actor callers with no forbidden database changes. See [plan](SECURITY_IMPLEMENTATION_PLAN.md), AT02 and AT05.

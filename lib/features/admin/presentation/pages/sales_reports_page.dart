@@ -474,7 +474,7 @@ class _SalesReportsPageState extends State<SalesReportsPage>
                           dataRowMinHeight: 48,
                           dataRowMaxHeight: 56,
                           horizontalMargin: 24,
-                          columnSpacing: constraints.maxWidth > 900 ? (constraints.maxWidth - 650) / 7 : 24,
+                          columnSpacing: constraints.maxWidth > 900 ? 56.0 : 24.0,
                           columns: const [
                             DataColumn(
                               label: Text(

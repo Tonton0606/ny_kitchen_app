@@ -1,4 +1,6 @@
 ﻿# docs/FOLDER_STRUCTURE.md
+
+> 2026-10-20 reconciliation: The tree below is a historical proposed layout. The actual map is in ../SECURITY_DEFENSE_RECORD.md: features/auth, admin, cashier and shared; core/database, services, session, utils and theme. No folder migration is planned for defense.
 # N.Y Kitchen — Folder Structure
 
 > Source of Truth: `PROJECT_BLUEPRINT.md` Section 18 (Architecture)

@@ -1,55 +1,11 @@
-﻿# docs/BACKUP_STRATEGY.md
-# N.Y Kitchen — Backup and Restore Strategy
+# Backup and restore — baseline and proposed correction
 
-> See: DECISIONS.md ADR-016
+Updated 2026-10-20. The inspected `BackupRepository.exportDatabase()` writes MySQL-style SQL INSERT statements for local tables into a temporary `.sql` file. It includes stored user data, does not encrypt the export, and logs a placeholder Admin ID. This is not the SQLite file-copy recovery process previously described in ADR-016. A successful restore has not been demonstrated.
 
----
+Proposed implementation: Admin-only consistent SQLite snapshot, protected authenticated backup container, documented key recovery, genuine actor audit, and retention approved with the client. If relying on OS encryption, document that copied exports may lose that protection. Optional cloud synchronization is not a substitute for an independently recoverable backup.
 
-## Purpose
-Define how database backups are created, stored, and restored.
+Restore into a temporary location first. Check authentication, format/schema compatibility, integrity and foreign-key consistency. Pause writes and sync, keep the existing database as a rollback copy, perform replacement, reopen/validate, and record the outcome. Corrupt or wrong-key input must leave the working data intact.
 
----
+Proposed rehearsal targets: recovery point no older than 24 hours and recovery time at most 15 minutes. These are project targets awaiting acceptance and measurement, not statutory requirements or achieved results.
 
-## Backup Method
-- SQLite backup: Copy the .db file to a backup directory.
-- The backup file preserves the complete database state.
-
-## Backup Storage Locations (Pending Review)
-- Android: TODO — Define target directory (Downloads, external storage, app documents)
-- Windows: TODO — Define target directory (Documents folder, application directory)
-
-## Backup Naming
-- Proposed format: ny_kitchen_backup_YYYYMMDD_HHMMSS.db
-- Unique timestamp ensures no overwriting.
-
-## Backup Retention
-- TODO: Define maximum number of backup versions to retain.
-
-## Restore Process
-1. Select backup file.
-2. Confirm restore (destructive action — confirm dialog required).
-3. Copy backup file to replace active database.
-4. Verify database integrity after restore.
-5. Restart database connection.
-6. Generate Activity Log entry.
-
-## Rules
-- The existing database must be preserved until restoration is confirmed successful.
-- All backup and restore actions must generate Activity Log entries.
-- Backup files should not contain plain-text passwords.
-
-## Cloud Backup (Future Optional)
-- Store backup files in Supabase Storage.
-- Requires Supabase integration approval (ADR-002).
-
----
-
-## Open Questions
-- [ ] Backup encryption: Required? (ADR-016)
-- [ ] Storage location per platform: Android and Windows (ADR-016)
-- [ ] Maximum backup retention count?
-
----
-
-## TODO
-- [ ] Confirm backup strategy decisions before Phase 3
+See [implementation plan](SECURITY_IMPLEMENTATION_PLAN.md), K03 and AT08. Cross-device recovery must account for device-bound biometric encryption keys.

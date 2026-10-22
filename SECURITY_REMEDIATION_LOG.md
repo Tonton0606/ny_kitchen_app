@@ -1,5 +1,7 @@
 # Security Remediation Log
 
+> 2026-10-20 reconciliation: Historical task results below are preserved. New defense work is planned in docs/SECURITY_IMPLEMENTATION_PLAN.md; no historical test result was rerun or newly validated during the October 20 rubric review.
+
 ## Status Table
 
 | ID | Gap # (from profile §13) | Task | Status (TODO/IN PROGRESS/DONE/BLOCKED/SKIPPED) | Files changed | Test added | Evidence |

@@ -1,69 +1,13 @@
-﻿# docs/AUTHENTICATION.md
-# N.Y Kitchen — Authentication
+# Authentication — current baseline and planned work
 
-> Source of Truth: PROJECT_BLUEPRINT.md Section 14
-> See: DECISIONS.md ADR-013
+Updated 2026-10-20 from source inspection. Verification is pending.
 
----
+Local username/password authentication uses SQLite through `UserRepository.login()`. `SecurityUtils` implements PBKDF2-HMAC-SHA256 with 10,000 iterations and a random salt per password. Stored values use `salt:hash`. The policy helper requires eight characters, a letter, and a digit; consistent repository enforcement is pending.
 
-## Purpose
-Document the authentication strategy, login flow, and account security mechanisms.
+Five failed password checks for an active known account set its status to locked. Successful login resets the counter. Locked/inactive and unknown accounts are rejected early; those early rejection paths need audit coverage. Login success, failed password checks, and lockout have audit calls.
 
----
+Seed accounts carry a forced-password-change flag. Verify this requirement at every protected operation, including direct repository calls. The current `SessionManager` stores the user in memory and expires after 30 minutes of inactivity. `main.dart` checks periodically. Disabled-account session revocation needs verification.
 
-## Authentication Method
-- Username and password (local SQLite authentication).
-- No external OAuth or social login in initial version.
+Planned: versioned KDF parameters and compatible rehash-on-login, repository password policy checks, complete audit coverage, consistent safe errors, and verified first-login restrictions. Do not change iteration counts without migration support.
 
-## Login Requirements
-- Username: Required, case-sensitive (TBD), must exist in users table.
-- Password: Required, verified against stored password hash.
-
-## Password Hashing (Current Implementation)
-- Algorithm: SHA-256 with the project-wide salt via Dart `crypto` and `SecurityUtils`.
-- This is the current Phase 4 implementation; a stronger password KDF remains a production security review item.
-- Minimum password length: TODO — Define minimum (e.g., 8 characters).
-- Passwords are hashed before storage. Plain-text passwords are never stored.
-
-## Failed Login Policy
-- Failed login counter incremented on every failed attempt.
-- Counter is reset on successful login.
-- Account lockout threshold: 5 failed attempts; the repository sets `status = 'locked'`.
-- Locked accounts display a user-friendly message.
-- The system must NEVER reveal whether a username exists.
-- Error message: "Invalid username or password." (always)
-
-## Account Lockout
-- Locked accounts cannot log in.
-- Admin can unlock accounts via User Management.
-- Lockout event logging is planned but is not currently wired by `UserRepository`.
-
-## Session Management
-- See: docs/SESSION_MANAGEMENT.md
-- Sessions are currently in-memory through `SessionManager`; inactivity expiration is not implemented.
-- Logout clears session and generates Activity Log entry.
-
-## Role-Based Routing Post-Login
-- Admin → /admin/dashboard
-- Cashier → /cashier/orders
-
----
-
-## Security Considerations
-- Never reveal username existence in error messages.
-- Always log failed login attempts.
-- Always log account lockout events.
-- Always log successful logins.
-
----
-
-## Open Questions
-- [x] Current password hashing algorithm documented (SHA-256 via `crypto`)
-- [ ] Minimum password length
-- [x] Failed login lockout threshold documented (5 attempts)
-- [ ] Session expiration duration and implementation
-
----
-
-## TODO
-- [ ] Resolve remaining authentication hardening gaps before production use
+See [implementation plan](SECURITY_IMPLEMENTATION_PLAN.md), AT01, AT03 and AT04. Face-service code exists; current login integration and deployment are not verified.

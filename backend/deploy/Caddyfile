@@ -1,0 +1,13 @@
+# Replace this hostname or map it to the VM's host-only IP on the Windows host.
+https://nykitchen.test {
+    tls internal
+    request_body {
+        max_size 256KB
+    }
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy no-referrer
+    }
+    reverse_proxy 127.0.0.1:8000
+}

@@ -1,4 +1,6 @@
 # RULES.md
+
+> 2026-10-20 reconciliation: Implementation reconciliation: Provider/go_router below are historical architecture requirements, while current source uses stateful widgets, singleton services and Navigator. The discrepancy is recorded for review in DECISIONS.md; no migration is authorized by this note.
 # N.Y Kitchen — Immutable Project Rules
 
 > **Authority Level: HIGHEST**
@@ -31,7 +33,7 @@
 - **Flutter and Dart** are the only approved application technologies.
 - **Material 3** is the approved UI foundation. Do not replace it with other design systems.
 - **SQLite** is the primary local database. It must never be removed.
-- **Supabase** is an optional cloud platform for future approved features only.
+- **Supabase** provides approved online synchronization for the hybrid offline/online system. Core local operations must remain available without connectivity.
 - Do not make the application dependent on continuous internet connectivity.
 - Do not replace SQLite with Supabase as the sole database.
 - State management uses **Provider** (subject to architectural review before change).

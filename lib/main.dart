@@ -11,6 +11,8 @@ import 'core/session/session_manager.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/shared/widgets/custom_title_bar.dart';
 import 'core/services/sync_service.dart';
+import 'core/services/backend_sync_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,24 +89,6 @@ void main() async {
     }
   }
 
-  // Initialize Supabase if credentials exist
-  if (envVars.containsKey('SUPABASE_URL') && envVars.containsKey('SUPABASE_ANON_KEY')) {
-    await Supabase.initialize(
-      url: envVars['SUPABASE_URL']!,
-      anonKey: envVars['SUPABASE_ANON_KEY']!,
-      headers: {
-        'x-device-secret': envVars['SUPABASE_DEVICE_SECRET'] ?? '',
-      },
-    );
-
-    // Initial fetch and periodic auto-sync from cloud
-    final syncService = SyncService();
-    syncService.startAutomaticSync(intervalSeconds: 10);
-    print("Started automatic cloud synchronization (every 10 seconds)");
-  } else {
-    print("WARNING: Supabase credentials not found. Cloud sync is disabled.");
-  }
-
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -123,6 +107,39 @@ void main() async {
       await windowManager.show();
       await windowManager.focus();
     });
+  }
+  // Local platform/database setup precedes all optional network work.
+  SyncService.backendMode = envVars['SYNC_BACKEND'] == 'ubuntu';
+  if (SyncService.backendMode) {
+    try {
+      final uri = Uri.parse(envVars['BACKEND_URL'] ?? '');
+      const storage = FlutterSecureStorage();
+      final storageKey = 'nyk_backend_token:$uri';
+      final supplied = envVars['BACKEND_DEVICE_TOKEN'];
+      final token = supplied?.isNotEmpty == true
+          ? supplied!
+          : await storage.read(key: storageKey) ?? '';
+      final service = BackendSyncService(baseUrl: uri, token: token);
+      if (supplied?.isNotEmpty == true) {
+        await storage.write(key: storageKey, value: token);
+      }
+      BackendSyncService.instance = service;
+      SyncService().startAutomaticSync(intervalSeconds: 30);
+    } catch (_) {
+      debugPrint('Backend configuration unavailable; local operation remains available.');
+    }
+  } else if (envVars.containsKey('SUPABASE_URL') &&
+      envVars.containsKey('SUPABASE_ANON_KEY')) {
+    try {
+      await Supabase.initialize(
+        url: envVars['SUPABASE_URL']!,
+        anonKey: envVars['SUPABASE_ANON_KEY']!,
+        headers: {'x-device-secret': envVars['SUPABASE_DEVICE_SECRET'] ?? ''},
+      );
+      SyncService().startAutomaticSync(intervalSeconds: 10);
+    } catch (_) {
+      debugPrint('Cloud initialization unavailable; continuing with local storage.');
+    }
   }
   runApp(const NYKitchenApp());
 }
@@ -190,6 +207,17 @@ class _NYKitchenAppState extends State<NYKitchenApp> {
               children: [
                 const CustomTitleBar(),
                 Expanded(child: child ?? const SizedBox.shrink()),
+                if (SyncService.backendMode)
+                  SafeArea(top: false, child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: BackendSyncService.instance == null
+                        ? const Text('Online sync not configured; working locally')
+                        : ValueListenableBuilder<String>(
+                            valueListenable: BackendSyncService.instance!.status,
+                            builder: (context, value, child) => Text(value,
+                              style: Theme.of(context).textTheme.bodySmall),
+                          ),
+                  )),
               ],
             ),
           );

@@ -1,4 +1,6 @@
 ﻿# ai/CONTEXT.md
+
+> 2026-10-20 reconciliation: The phase, future-cloud and proposed navigation entries below are historical. Current source has SQLite repositories, Navigator, in-memory sessions and optional Supabase push/pull. Use ../SECURITY_DEFENSE_RECORD.md and ../docs/SECURITY_IMPLEMENTATION_PLAN.md for this defense session.
 # N.Y Kitchen — Stable Project Facts
 
 > This file contains only confirmed, stable project facts.

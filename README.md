@@ -1,8 +1,11 @@
 # N.Y Kitchen Secure Order and Sales Management System
 
+> **AI collaborators:** Read [AGENTS.md](AGENTS.md) and [AI_SESSION_HANDOFF.md](AI_SESSION_HANDOFF.md) first. Ask the current session owner's name before starting project work.
+
 > **Single Source of Truth:** [`PROJECT_BLUEPRINT.md`](PROJECT_BLUEPRINT.md)
 > **Immutable Rules:** [`RULES.md`](RULES.md)
-> **Current Phase:** Pre-Phase 5 Cloud Sync Validation; SQLite remains the offline source of truth
+> **Current Phase:** Security defense planning and verification preparation (2026-10-20).
+> **Start here:** [Security implementation and rubric plan](docs/SECURITY_IMPLEMENTATION_PLAN.md) and [session record](SECURITY_DEFENSE_RECORD.md).
 
 ---
 
@@ -32,9 +35,9 @@ The system demonstrates practical implementation of Information Assurance and Se
 | Dart | Programming language |
 | Material 3 | UI design system |
 | SQLite | Primary local database (offline-first) |
-| Supabase | Optional cloud backup and sync (future) |
-| Provider | State management |
-| go_router | Navigation and route guards |
+| Supabase | Optional push/pull synchronization implemented in source; deployment unverified |
+| Stateful widgets / singleton services | Current state management |
+| Flutter Navigator / GuardedRoute | Current navigation and UI access checks |
 
 ---
 
@@ -58,7 +61,7 @@ Only **two roles** exist in this system:
 - **Repository pattern** — Clean separation of data access from business logic.
 - **Service layer** — Business logic separated from UI widgets.
 - **SQLite** — Primary local database. Never removed.
-- **Supabase** — Optional future cloud platform for backup and synchronization.
+- **Supabase** — Optional synchronization code exists; cloud policy and immutable-record protection need verification.
 
 ---
 
@@ -119,10 +122,11 @@ ny_kitchen_app/
 
 ## Current Status
 
-- **Project Phase 4 security and SQLite integration are implemented.**
-- Login, Admin, and Cashier screens now use local SQLite repositories; Supabase cloud sync is not implemented.
-- Supabase, when approved, is restricted to background backup/synchronization. SQLite remains the primary source of truth and authentication remains local-only.
-- Pre-Phase 5 validation includes analyzer checks, baseline widget tests, lifecycle checks, and documentation synchronization.
+- Login, Admin, and Cashier screens use local SQLite repositories. Security controls exist but have open findings.
+- Supabase push/pull exists in source; live configuration and RLS were not inspected. Hybrid offline/online operation with online synchronization is owner-confirmed scope (2026-10-20).
+- The supplied security rubric has 20 criteria worth 100 points. The plan maps each criterion to required evidence; no score is assigned.
+- Windows is the recommended base demo. Linux VM and Docker are optional; ZAP is relevant to the HTTP API, while native app controls require direct tests.
+- No application code was changed or security tests run during the documentation review.
 
 ---
 
@@ -140,3 +144,7 @@ ny_kitchen_app/
 ---
 
 *See [`RULES.md`](RULES.md) for the complete rule set.*
+
+## Ubuntu VM backend (2026-10-22)
+
+The approved Flutter + Ubuntu direction now has a [backend and deployment guide](backend/README.md). This first version provides one-way sales synchronization with device authentication, separate Admin reads, retained revisions, offline retries and a visible status footer. Select `SYNC_BACKEND=ubuntu` after deploying; it is exclusive with the existing direct Supabase mode. VM installation/HTTPS verification remain pending. [Local test evidence](docs/security/evidence/2026-10-defense/backend_verification.md): 11 backend and 4 Flutter tests passed.

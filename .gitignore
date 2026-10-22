@@ -49,3 +49,10 @@ app.*.map.json
 .env.*
 !.env.example
 
+# Local backend environments, state and credentials
+backend/.venv/
+backend/data/
+backend/credentials.json
+**/__pycache__/
+.pytest_cache/
+

@@ -13,7 +13,7 @@
 | ID | Title | Status | Date |
 |---|---|---|---|
 | ADR-001 | SQLite as Primary Local Database | Accepted | 2026-07-14 |
-| ADR-002 | Supabase as Optional Cloud Platform | Proposed | 2026-07-14 |
+| ADR-002 | Supabase online synchronization; offline core retained | Accepted | 2026-10-20 |
 | ADR-003 | Offline-First Architecture | Accepted | 2026-07-14 |
 | ADR-004 | Provider for State Management | Proposed | 2026-07-14 |
 | ADR-005 | go_router for Navigation | Proposed | 2026-07-14 |
@@ -84,10 +84,10 @@ Which local database engine should be used to ensure offline-first operation, re
 |---|---|
 | **Decision ID** | ADR-002 |
 | **Title** | Supabase as Optional Cloud Platform |
-| **Status** | Proposed |
+| **Status** | Accepted — scope confirmed 2026-10-20 |
 | **Date** | 2026-07-14 |
 
-### Context
+### Historical Context
 The blueprint mentions Supabase as a future optional enhancement for cloud backup, synchronization, and remote Admin access. It is NOT a core requirement for the initial application.
 
 ### Problem
@@ -99,7 +99,7 @@ Should Supabase be integrated in the initial version, and what should the scope 
 3. **No Supabase in initial version** — Defer all cloud features to a future version.
 
 ### Decision
-**Pending Review.** The blueprint lists cloud sync as excluded from the initial scope (Section 4). Supabase is explicitly listed as a future optional enhancement. The exact phase for Supabase integration must be confirmed by the project owner.
+**Accepted, 2026-10-20.** The owner confirmed that the system is hybrid offline/online with online synchronization. SQLite supports core offline operations; Supabase synchronizes records when connected. This approves synchronization scope, not a claim of verified RLS, conflict handling, recovery, remote Admin access, or cloud authentication.
 
 ### Consequences
 - Core application will be fully functional without Supabase.
@@ -120,7 +120,7 @@ Should Supabase be integrated in the initial version, and what should the scope 
 - Supabase SDK must be compatible with Flutter on Android and Windows.
 
 ### Revisit Conditions
-- When the project owner approves cloud synchronization scope.
+- When synchronization requirements or data boundaries change.
 - Before beginning Supabase integration work.
 
 ---
@@ -416,6 +416,16 @@ Two major Flutter SQLite packages exist: `sqflite` (direct SQL) and `drift` (typ
 
 ---
 
+## ADR-017 — Defense environment and security reconciliation (2026-10-20)
+
+**Status:** Recommended plan; implementation decisions pending verification.
+
+Use Windows with disposable SQLite fixtures for the base defense. The owner clarified Linux meant a VM and could be omitted if unnecessary; the rubric does not require it. Docker is optional. ZAP is optional for the Python HTTP API. Native application controls require direct repository and device tests.
+
+`docs/SECURITY_IMPLEMENTATION_PLAN.md` maps all 20 rubric criteria and the proposed treatment sequence. No runtime architecture was changed.
+
+Pending decisions: confirm face functionality in the demonstrated scope; verify the owner-approved online synchronization; record current Navigator/stateful-widget implementation against earlier Provider/go_router proposals; revise ADR-016 to match a verified protected backup/restore implementation. RPO/RTO targets in the plan are proposals, not achieved guarantees.
+
 ## ADR-016 — Backup and Restore Strategy
 
 | Field | Value |
@@ -439,3 +449,9 @@ The application must support manual database backup and restore. SQLite backup c
 ### Consequences
 - Simple, reliable backup process.
 - Requires user training on how to export backups to external drives for disaster recovery.
+
+## ADR-018 — Flutter retained with Ubuntu synchronization backend
+
+**Accepted direction, 2026-10-22:** owner explicitly chose an Ubuntu VM backend while retaining Flutter. First implementation: device-authenticated HTTPS sales replication; separate Admin read token; server SQLite revision history; no deletion endpoint; explicit backend selection to avoid concurrent Supabase writes. No local user/password/biometric replication. This is one-way sales sync, not a full replacement for existing two-way Supabase features. Existing server credentials are operator-provisioned, not new POS user roles. User has no VM yet; deployment files prepared, deployment pending.
+
+Local evidence: 11 backend tests and 4 Flutter sync tests pass; see `docs/security/evidence/2026-10-defense/backend_verification.md`. Threats remaining: compromised terminal can falsify its own submissions; operator filesystem access can alter server data; local repository authorization remains open. Exact VM network/HTTPS setup and recovery need separate verification.

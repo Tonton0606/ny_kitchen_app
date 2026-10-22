@@ -1,14 +1,16 @@
 ﻿# docs/SUPABASE_ARCHITECTURE.md
+
+> 2026-10-20 reconciliation: Supabase push/pull and image transfer exist in current source. Deployment/RLS are not verified. Future-only statements below describe older planning; local authentication remains the baseline. See SECURITY_IMPLEMENTATION_PLAN.md for K02, AT10 and the approved hybrid synchronization scope (owner confirmation, 2026-10-20).
 # N.Y Kitchen — Supabase Architecture
 
-> Status: FUTURE/OPTIONAL — Not required for initial application
+> Status: APPROVED — Online synchronization in a hybrid offline/online application; live security verification pending
 > Source of Truth: PROJECT_BLUEPRINT.md
 > See: DECISIONS.md ADR-002
 
 ---
 
 ## Purpose
-Document the Supabase cloud platform architecture for future optional integration.
+Document Supabase online synchronization while preserving SQLite-backed offline operations.
 
 ---
 
@@ -111,7 +113,7 @@ Supabase serves as an optional cloud platform for:
 ---
 
 ## Open Architectural Decisions
-- ADR-002: Supabase integration scope (Pending Review)
+- ADR-002: Hybrid online synchronization scope (Accepted 2026-10-20)
 - ADR-012: Synchronization strategy (Pending Review)
 - ADR-014: Conflict resolution strategy (Pending Review)
 

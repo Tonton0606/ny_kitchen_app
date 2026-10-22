@@ -1,6 +1,8 @@
 # PROJECT_STATE.md
 # N.Y Kitchen — Project State Tracker
 
+> 2026-10-20 review: Rubric received and mapped in `docs/SECURITY_IMPLEMENTATION_PLAN.md`. See `SECURITY_DEFENSE_RECORD.md` for session history. No fresh runtime/security test pass is claimed. Completion entries below the current information table are historical claims requiring current evidence.
+
 > This file must be updated after every approved work session.
 > Do not claim features are complete unless they have been implemented and verified.
 > Authority: `PROJECT_BLUEPRINT.md` → `RULES.md` → `AI_DEVELOPMENT_RULES.md`
@@ -12,10 +14,10 @@
 | Field | Value |
 |---|---|
 | **Project Name** | N.Y Kitchen Secure Order and Sales Management System |
-| **Current Phase** | Phase 6 UI/UX Polish — Project Phase 5 cloud synchronization completed |
-| **Current Status** | SQLite is local source of truth; Supabase background sync is active and secured |
-| **Last Updated** | 2026-07-20 |
-| **Updated By** | Jr. Flutter Developer |
+| **Current Phase** | Security defense planning and documentation reconciliation |
+| **Current Status** | SQLite implementation inspected; optional cloud code present; security gaps and runtime verification pending |
+| **Last Updated** | 2026-10-20 |
+| **Updated By** | Documentation review session |
 
 ---
 
@@ -347,3 +349,15 @@ The percentages describe implementation scope, not production readiness. Securit
 - Consult `DECISIONS.md` before making architectural choices.
 - Update this file after every approved work session.
 - Do not claim Supabase cloud synchronization is complete; it has not been implemented.
+
+## Owner-confirmed scope — 2026-10-20
+
+Hybrid offline/online POS with online synchronization is approved. SQLite supports offline operations; Supabase handles online synchronization. Cloud security and conflict/recovery behavior still require verification.
+
+## Backend implementation — 2026-10-22
+
+Flutter retained. Added `backend/` FastAPI sales synchronization service, provisioner, Ubuntu systemd/Caddy templates, Flutter client/checkpoint logic and visible sync status. Select with `SYNC_BACKEND=ubuntu`; Supabase remains the legacy/default mode. No production configuration changed. 11 backend and 4 Flutter targeted tests passed. Ubuntu VM, trusted HTTPS and real-device end-to-end verification remain pending.
+
+## AI continuity — 2026-10-22
+
+Root `AGENTS.md` now directs every new AI session to `AI_SESSION_HANDOFF.md` and requires self-identification as Ralston Villamin, MJ Daz, Hancr Gonzales, or another explicitly identified collaborator before project work. Current handoff creation session: Ralston Villamin. No runtime implementation or test status changed.

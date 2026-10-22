@@ -1,83 +1,19 @@
-﻿# docs/ARCHITECTURE.md
-# N.Y Kitchen — System Architecture
+# System architecture — observed implementation
 
-> Source of Truth: `PROJECT_BLUEPRINT.md` Section 18
-> Confirmed Decisions: See `DECISIONS.md` ADR-006, ADR-007, ADR-008
+Updated 2026-10-20. This describes source, not a verified deployment.
 
----
+Flutter/Dart and Material 3 provide the UI. `lib/main.dart` creates `MaterialApp`; navigation uses Flutter `Navigator` and `MaterialPageRoute`. Stateful widgets and singleton services manage state. Provider and go_router are older proposals, not current dependencies.
 
-## Purpose
-Document the overall system architecture and the design patterns used in N.Y Kitchen.
+Admin, Cashier and authentication presentation code lives under `lib/features/`. Shared widgets live under `lib/features/shared/`. SQLite creation/migrations and concrete repositories live under `lib/core/database/`. Session, security helpers, sync and exports are under `lib/core/`.
 
----
+Pages call repositories; the sync service also accesses SQLite directly. There is no universal service authorization layer established by this inspection. UI route guards exist, but repository enforcement must be strengthened.
 
-## Architecture Style
-**Offline-First, Feature-First Flutter Application**
+SQLite is the local source for core operations. Optional configured Supabase code pushes and pulls records and transfers images. The Python FastAPI service is a separate local face-processing component. Its integration into the current login flow remains unverified.
 
----
+See [security implementation plan](SECURITY_IMPLEMENTATION_PLAN.md) for boundaries, assets, deployment decisions and verification. The owner confirmed online synchronization as part of the hybrid system on 2026-10-20. SQLite remains the local operational store; this does not establish verified cloud security.
 
-## Layer Overview
+## Ubuntu backend mode — 2026-10-22
 
-`
-UI Layer (Flutter Widgets, Screens)
-        ↓ calls
-Provider Layer (State Management)
-        ↓ calls
-Service Layer (Business Logic, Validation, Activity Logging)
-        ↓ calls
-Repository Layer (Data Access Abstraction)
-        ↓ implements
-SQLite Repository (Local) | Supabase Repository (Cloud - Future)
-`
+Owner-approved addition: Flutter + local SQLite → HTTPS → Caddy on Ubuntu → loopback FastAPI → server SQLite sales revisions. Device credential can upload only to its own server-assigned namespace; separate Admin credential reads sales/audit. No POS passwords or face data leave the device through this path.
 
----
-
-## Feature-First Folder Structure
-Code is organized by feature, not by layer. Each feature contains its own screens, providers, repositories, and services. Shared components live in core/.
-
-See: `docs/FOLDER_STRUCTURE.md`
-
----
-
-## Repository Pattern
-- Repository interfaces define data access contracts.
-- SQLite repositories implement local data access.
-- Future Supabase repositories may implement the same interfaces.
-- Services never access the database directly.
-
----
-
-## Service Layer
-- Contains all business logic.
-- Handles validation before writing to repositories.
-- Triggers Activity Log entries for all tracked events.
-- Services do not interact with the database directly.
-
----
-
-## State Management
-- Provider (see `DECISIONS.md` ADR-004 - Proposed)
-- Providers hold application state and call services.
-- UI rebuilds reactively when provider state changes.
-
----
-
-## Navigation
-- go_router (see `DECISIONS.md` ADR-005 - Proposed)
-- Declarative routing with route guards for role-based access control.
-- Unauthorized access redirects to the Unauthorized page.
-
----
-
-## Security Architecture
-- Role-based access enforced at router and service layers.
-- All database operations use parameterized queries.
-- Passwords hashed before storage (algorithm TBD - ADR-013).
-- Activity logs generated automatically by the service layer.
-
----
-
-## Open Questions
-- [ ] Confirm Provider vs alternatives before Phase 2 (ADR-004)
-- [ ] Confirm go_router version before Phase 2 (ADR-005)
-- [ ] Confirm SQLite package before Phase 3 (ADR-015)
+`SYNC_BACKEND=ubuntu` selects this one-way sales mode and prevents direct Supabase push/pull/image upload. Unset/default mode preserves the prior Supabase path. Neither mode is silently used as a fallback for the other. See `../backend/README.md` for capabilities, deployment and remaining limits.
