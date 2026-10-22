@@ -52,8 +52,6 @@ dependencies:
   window_manager: ^0.5.2
   http: ^1.6.0
   syncfusion_flutter_xlsio: ^34.1.33
-  camera: ^0.12.0+2
-  camera_windows: ^0.2.6+4
   share_plus: ^12.0.2
   flutter_secure_storage: ^9.0.0
   flutter_lucide: ^1.59.0

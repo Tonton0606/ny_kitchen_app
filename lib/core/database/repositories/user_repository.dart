@@ -181,8 +181,8 @@ class UserRepository {
       whereArgs: [id],
     );
 
-    // Audit user update (Gap 9) - sanitize fields, never log password_hash or face_encoding
-    final sanitizedKeys = user.keys.where((k) => k != 'password_hash' && k != 'face_encoding').join(', ');
+    // Audit user update (Gap 9) - sanitize fields, never log password_hash
+    final sanitizedKeys = user.keys.where((k) => k != 'password_hash').join(', ');
     await _auditRepo.logAction(
       userId: adminId,
       username: adminUsername ?? 'Admin',
@@ -246,98 +246,5 @@ class UserRepository {
       );
     }
   }
-
-  // Update face encoding
-  Future<void> updateFaceEncoding(int userId, String encodingJson, {String? adminName}) async {
-    final db = await _dbHelper.database;
-    final encryptedEncoding = await SecurityUtils.encryptFaceEncoding(encodingJson);
-    await db.update(
-      'users',
-      {'face_encoding': encryptedEncoding},
-      where: 'id = ?',
-      whereArgs: [userId],
-    );
-
-    final userMaps = await db.query('users', where: 'id = ?', whereArgs: [userId], limit: 1);
-    if (userMaps.isNotEmpty) {
-      final user = userMaps.first;
-      await _auditRepo.logAction(
-        userId: userId,
-        username: user['username'] as String,
-        role: user['role'] as String,
-        module: 'Security',
-        action: 'Biometric Enrolled',
-        status: 'Success',
-        description: 'Biometric face profile enrolled by ${adminName ?? 'Admin'}',
-      );
-    }
-  }
-
-  /// Hard deletes the user's stored biometric face template (Fix 2).
-  ///
-  /// Clears `face_encoding` to NULL in SQLite and logs an audit event for
-  /// permanent erasure WITHOUT recording any biometric vector data.
-  Future<void> deleteBiometricProfile(int userId, {String? adminName}) async {
-    final db = await _dbHelper.database;
-    final userMaps = await db.query('users', where: 'id = ?', whereArgs: [userId], limit: 1);
-    if (userMaps.isEmpty) {
-      throw ArgumentError('User with ID $userId not found');
-    }
-    final user = userMaps.first;
-
-    await db.update(
-      'users',
-      {'face_encoding': null},
-      where: 'id = ?',
-      whereArgs: [userId],
-    );
-
-    await _auditRepo.logAction(
-      userId: userId,
-      username: user['username'] as String,
-      role: user['role'] as String,
-      module: 'Security',
-      action: 'Biometric Profile Deleted',
-      status: 'Success',
-      description: 'Biometric face profile permanently deleted by ${adminName ?? 'Admin'}',
-    );
-  }
-
-
-  // Get users with face encoding
-  Future<List<Map<String, dynamic>>> getUsersWithFaceEncoding() async {
-    final db = await _dbHelper.database;
-    final users = await db.query(
-      'users',
-      where: 'status = ? AND face_encoding IS NOT NULL',
-      whereArgs: ['active'],
-    );
-    
-    // Decrypt the face encodings and transparently migrate legacy CBC to GCM (Task B2)
-    final decryptedUsers = await Future.wait(users.map((user) async {
-      final mutableUser = Map<String, dynamic>.from(user);
-      if (mutableUser['face_encoding'] != null) {
-        final rawCipher = mutableUser['face_encoding'] as String;
-        try {
-          final decrypted = await SecurityUtils.decryptFaceEncoding(rawCipher);
-          mutableUser['face_encoding'] = decrypted;
-
-          // Transparent re-encrypt to GCM on read if stored in legacy format
-          if (SecurityUtils.isLegacyFaceEncoding(rawCipher)) {
-            final upgradedGcm = await SecurityUtils.encryptFaceEncoding(decrypted);
-            await db.update(
-              'users',
-              {'face_encoding': upgradedGcm},
-              where: 'id = ?',
-              whereArgs: [mutableUser['id']],
-            );
-          }
-        } catch (_) {
-          mutableUser['face_encoding'] = null;
-        }
-      }
-      return mutableUser;
-    }));
-    return decryptedUsers;
-  }
 }
+

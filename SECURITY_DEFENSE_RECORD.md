@@ -308,4 +308,44 @@ Checks actually run and actual results:
 - `git fetch origin ui-refinements`: up to date, nothing to pull or merge.
 Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Continue testing UI workflows in running application.
+
+## Biometrics & Face Scan Artifacts Complete Removal Session — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T00:01:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+1. Audit and completely remove all remaining face scan, biometric, and camera artifacts from the project.
+2. Remove unused `camera` and `camera_windows` dependencies from `pubspec.yaml` to accelerate Windows build times.
+3. Clean UI: remove Biometrics metric card, table column, status pill, action buttons, and dialogs from `account_management_page.dart`; delete `biometric_consent_dialog.dart`.
+4. Clean core services & security utils: delete `ai_service_client.dart`; remove AES face encoding encryption/decryption from `security_utils.dart`; remove biometric methods from `user_repository.dart`.
+5. Remove external microservice: delete root `ai_service/` folder, remove `AI_SERVICE_KEY` from `.env` and `.env.example`.
+6. Remove obsolete test suites: delete `ai_service_client_test.dart`, `biometric_lifecycle_test.dart`, and `face_encryption_test.dart`.
+7. Follow operator Git procedure: check remote tracking, commit cleanly, and ask user permission before push.
+Rubric / risk / acceptance-test IDs: SEC-01 (Credential and PII attack surface reduction), AT04 (Cryptographic boundaries), UI-01 (UI Principles compliance).
+Files changed:
+- `pubspec.yaml`
+- `pubspec.lock`
+- `.env`
+- `.env.example`
+- `lib/features/admin/presentation/pages/account_management_page.dart`
+- `lib/core/utils/security_utils.dart`
+- `lib/core/database/repositories/user_repository.dart`
+- `windows/flutter/generated_plugin_registrant.cc`
+- `windows/flutter/generated_plugins.cmake`
+- `SECURITY_DEFENSE_RECORD.md`
+Files deleted:
+- `lib/features/auth/presentation/widgets/biometric_consent_dialog.dart`
+- `lib/core/services/ai_service_client.dart`
+- `ai_service/` (entire microservice directory)
+- `test/security/ai_service_client_test.dart`
+- `test/security/biometric_lifecycle_test.dart`
+- `test/security/face_encryption_test.dart`
+Checks actually run and actual results:
+- `flutter pub get`: Resolved cleanly without camera dependencies.
+- `flutter analyze`: 0 errors / No issues found across all modified files.
+- `flutter test test/security/`: 47/47 active security tests passed cleanly.
+- `git fetch origin ui-refinements`: up to date, nothing to pull or merge.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Seek user permission to push commit to `origin/ui-refinements`.
