@@ -7,6 +7,7 @@ import '../widgets/food_card.dart';
 import '../widgets/order_summary_panel.dart';
 import '../../../../../core/database/repositories/food_repository.dart';
 import '../../../../../core/database/repositories/transaction_repository.dart';
+import '../../../../../core/session/session_manager.dart';
 import '../../../shared/widgets/manual_sync_button.dart';
 
 class CashierHomePage extends StatefulWidget {
@@ -217,8 +218,13 @@ class _CashierHomePageState extends State<CashierHomePage> {
     }).toList();
 
     try {
+      final session = SessionManager();
+      final currentUserId = session.userId ?? 1;
+      final currentUsername = session.currentUser?['full_name'] ?? session.currentUser?['username'] ?? 'Cashier';
+      final currentRole = session.role ?? 'cashier';
+
       final result = await _transactionRepo.createTransaction(
-        userId: 1,
+        userId: currentUserId,
         totalAmount: total,
         discount: 0,
         paymentMethod: 'cash',
@@ -226,6 +232,8 @@ class _CashierHomePageState extends State<CashierHomePage> {
         change: change,
         items: itemsForDb,
         customOrderNumber: customOrderNumber,
+        username: currentUsername,
+        role: currentRole,
       );
 
       if (!mounted) return;
