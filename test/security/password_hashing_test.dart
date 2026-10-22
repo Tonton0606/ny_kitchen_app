@@ -50,6 +50,25 @@ void main() {
       // Known hash for password="password", salt="salt", iterations=10000, keyLen=32 (RFC 6070)
       expect(parts[1], equals('XsArkaS1nG9Z3V++TKZJ7OT6hWjNuLo2z0FCbogFUis='));
     });
+
+    test('verifyPassword handles both 2-part and 3-part hashes seamlessly', () {
+      const password = 'password';
+      const salt = 'salt';
+      const expectedHash = 'XsArkaS1nG9Z3V++TKZJ7OT6hWjNuLo2z0FCbogFUis=';
+
+      // 2-part format
+      expect(SecurityUtils.verifyPassword(password, '$salt:$expectedHash'), isTrue);
+
+      // 3-part format with explicit iteration count
+      expect(SecurityUtils.verifyPassword(password, '10000:$salt:$expectedHash'), isTrue);
+
+      // Incorrect password fails on both formats
+      expect(SecurityUtils.verifyPassword('wrongPassword', '$salt:$expectedHash'), isFalse);
+      expect(SecurityUtils.verifyPassword('wrongPassword', '10000:$salt:$expectedHash'), isFalse);
+
+      // Malformed hash fails safely without crashing
+      expect(SecurityUtils.verifyPassword(password, 'invalid_hash'), isFalse);
+    });
   });
 }
 

@@ -35,15 +35,41 @@ class SecurityUtils {
     return '$actualSalt:$hashString';
   }
 
-  /// Verifies a password against a stored 'salt:hash' string
+  /// Verifies a password against a stored hash string.
+  /// Backward compatible:
+  /// - Modern format with iteration metadata (3 parts): '$iterations:$salt:$hash'
+  /// - Legacy format (2 parts): '$salt:$hash' (evaluated with 10,000 legacy iterations)
   static bool verifyPassword(String password, String storedHash) {
     try {
       final parts = storedHash.split(':');
-      if (parts.length != 2) return false;
-      
-      final salt = parts[0];
-      final newHash = hashPassword(password, salt);
-      return newHash == storedHash;
+      if (parts.length == 3) {
+        final iter = int.tryParse(parts[0]);
+        if (iter == null || iter <= 0) return false;
+        final salt = parts[1];
+        final expectedHash = parts[2];
+
+        final saltBytes = utf8.encode(salt);
+        final passwordBytes = utf8.encode(password);
+        final derivator = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))
+          ..init(Pbkdf2Parameters(saltBytes, iter, _keyLength));
+        final hashBytes = derivator.process(passwordBytes);
+        final computedHash = base64.encode(hashBytes);
+
+        return computedHash == expectedHash;
+      } else if (parts.length == 2) {
+        final salt = parts[0];
+        final expectedHash = parts[1];
+
+        final saltBytes = utf8.encode(salt);
+        final passwordBytes = utf8.encode(password);
+        final derivator = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))
+          ..init(Pbkdf2Parameters(saltBytes, _iterations, _keyLength));
+        final hashBytes = derivator.process(passwordBytes);
+        final computedHash = base64.encode(hashBytes);
+
+        return computedHash == expectedHash;
+      }
+      return false;
     } catch (_) {
       return false; // Fallback fail
     }
