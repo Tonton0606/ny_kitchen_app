@@ -791,3 +791,32 @@ Evidence paths:
 - `test/security/repository_authorization_test.dart`
 - `SECURITY_DEFENSE_RECORD.md`
 
+## Cashier Operational Menu & Own-Record Transaction Permissions Remediation — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T06:14:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Resolve runtime cashier `SecurityException: FORBIDDEN_ROLE` on login and food catalog loading:
+1. Root cause:
+   - `home_page.dart` (cashier POS screen) calls `FoodRepository.getAllFoodItems()` on initialization to display menu items. It was strictly guarded with `requireAdmin`, blocking cashiers from viewing the active food catalog.
+   - `transaction_history_page.dart` (cashier transaction history tab) calls `TransactionRepository.getAllTransactions()`. It was guarded with `requireAdmin`, blocking cashiers from loading past transactions.
+2. Remediation:
+   - `FoodRepository.getAllFoodItems()`: Changed to `RepositorySecurityGuard.requireAuthenticated()`. Reading the active food catalog is an essential operational requirement for cashiers to take orders. All menu modifications (`insertFoodItem`, `updateFoodItem`, `archiveFoodItem`, categories) remain strictly enforced as `requireAdmin()`.
+   - `TransactionRepository.getAllTransactions()`: Changed to `RepositorySecurityGuard.requireAuthenticated()` with **automatic own-record filtering**: if the caller is not an administrator, the query automatically appends `WHERE t.user_id = ?` binding to `actor['id']`. Cashiers can view their own transaction history tab without viewing other cashiers' records or receiving authorization exceptions.
+   - `test/security/repository_authorization_test.dart`: Added test assertions verifying that cashiers can successfully load menu catalog items and that non-admin transaction queries are strictly isolated to the caller's own records.
+Rubric / risk / acceptance-test IDs: R08, R10, K01, AT02, SEC-01.
+Files changed:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/core/database/repositories/transaction_repository.dart`
+- `test/security/repository_authorization_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/core/database/repositories/ test/security/`: 0 errors.
+- `flutter test test/security/repository_authorization_test.dart`: 8/8 passed (1.0s).
+- `flutter test test/security/`: 55/55 passed (100% pass rate).
+Evidence paths:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/core/database/repositories/transaction_repository.dart`
+- `test/security/repository_authorization_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+
+

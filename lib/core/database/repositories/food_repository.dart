@@ -20,9 +20,9 @@ class FoodRepository {
     );
   }
 
-  // Retrieve ALL food items (used for Admin food management table)
+  // Retrieve ALL food items (used for Admin food management table and Cashier menu catalog)
   Future<List<Map<String, dynamic>>> getAllFoodItems() async {
-    await RepositorySecurityGuard.requireAdmin(
+    await RepositorySecurityGuard.requireAuthenticated(
       module: 'Food Management',
       action: 'View All Food Items',
     );

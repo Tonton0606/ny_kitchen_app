@@ -123,11 +123,31 @@ class TransactionRepository {
   }
 
   Future<List<Map<String, dynamic>>> getAllTransactions() async {
-    await RepositorySecurityGuard.requireAdmin(
+    final actor = await RepositorySecurityGuard.requireAuthenticated(
       module: 'Transactions',
       action: 'View All Transactions',
     );
     final db = await _dbHelper.database;
+    final role = (actor['role'] as String?)?.toLowerCase();
+
+    // SEC-01 & AT02: Non-admin callers are strictly restricted to their own transactions
+    if (role != 'admin') {
+      final userId = actor['id'] as int?;
+      if (userId != null) {
+        return await db.rawQuery('''
+          SELECT 
+            t.*, 
+            u.full_name as cashier_name, 
+            u.username as cashier_username, 
+            u.role as cashier_role
+          FROM transactions t
+          LEFT JOIN users u ON t.user_id = u.id
+          WHERE t.user_id = ?
+          ORDER BY t.created_at DESC
+        ''', [userId]);
+      }
+    }
+
     return await db.rawQuery('''
       SELECT 
         t.*, 

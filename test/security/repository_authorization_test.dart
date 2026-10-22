@@ -22,7 +22,12 @@ void main() {
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    SecurityUtils.defaultIterations = 1000;
     FlutterSecureStorage.setMockInitialValues({});
+  });
+
+  tearDownAll(() {
+    SecurityUtils.defaultIterations = SecurityUtils.targetIterations;
   });
 
   setUp(() async {
@@ -320,6 +325,31 @@ void main() {
         userRepo.updateUser(2, {'role': 'admin'}),
         throwsA(isA<SecurityException>().having((e) => e.code, 'code', 'FORBIDDEN_ROLE')),
       );
+
+      // 4. Cashier can view food menu catalog (getAllFoodItems) to take orders
+      final cashierFoods = await foodRepo.getAllFoodItems();
+      expect(cashierFoods.isNotEmpty, isTrue);
+
+      // 5. Cashier calling getAllTransactions only receives their own transactions
+      await db.insert('transactions', {
+        'receipt_number': 'TX-CASHIER-2',
+        'user_id': 2,
+        'total_amount': 250.0,
+        'payment_method': 'Cash',
+        'status': 'Served',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      await db.insert('transactions', {
+        'receipt_number': 'TX-OTHER-3',
+        'user_id': 3,
+        'total_amount': 500.0,
+        'payment_method': 'Cash',
+        'status': 'Served',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      final cashierTxns = await transactionRepo.getAllTransactions();
+      expect(cashierTxns.every((t) => t['user_id'] == 2), isTrue,
+          reason: 'Cashier must only see their own transactions');
     });
 
     test('Audit log querying restricts non-admins to their own user ID records', () async {
