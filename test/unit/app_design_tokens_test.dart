@@ -18,8 +18,8 @@ void main() {
       expect(tokens.goldTint, const Color(0xFFFFF1C2));
       expect(tokens.creamBackground, const Color(0xFFF5F6F8));
       expect(tokens.surfaceWhite, const Color(0xFFFFFFFF));
-      expect(tokens.softBorder, const Color(0xFFE7DCCB));
-      expect(tokens.mutedBrown, const Color(0xFF6B5E4B));
+      expect(tokens.softBorder, AppColors.softBorder);
+      expect(tokens.mutedBrown, AppColors.mutedBrown);
       expect(tokens.disabled, const Color(0xFFB9AE9B));
     });
 

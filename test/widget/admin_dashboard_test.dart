@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ny_kitchen_app/features/admin/presentation/pages/admin_dashboard_page.dart';
+import 'package:ny_kitchen_app/features/shared/widgets/app_status_strip.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -25,8 +26,9 @@ void main() {
     );
     await tester.pump();
 
-    // Verify Quick Actions card title is removed (slim row without title)
+    // Verify Quick Actions card title is replaced by QUICK ACTIONS label caption
     expect(find.text('Quick Actions'), findsNothing);
+    expect(find.text('QUICK ACTIONS'), findsOneWidget);
 
     // Verify all 4 action items exist
     expect(find.text('Add Food Item'), findsOneWidget);
@@ -74,4 +76,40 @@ void main() {
     // Verify duplicate User Settings icon is removed from the dashboard
     expect(find.byTooltip('User Settings'), findsNothing);
   });
+
+  testWidgets('AppStatusStrip renders Online chip, Sync off chip, digital clock, and settings trigger', (tester) async {
+    tester.view.physicalSize = const Size(1280, 720);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    bool settingsTapped = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AppStatusStrip(
+            title: 'Admin Dashboard',
+            onSettingsTap: () {
+              settingsTapped = true;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // Verify title
+    expect(find.text('Admin Dashboard'), findsOneWidget);
+    // Verify Online chip
+    expect(find.text('Online'), findsOneWidget);
+    // Verify Sync chip in unconfigured/test mode shows "Sync off"
+    expect(find.text('Sync off'), findsOneWidget);
+    // Verify settings trigger icon
+    final settingsIcon = find.byIcon(Icons.tune_outlined);
+    expect(settingsIcon, findsOneWidget);
+
+    await tester.tap(settingsIcon);
+    await tester.pump();
+    expect(settingsTapped, isTrue);
+  });
 }
+

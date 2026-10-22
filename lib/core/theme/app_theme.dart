@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import 'app_design_tokens.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
@@ -21,6 +22,7 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: AppTypography.bodyFontFamily,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: colorScheme.surface,
       appBarTheme: AppBarTheme(
@@ -117,16 +119,16 @@ class AppTheme {
         color: colorScheme.onSurfaceVariant,
       ),
       textTheme: const TextTheme(
-        displayLarge: TextStyle(fontSize: 57, fontWeight: FontWeight.normal, height: 1.12),
-        headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, height: 1.25),
-        headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.25),
-        titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, height: 1.27),
-        titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.5),
-        bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.normal, height: 1.5),
-        bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, height: 1.43),
-        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.43),
-        labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.33),
-        labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, height: 1.45),
+        displayLarge: TextStyle(fontFamily: AppTypography.displayFontFamily, fontSize: 57, fontWeight: FontWeight.normal, height: 1.12),
+        headlineLarge: TextStyle(fontFamily: AppTypography.displayFontFamily, fontSize: 32, fontWeight: FontWeight.bold, height: 1.25),
+        headlineMedium: TextStyle(fontFamily: AppTypography.displayFontFamily, fontSize: 28, fontWeight: FontWeight.bold, height: 1.25),
+        titleLarge: TextStyle(fontFamily: AppTypography.displayFontFamily, fontSize: 22, fontWeight: FontWeight.w600, height: 1.27),
+        titleMedium: TextStyle(fontFamily: AppTypography.displayFontFamily, fontSize: 16, fontWeight: FontWeight.w600, height: 1.5),
+        bodyLarge: TextStyle(fontFamily: AppTypography.bodyFontFamily, fontSize: 16, fontWeight: FontWeight.normal, height: 1.5),
+        bodyMedium: TextStyle(fontFamily: AppTypography.bodyFontFamily, fontSize: 14, fontWeight: FontWeight.normal, height: 1.43),
+        labelLarge: TextStyle(fontFamily: AppTypography.displayFontFamily, fontSize: 14, fontWeight: FontWeight.w600, height: 1.43),
+        labelMedium: TextStyle(fontFamily: AppTypography.bodyFontFamily, fontSize: 12, fontWeight: FontWeight.w600, height: 1.33),
+        labelSmall: TextStyle(fontFamily: AppTypography.bodyFontFamily, fontSize: 11, fontWeight: FontWeight.w600, height: 1.45),
       ),
       dividerTheme: DividerThemeData(
         color: colorScheme.outlineVariant.withValues(alpha: 0.5),

@@ -190,8 +190,12 @@ extension AppDesignTokensContextX on BuildContext {
 /// 4. Label: 11-12px, UPPERCASE, weight 600, +0.5 letter-spacing, muted (passes 4.5:1).
 /// 5. Button: same sans, 14px (or 12px compact), weight 600, sentence case, NOT uppercase.
 class AppTypography {
-  // --- ROLE 1: FIGURE (numbers only, bold, tabular figures) ---
+  static const String displayFontFamily = 'SpaceGrotesk';
+  static const String bodyFontFamily = 'Inter';
+
+  // --- ROLE 1: FIGURE (numbers only, bold, tabular figures, Display family) ---
   static const TextStyle figureHero = TextStyle(
+    fontFamily: displayFontFamily,
     fontSize: 40,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.8,
@@ -200,6 +204,7 @@ class AppTypography {
   );
 
   static const TextStyle figure = TextStyle(
+    fontFamily: displayFontFamily,
     fontSize: 20,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.3,
@@ -208,6 +213,7 @@ class AppTypography {
   );
 
   static const TextStyle figureSmall = TextStyle(
+    fontFamily: displayFontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w700,
     color: AppColors.darkCharcoal,
@@ -221,6 +227,7 @@ class AppTypography {
     double? letterSpacing,
   }) {
     return TextStyle(
+      fontFamily: displayFontFamily,
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -229,8 +236,9 @@ class AppTypography {
     );
   }
 
-  // --- ROLE 2: HEADING (16-18px, weight 600, sentence case, visibly lighter than hero) ---
+  // --- ROLE 2: HEADING (16-18px, weight 600, Display family) ---
   static const TextStyle heading = TextStyle(
+    fontFamily: displayFontFamily,
     fontSize: 16,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.0,
@@ -238,14 +246,16 @@ class AppTypography {
   );
 
   static const TextStyle headingLarge = TextStyle(
+    fontFamily: displayFontFamily,
     fontSize: 18,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.0,
     color: AppColors.darkCharcoal,
   );
 
-  // --- ROLE 3: BODY (14px, weight 400) ---
+  // --- ROLE 3: BODY (14px, weight 400, Body family) ---
   static const TextStyle body = TextStyle(
+    fontFamily: bodyFontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: AppColors.darkCharcoal,
@@ -253,29 +263,33 @@ class AppTypography {
   );
 
   static const TextStyle bodyMuted = TextStyle(
+    fontFamily: bodyFontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    color: AppColors.mutedBrown,
+    color: AppColors.mutedSlate,
     height: 1.4,
   );
 
-  // --- ROLE 4: LABEL (11-12px, UPPERCASE, weight 600, +0.5 letter-spacing, muted) ---
+  // --- ROLE 4: LABEL (11-12px, UPPERCASE, weight 600, +0.5 letter-spacing, Body family) ---
   static const TextStyle label = TextStyle(
+    fontFamily: bodyFontFamily,
     fontSize: 11,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
-    color: AppColors.mutedBrown,
+    color: AppColors.mutedSlate,
   );
 
   static const TextStyle label12 = TextStyle(
+    fontFamily: bodyFontFamily,
     fontSize: 12,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
-    color: AppColors.mutedBrown,
+    color: AppColors.mutedSlate,
   );
 
-  // --- ROLE 5: BUTTON (14px, weight 600, sentence case, NOT uppercase) ---
+  // --- ROLE 5: BUTTON (14px, weight 600, sentence case, Display family) ---
   static const TextStyle button = TextStyle(
+    fontFamily: displayFontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.0,
@@ -283,6 +297,7 @@ class AppTypography {
   );
 
   static const TextStyle buttonSmall = TextStyle(
+    fontFamily: displayFontFamily,
     fontSize: 12,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.0,
@@ -314,7 +329,7 @@ class AppTypography {
   static const TextStyle caption = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w400,
-    color: AppColors.mutedBrown,
+    color: AppColors.mutedSlate,
     height: 1.3,
   );
 

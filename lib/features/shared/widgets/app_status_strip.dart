@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import '../../../../core/services/sync_service.dart';
 import 'app_status_chip.dart';
-import 'manual_sync_button.dart';
 
 /// Persistent Status Strip displaying:
 /// - Online/Offline connectivity chip (reflects real network state)
 /// - Cloud sync status chip (reflects real Supabase / backend state; "Sync off" when unconfigured)
 /// - Live digital clock with tabular figures (no visual jiggle)
-/// - Pinned role & shift identifier
+/// - Settings drawer trigger
 class AppStatusStrip extends StatefulWidget {
   final String title;
   final VoidCallback? onSettingsTap;
@@ -31,6 +31,8 @@ class _AppStatusStripState extends State<AppStatusStrip> {
   Timer? _connectivityTimer;
   DateTime _now = DateTime.now();
   bool _isOnline = true;
+  bool _isSyncing = false;
+  bool _hasSyncError = false;
 
   bool get _isTest {
     if (Platform.environment.containsKey('FLUTTER_TEST')) return true;
@@ -40,6 +42,7 @@ class _AppStatusStripState extends State<AppStatusStrip> {
   @override
   void initState() {
     super.initState();
+    SyncService.onSyncCompletedNotifier.addListener(_onSyncChanged);
     if (!_isTest) {
       _checkConnectivity();
       _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -50,6 +53,12 @@ class _AppStatusStripState extends State<AppStatusStrip> {
       _connectivityTimer = Timer.periodic(const Duration(seconds: 10), (_) {
         _checkConnectivity();
       });
+    }
+  }
+
+  void _onSyncChanged() {
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -68,8 +77,46 @@ class _AppStatusStripState extends State<AppStatusStrip> {
     }
   }
 
+  Future<void> _triggerSync() async {
+    if (!SyncService().isConfigured) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Cloud sync is off: credentials not configured. Operating in local mode.'),
+            backgroundColor: AppColors.darkCharcoal,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+      return;
+    }
+    setState(() {
+      _isSyncing = true;
+      _hasSyncError = false;
+    });
+    try {
+      final success = await SyncService().fullSync();
+      if (mounted) {
+        setState(() {
+          _isSyncing = false;
+          _hasSyncError = !success;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isSyncing = false;
+          _hasSyncError = true;
+        });
+      }
+    }
+  }
+
   @override
   void dispose() {
+    SyncService.onSyncCompletedNotifier.removeListener(_onSyncChanged);
     _clockTimer?.cancel();
     _connectivityTimer?.cancel();
     super.dispose();
@@ -91,7 +138,6 @@ class _AppStatusStripState extends State<AppStatusStrip> {
       padding: const EdgeInsets.symmetric(horizontal: AppDesignTokens.space24),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= 720;
           final isMedium = constraints.maxWidth >= 480;
 
           return Row(
@@ -112,12 +158,8 @@ class _AppStatusStripState extends State<AppStatusStrip> {
               if (isMedium) ...[
                 _buildConnectivityChip(),
                 const SizedBox(width: AppDesignTokens.space8),
-              ],
-
-              // Interactive Manual Cloud Sync Button (Wide screens only)
-              if (isWide) ...[
-                const ManualSyncButton(isCompact: false),
-                const SizedBox(width: AppDesignTokens.space12),
+                _buildSyncChip(),
+                const SizedBox(width: AppDesignTokens.space8),
               ],
 
               // Tabular Digital Clock (12-hour format)
@@ -154,7 +196,8 @@ class _AppStatusStripState extends State<AppStatusStrip> {
                   tooltip: 'Settings',
                   padding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  alignment: Alignment.centerRight,
+                  constraints: const BoxConstraints(minWidth: 20, minHeight: 32),
                 ),
               ],
             ],
@@ -177,6 +220,52 @@ class _AppStatusStripState extends State<AppStatusStrip> {
       type: _isOnline ? AppStatusType.success : AppStatusType.error,
       icon: _isOnline ? Icons.wifi : Icons.wifi_off,
       isCompact: true,
+    );
+  }
+
+  Widget _buildSyncChip() {
+    final isConfigured = SyncService().isConfigured;
+
+    final String label;
+    final AppStatusType type;
+    final IconData icon;
+
+    if (!isConfigured) {
+      label = 'Sync off';
+      type = AppStatusType.info;
+      icon = Icons.cloud_off;
+    } else if (_isSyncing) {
+      label = 'Syncing';
+      type = AppStatusType.info;
+      icon = Icons.sync;
+    } else if (_hasSyncError) {
+      label = 'Sync error';
+      type = AppStatusType.error;
+      icon = Icons.error_outline;
+    } else {
+      label = 'Synced';
+      type = AppStatusType.success;
+      icon = Icons.cloud_done;
+    }
+
+    return Tooltip(
+      message: !isConfigured
+          ? 'Cloud sync is off (credentials missing)'
+          : _isSyncing
+              ? 'Syncing with cloud...'
+              : _hasSyncError
+                  ? 'Sync error (tap to retry)'
+                  : 'Synced with cloud (tap to sync now)',
+      child: InkWell(
+        onTap: _isSyncing ? null : _triggerSync,
+        borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+        child: AppStatusChip(
+          label: label,
+          type: type,
+          icon: icon,
+          isCompact: true,
+        ),
+      ),
     );
   }
 }

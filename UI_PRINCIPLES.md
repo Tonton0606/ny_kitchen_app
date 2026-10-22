@@ -21,14 +21,19 @@ All values live in lib/core/theme/. If a token is missing, add it there first.
 - Icons: Lucide, thin stroke, 18-20 px in content, 20-24 px in nav
 
 ### 3a. Typography roles
+Two font families declared in pubspec.yaml:
+- Display family (Space Grotesk): Figure (bold, tabular), Heading (600), Button (600).
+- Body family (Inter / clean sans): Body (14px, 400) and Label (11-12px, uppercase, 600, +0.5 letter-spacing).
+
 Five roles defined in the theme (max 2 font families total):
-- Figure: a distinct face used ONLY for numbers (hero revenue, stat values, amounts, counts), bold, tabular figures. Hero 32px+, other figures 18-24px.
-- Heading: clean UI sans for section titles ("Sales Trend", "Recent Transactions", "Top Selling Foods"), 16-18px, weight 600, normal letter-spacing, visibly lighter than the hero figure.
-- Body: same sans, 14px, weight 400 (row text, names, descriptions).
-- Label: 11-12px, UPPERCASE, weight 600, +0.5 letter-spacing, muted (must still pass 4.5:1). Used for stat captions, table headers, the date line.
-- Button: same sans, 14px, weight 600, sentence case, NOT uppercase. Used for Quick Actions, toggles (Today/Week/Month), View All, and any other tappable text.
+- Figure: Display face used ONLY for numbers (hero revenue, stat values, amounts, counts), bold, tabular figures. Hero 32px+, other figures 18-24px.
+- Heading: Display face for section titles ("Sales Trend", "Recent Transactions", "Top Selling Foods"), 16-18px, weight 600, normal letter-spacing, visibly lighter than the hero figure.
+- Body: Body sans, 14px, weight 400 (row text, names, descriptions).
+- Label: Body sans, 11-12px, UPPERCASE, weight 600, +0.5 letter-spacing, muted (must still pass 4.5:1). Used for stat captions, table headers, the date line.
+- Button: Display face, 14px, weight 600, sentence case, NOT uppercase. Used for Quick Actions, toggles (Today/Week/Month), View All, and any other tappable text.
 
 Typography rules:
+- Headings and buttons share the Figure typeface; Body and Label use the body sans.
 - Figure face only for numbers.
 - Heading is never uppercase.
 - Label is the only uppercase role.
