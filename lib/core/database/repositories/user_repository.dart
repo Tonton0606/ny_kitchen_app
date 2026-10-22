@@ -1,6 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import '../database_helper.dart';
 import '../../utils/security_utils.dart';
+import '../../utils/security_exception.dart';
+import '../../utils/repository_security_guard.dart';
 import 'audit_repository.dart';
 
 class UserRepository {
@@ -117,6 +119,18 @@ class UserRepository {
 
   // Change password
   Future<bool> changePassword(int userId, String newPassword) async {
+    // SEC-01 & SEC-05: Enforce password policy at logic layer and verify authorization
+    final policyError = SecurityUtils.validatePassword(newPassword);
+    if (policyError != null) {
+      throw SecurityException(policyError, code: 'WEAK_PASSWORD');
+    }
+
+    final actor = await RepositorySecurityGuard.requireSelfOrAdmin(
+      userId,
+      module: 'Account',
+      action: 'Change Password',
+    );
+
     final db = await _dbHelper.database;
     final hashedPassword = SecurityUtils.hashPassword(newPassword);
     
@@ -133,6 +147,8 @@ class UserRepository {
     if (changes > 0) {
       await _auditRepo.logAction(
         userId: userId,
+        username: actor['username'] as String?,
+        role: actor['role'] as String?,
         module: 'Account',
         action: 'Password Changed',
         status: 'Success',
@@ -144,12 +160,20 @@ class UserRepository {
 
   // Get all users
   Future<List<Map<String, dynamic>>> getAllUsers() async {
+    await RepositorySecurityGuard.requireAdmin(
+      module: 'User Management',
+      action: 'View All Users',
+    );
     final db = await _dbHelper.database;
     return await db.query('users', orderBy: 'full_name ASC');
   }
 
   // Create a new user
   Future<int> createUser(Map<String, dynamic> user, {int? adminId, String? adminUsername}) async {
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'User Management',
+      action: 'Create User',
+    );
     final db = await _dbHelper.database;
     user['created_at'] = DateTime.now().toIso8601String();
     if (!user.containsKey('must_change_password')) {
@@ -157,10 +181,10 @@ class UserRepository {
     }
     final newId = await db.insert('users', user, conflictAlgorithm: ConflictAlgorithm.abort);
     
-    // Audit user creation (Gap 9) - never log passwords or hashes
+    // Audit user creation (Gap 9 / SEC-01) - use authoritative acting session identity
     await _auditRepo.logAction(
-      userId: adminId,
-      username: adminUsername ?? 'Admin',
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? adminUsername ?? 'Admin',
       role: 'admin',
       module: 'User Management',
       action: 'User Created',
@@ -173,6 +197,21 @@ class UserRepository {
 
   // Update a user
   Future<int> updateUser(int id, Map<String, dynamic> user, {int? adminId, String? adminUsername}) async {
+    // If updating privileged fields (role, status, lockout counter), strictly require Admin
+    final Map<String, dynamic> actor;
+    if (user.containsKey('role') || user.containsKey('status') || user.containsKey('failed_login_count')) {
+      actor = await RepositorySecurityGuard.requireAdmin(
+        module: 'User Management',
+        action: 'Update User Role/Status',
+      );
+    } else {
+      actor = await RepositorySecurityGuard.requireSelfOrAdmin(
+        id,
+        module: 'User Management',
+        action: 'Update User Profile',
+      );
+    }
+
     final db = await _dbHelper.database;
     final count = await db.update(
       'users',
@@ -181,24 +220,35 @@ class UserRepository {
       whereArgs: [id],
     );
 
-    // Audit user update (Gap 9) - sanitize fields, never log password_hash
+    // Audit user update (Gap 9 / SEC-01) - authoritative actor identity, never log password_hash
     final sanitizedKeys = user.keys.where((k) => k != 'password_hash').join(', ');
     await _auditRepo.logAction(
-      userId: adminId,
-      username: adminUsername ?? 'Admin',
-      role: 'admin',
+      userId: actor['id'] as int?,
+      username: actor['username'] as String? ?? adminUsername ?? 'Admin',
+      role: actor['role'] as String? ?? 'admin',
       module: 'User Management',
       action: 'User Updated',
       status: 'Success',
       description: 'Updated user ID $id (modified fields: $sanitizedKeys)',
     );
 
-
     return count;
   }
 
   // Delete/Disable a user (We prefer changing status to 'inactive' over hard delete)
   Future<int> disableUser(int id, {int? adminId, String? adminUsername}) async {
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'User Management',
+      action: 'Disable User',
+    );
+
+    if (admin['id'] == id) {
+      throw const SecurityException(
+        'Self-lockout prohibited: Administrators cannot disable their own active account.',
+        code: 'SELF_DISABLE_PROHIBITED',
+      );
+    }
+
     final db = await _dbHelper.database;
     final count = await db.update(
       'users',
@@ -207,10 +257,10 @@ class UserRepository {
       whereArgs: [id],
     );
 
-    // Audit user disable (Gap 9)
+    // Audit user disable (Gap 9 / SEC-01)
     await _auditRepo.logAction(
-      userId: adminId,
-      username: adminUsername ?? 'Admin',
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? adminUsername ?? 'Admin',
       role: 'admin',
       module: 'User Management',
       action: 'User Disabled',
@@ -221,9 +271,13 @@ class UserRepository {
     return count;
   }
 
-
   // Unlock user
-  Future<void> unlockUser(int id, String adminName) async {
+  Future<void> unlockUser(int id, [String? adminName]) async {
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'Security',
+      action: 'Unlock User',
+    );
+
     final db = await _dbHelper.database;
     await db.update(
       'users',
@@ -242,9 +296,10 @@ class UserRepository {
         module: 'Security',
         action: 'Account Unlocked',
         status: 'Success',
-        description: 'Account unlocked by $adminName',
+        description: 'Account unlocked by ${admin['username'] ?? adminName ?? 'Admin'}',
       );
     }
   }
 }
+
 

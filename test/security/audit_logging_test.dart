@@ -163,6 +163,7 @@ void main() {
     });
 
     test('Food item CRUD operations create audit records', () async {
+      SessionManager().setSession({'id': 1, 'username': 'admin', 'role': 'admin', 'status': 'active'});
       final foodId = await foodRepo.insertFoodItem({
         'name': 'Burger',
         'price': 99.0,
@@ -184,6 +185,7 @@ void main() {
     });
 
     test('Transaction creation and voiding create audit records', () async {
+      SessionManager().setSession({'id': 1, 'username': 'cashier', 'role': 'cashier', 'status': 'active'});
       final tx = await transactionRepo.createTransaction(
         userId: 1,
         totalAmount: 100.0,
@@ -213,6 +215,7 @@ void main() {
     });
 
     test('Admin user creation and modification create audit records', () async {
+      SessionManager().setSession({'id': 1, 'username': 'admin', 'role': 'admin', 'status': 'active'});
       final newUserId = await userRepo.createUser({
         'full_name': 'Cashier 2',
         'username': 'cashier2',

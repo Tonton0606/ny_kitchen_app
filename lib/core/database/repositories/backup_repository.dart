@@ -3,12 +3,19 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'audit_repository.dart';
 import '../database_helper.dart';
+import '../../utils/repository_security_guard.dart';
 
 class BackupRepository {
   final AuditRepository _auditRepo = AuditRepository();
 
   /// Exports the local database to a MySQL-compatible .sql file.
   Future<File?> exportDatabase() async {
+    // SEC-01 & SEC-03: Enforce administrator authorization
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'Backup & Restore',
+      action: 'Export Database',
+    );
+
     try {
       final db = await DatabaseHelper.instance.database;
       
@@ -56,24 +63,28 @@ class BackupRepository {
       
       await backupFile.writeAsString(sqlDump.toString());
       
-      // Log the action
+      // Log the action using authoritative session identity (SEC-01 / SEC-03)
       await _auditRepo.logAction(
-        userId: 1, // Using 1 (Admin) as placeholder
+        userId: admin['id'] as int?,
+        username: admin['username'] as String? ?? 'Admin',
         role: 'admin',
         module: 'Backup & Restore',
-        action: 'Exported MySQL Database to ${backupFile.path}',
+        action: 'Database Backup Exported',
         status: 'Success',
+        description: 'Database exported to MySQL compatible SQL file: $backupFileName',
         deviceInfo: Platform.operatingSystem,
       );
 
       return backupFile;
     } catch (e) {
       await _auditRepo.logAction(
-        userId: 1,
+        userId: admin['id'] as int?,
+        username: admin['username'] as String? ?? 'Admin',
         role: 'admin',
         module: 'Backup & Restore',
-        action: 'Failed to export database: ${e.toString()}',
+        action: 'Export Failed',
         status: 'Failed',
+        description: 'Failed to export database: ${e.toString()}',
         deviceInfo: Platform.operatingSystem,
       );
       return null;

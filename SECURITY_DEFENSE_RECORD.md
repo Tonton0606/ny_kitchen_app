@@ -741,3 +741,53 @@ Checks actually run and actual results:
 Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Stage changes, commit cleanly, ask user permission, and push to origin/main.
+
+## Repository-Level Authorization Enforcement & Own-Record Restriction Session (Gap 1 / SEC-01 / AT02) — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T05:59:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Implement Gap 1 (SEC-01 / K01 / R08 / R10 / AT02):
+1. Create strongly-typed `SecurityException` with granular error codes (`UNAUTHENTICATED`, `SESSION_EXPIRED`, `ACCOUNT_INACTIVE`, `FORBIDDEN_ROLE`, `FORBIDDEN_OWN_RECORD`, `WEAK_PASSWORD`, `SELF_DISABLE_PROHIBITED`, `ADMIN_REQUIRED_REFUND`).
+2. Build centralized `RepositorySecurityGuard` with `requireAuthenticated()`, `requireAdmin()`, and `requireSelfOrAdmin()`. Every denied access automatically writes an immutable `Blocked` audit log record to `activity_logs` before raising an exception.
+3. Secure all database repositories:
+   - `user_repository.dart`: `getAllUsers`, `createUser`, `updateUser`, `disableUser` (with self-disable protection), `unlockUser`, and `changePassword` (with own-record enforcement and logic-layer password policy validation).
+   - `food_repository.dart`: `getAllFoodItems`, `insertFoodItem`, `updateFoodItem`, `archiveFoodItem`, `insertCategory`, `updateCategory`, `archiveCategory`.
+   - `transaction_repository.dart`: `createTransaction` (ignores spoofed `userId` and binds directly to authentic session identity), `getAllTransactions`, `getTransactions`, `getTransactionItems`, `updateTransactionStatus` (strictly blocks non-admin refunds), `cancelOrder`.
+   - `backup_repository.dart`: `exportDatabase` strictly requires admin role and logs authentic admin actor identity.
+   - `audit_repository.dart`: `getLogs` enforces own-record restrictions: non-admin callers are strictly limited to their own audit records.
+4. Add comprehensive AT02 security test suite (`test/security/repository_authorization_test.dart`) covering:
+   - Unauthenticated rejection across all mutations with audit recording.
+   - Expired session denial.
+   - Cashier role elevation and privileged action blocking with zero state mutation.
+   - Transaction userId spoofing prevention and authentic session binding.
+   - Own-record restrictions (user can update own profile, but blocked from other users and role elevation).
+   - Non-admin audit log query isolation.
+   - Logic-layer password policy enforcement (SEC-05).
+   - Authorized administrator operations.
+Rubric / risk / acceptance-test IDs: R08, R10, K01, AT02, SEC-01, SEC-05.
+Files changed / created:
+- `lib/core/utils/security_exception.dart` (New)
+- `lib/core/utils/repository_security_guard.dart` (New)
+- `lib/core/utils/security_utils.dart`
+- `lib/core/database/repositories/user_repository.dart`
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/core/database/repositories/transaction_repository.dart`
+- `lib/core/database/repositories/backup_repository.dart`
+- `lib/core/database/repositories/audit_repository.dart`
+- `test/security/repository_authorization_test.dart` (New)
+- `test/security/account_lockout_test.dart`
+- `test/security/audit_logging_test.dart`
+- `test/security/force_password_change_test.dart`
+- `test/unit/security_utils_test.dart`
+- `test/unit/transaction_repository_test.dart`
+- `test/unit/user_repository_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/core/ test/`: 0 errors.
+- `flutter test test/security/`: 55/55 passed (100% pass rate, including all 8 AT02 tests).
+- `flutter test test/unit/`: 42/42 passed (100% pass rate).
+Evidence paths:
+- `lib/core/utils/repository_security_guard.dart`
+- `test/security/repository_authorization_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+

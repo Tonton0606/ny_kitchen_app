@@ -1,4 +1,5 @@
 import '../database_helper.dart';
+import '../../session/session_manager.dart';
 
 class AuditRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
@@ -33,7 +34,6 @@ class AuditRepository {
     }
   }
 
-
   Future<List<Map<String, dynamic>>> getLogs({
     int? userId,
     String? role,
@@ -42,13 +42,22 @@ class AuditRepository {
     String? search,
   }) async {
     final db = await _dbHelper.database;
+    final sessionUser = SessionManager().currentUser;
+    final callerRole = (sessionUser?['role'] as String?)?.toLowerCase();
+    final callerId = sessionUser?['id'] as int?;
+
+    // SEC-01 & AT02: Non-admin users are strictly restricted to their own audit records
+    int? effectiveUserId = userId;
+    if (callerRole != 'admin' && callerId != null) {
+      effectiveUserId = callerId;
+    }
     
     String where = '1 = 1';
     List<dynamic> whereArgs = [];
 
-    if (userId != null) {
+    if (effectiveUserId != null) {
       where += ' AND user_id = ?';
-      whereArgs.add(userId);
+      whereArgs.add(effectiveUserId);
     }
 
     if (role != null && role != 'All') {

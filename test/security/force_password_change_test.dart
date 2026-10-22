@@ -94,6 +94,7 @@ void main() {
   });
 
   tearDown(() async {
+    sessionManager.clearSession();
     await db.close();
   });
 
@@ -113,6 +114,7 @@ void main() {
     test('UserRepository.changePassword updates password_hash and resets must_change_password to 0', () async {
       final user = await userRepo.login('admin', 'admin123');
       expect(user!['must_change_password'], equals(1));
+      sessionManager.setSession(user);
 
       final success = await userRepo.changePassword(user['id'] as int, 'NewSecurePass1');
       expect(success, isTrue);
@@ -124,6 +126,7 @@ void main() {
     });
 
     test('UserRepository.createUser defaults must_change_password to 1', () async {
+      sessionManager.setSession({'id': 1, 'username': 'admin', 'role': 'admin', 'status': 'active'});
       final newUserId = await userRepo.createUser({
         'full_name': 'Jane Cashier',
         'username': 'janec',

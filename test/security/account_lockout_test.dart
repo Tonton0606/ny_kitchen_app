@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ny_kitchen_app/core/database/database_helper.dart';
 import 'package:ny_kitchen_app/core/database/repositories/user_repository.dart';
 import 'package:ny_kitchen_app/core/utils/security_utils.dart';
+import 'package:ny_kitchen_app/core/session/session_manager.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -23,6 +24,7 @@ void main() {
   });
 
   setUp(() async {
+    SessionManager().clearSession();
     // Create fresh in-memory database for each test
     db = await databaseFactory.openDatabase(inMemoryDatabasePath,
         options: OpenDatabaseOptions(
@@ -75,6 +77,7 @@ void main() {
   });
 
   tearDown(() async {
+    SessionManager().clearSession();
     await db.close();
   });
 
@@ -120,7 +123,8 @@ void main() {
         await userRepository.login('testuser', 'wrongpassword');
       }
 
-      // Unlock
+      // Unlock requires administrator session
+      SessionManager().setSession({'id': 99, 'username': 'admin', 'role': 'admin', 'status': 'active'});
       final usersBefore = await db.query('users', where: 'username = ?', whereArgs: ['testuser']);
       final userId = usersBefore.first['id'] as int;
       await userRepository.unlockUser(userId, 'Admin User');
