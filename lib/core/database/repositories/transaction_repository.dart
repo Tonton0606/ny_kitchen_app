@@ -244,8 +244,9 @@ class TransactionRepository {
 
   Future<List<Map<String, dynamic>>> getActiveTransactions() async {
     final db = await _dbHelper.database;
-    // Active orders include currently 'Preparing' orders plus today's recently 'Served' orders.
-    // Historical served orders belong to transaction history.
+    // Active orders in the kitchen queue are restricted to today's business day:
+    // Only 'Preparing' and 'Served' orders placed today appear in the active kitchen queue.
+    // Cutoff/unserved orders from previous days remain permanently recorded in transaction history and admin sales reports.
     return await db.rawQuery('''
       SELECT 
         t.*, 
@@ -254,8 +255,8 @@ class TransactionRepository {
         u.role as cashier_role
       FROM transactions t
       LEFT JOIN users u ON t.user_id = u.id
-      WHERE t.status = 'Preparing'
-         OR (t.status = 'Served' AND date(t.created_at) = date('now', 'localtime'))
+      WHERE date(t.created_at) = date('now', 'localtime')
+        AND t.status IN ('Preparing', 'Served')
       ORDER BY t.created_at ASC
     ''');
   }
