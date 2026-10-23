@@ -59,6 +59,28 @@ class ExportService {
     return str;
   }
 
+  /// Normalizes characters for PDF rendering using built-in PostScript Helvetica font,
+  /// preventing "Helvetica has no Unicode support" console warnings by mapping
+  /// currency symbols and unicode punctuation to ASCII and stripping emojis.
+  static String sanitizePdfText(dynamic value) {
+    if (value == null) return '';
+    final str = value.toString();
+    if (str.isEmpty) return '';
+
+    return str
+        .replaceAll('₱', 'Php ')
+        .replaceAll('–', '-')
+        .replaceAll('—', '-')
+        .replaceAll('‘', "'")
+        .replaceAll('’', "'")
+        .replaceAll('“', '"')
+        .replaceAll('”', '"')
+        .replaceAll('•', '*')
+        .replaceAll('…', '...')
+        .replaceAll(RegExp(r'[^\x00-\x7F]'), '')
+        .trim();
+  }
+
   static Future<Directory> _getExportDirectory() async {
     try {
       return await getApplicationDocumentsDirectory();
@@ -141,13 +163,13 @@ class ExportService {
       }
 
       return [
-        tx['receipt_number']?.toString() ?? 'N/A',
-        formattedDate,
-        cashier,
-        tx['itemCount']?.toString() ?? '1',
-        tx['payment_method']?.toString() ?? 'Cash',
-        'Php ${amount.toStringAsFixed(2)}',
-        statusDisplay,
+        sanitizePdfText(tx['receipt_number'] ?? 'N/A'),
+        sanitizePdfText(formattedDate),
+        sanitizePdfText(cashier),
+        sanitizePdfText(tx['itemCount'] ?? '1'),
+        sanitizePdfText(tx['payment_method'] ?? 'Cash'),
+        sanitizePdfText('Php ${amount.toStringAsFixed(2)}'),
+        sanitizePdfText(statusDisplay),
       ];
     }).toList();
 
@@ -365,13 +387,13 @@ class ExportService {
       final roleDisplay = role.isNotEmpty ? role[0].toUpperCase() + role.substring(1) : 'User';
 
       return [
-        formattedDate,
-        log['username']?.toString() ?? 'System',
-        roleDisplay,
-        log['module']?.toString() ?? '',
-        log['action']?.toString() ?? '',
-        log['status']?.toString() ?? '',
-        log['description']?.toString() ?? '',
+        sanitizePdfText(formattedDate),
+        sanitizePdfText(log['username'] ?? 'System'),
+        sanitizePdfText(roleDisplay),
+        sanitizePdfText(log['module'] ?? ''),
+        sanitizePdfText(log['action'] ?? ''),
+        sanitizePdfText(log['status'] ?? ''),
+        sanitizePdfText(log['description'] ?? ''),
       ];
     }).toList();
 

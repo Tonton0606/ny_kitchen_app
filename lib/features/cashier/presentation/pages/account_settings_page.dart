@@ -4,10 +4,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../../core/database/repositories/user_repository.dart';
-import '../../../../core/utils/security_utils.dart';
 import '../../../../core/services/sync_service.dart';
 import 'cashier_activity_logs_page.dart';
 import '../../../shared/widgets/app_privacy_dialog.dart';
+import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/change_password_dialog.dart';
 
 class AccountSettingsPage extends StatefulWidget {
   const AccountSettingsPage({super.key});
@@ -81,7 +82,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
               _buildTile(
                 icon: Icons.lock_outline,
                 title: 'Change Password',
-                onTap: () => _showChangePasswordDialog(context),
+                onTap: () => ChangePasswordDialog.show(context, isAdmin: false),
               ),
               // Cloud Syncing Preference Section for Cashier
               Padding(
@@ -222,188 +223,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     );
   }
 
-  void _showChangePasswordDialog(BuildContext context) {
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-    bool obscureCurrent = true;
-    bool obscureNew = true;
-    bool obscureConfirm = true;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (dialogCtx, setDialogState) => AlertDialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-          actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.goldenYellow,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.lock_reset,
-                  color: AppColors.darkCharcoal,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Text(
-                'Change Password',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          content: SizedBox(
-            width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: currentPasswordController,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(64),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: 'Current Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility, size: 20),
-                      onPressed: () => setDialogState(() => obscureCurrent = !obscureCurrent),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  obscureText: obscureCurrent,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: newPasswordController,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(64),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: 'New Password',
-                    prefixIcon: const Icon(Icons.lock_reset_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility, size: 20),
-                      onPressed: () => setDialogState(() => obscureNew = !obscureNew),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  obscureText: obscureNew,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: confirmPasswordController,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(64),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: 'Confirm New Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility, size: 20),
-                      onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  obscureText: obscureConfirm,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final currentPass = currentPasswordController.text.trim();
-                final newPass = newPasswordController.text.trim();
-                final confirmPass = confirmPasswordController.text.trim();
-
-                if (currentPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill all required password fields')),
-                  );
-                  return;
-                }
-                if (newPass != confirmPass) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('New passwords do not match')),
-                  );
-                  return;
-                }
-                final policyError = SecurityUtils.validatePassword(newPass);
-                if (policyError != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(policyError)),
-                  );
-                  return;
-                }
-
-                final userId = SessionManager().userId;
-                if (userId != null) {
-                  final repo = UserRepository();
-                  try {
-                    await repo.changePasswordWithVerification(userId, currentPass, newPass);
-                    if (!context.mounted) return;
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Password changed successfully')),
-                    );
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to update password: $e')),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.goldenYellow,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: const Text(
-                'Save',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showEditProfileDialog(BuildContext context) {
     final currentName = SessionManager().fullName ?? '';
@@ -414,59 +233,93 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surfaceWhite,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+          side: const BorderSide(color: AppColors.softBorder, width: 1.0),
         ),
-        titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-        contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-        title: const Row(
-          children: [
-            Icon(Icons.person_outline, color: AppColors.darkCharcoal, size: 22),
-            SizedBox(width: 10),
-            Text('Edit Profile', style: AppTypography.heading),
-          ],
+        titlePadding: const EdgeInsets.fromLTRB(
+          AppDesignTokens.space24,
+          AppDesignTokens.space24,
+          AppDesignTokens.space24,
+          0,
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        contentPadding: const EdgeInsets.fromLTRB(
+          AppDesignTokens.space24,
+          AppDesignTokens.space16,
+          AppDesignTokens.space24,
+          AppDesignTokens.space16,
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(
+          AppDesignTokens.space24,
+          0,
+          AppDesignTokens.space24,
+          AppDesignTokens.space16,
+        ),
+        title: Row(
           children: [
-            const Text('Username', style: AppTypography.label),
-            const SizedBox(height: 6),
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.all(AppDesignTokens.space8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.softBorder),
+                color: AppColors.goldenYellow,
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
               ),
-              child: Text('@$username', style: AppTypography.bodyMuted),
+              child: const Icon(Icons.person_outline, color: AppColors.darkCharcoal, size: 22),
             ),
-            const SizedBox(height: 16),
-            const Text('Full Name', style: AppTypography.label),
-            const SizedBox(height: 6),
-            TextField(
-              controller: nameController,
-              inputFormatters: [LengthLimitingTextInputFormatter(50)],
-              decoration: InputDecoration(
-                hintText: 'Enter your full name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.softBorder),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              ),
-            ),
+            const SizedBox(width: AppDesignTokens.space12),
+            const Text('Edit Profile', style: AppTypography.headingLarge),
           ],
+        ),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Username', style: AppTypography.label),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.pageBackground,
+                  borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                  border: Border.all(color: AppColors.softBorder),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.account_circle_outlined, size: 20, color: AppColors.mutedBrown),
+                    const SizedBox(width: AppDesignTokens.space12),
+                    Text('@$username', style: AppTypography.bodyMuted),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppDesignTokens.space16),
+              AppTextField(
+                controller: nameController,
+                label: 'Full Name',
+                hint: 'Enter your full name',
+                prefixIcon: const Icon(Icons.badge_outlined, size: 20, color: AppColors.mutedBrown),
+                inputFormatters: [LengthLimitingTextInputFormatter(50)],
+              ),
+            ],
+          ),
         ),
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: AppTypography.buttonSmall),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.softBorder),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: Text(
+              'Cancel',
+              style: AppTypography.button.copyWith(color: AppColors.darkCharcoal),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -484,21 +337,31 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 Navigator.pop(ctx);
                 setState(() {});
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Profile updated successfully')),
+                  const SnackBar(
+                    content: Text('Profile updated successfully.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
                 );
               } catch (e) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to update profile: $e')),
+                  SnackBar(
+                    content: Text('Failed to update profile: $e'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
                 );
               }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.goldenYellow,
               foregroundColor: AppColors.darkCharcoal,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text('Save Changes', style: AppTypography.button),
           ),
         ],
       ),
