@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/database/repositories/backup_repository.dart';
@@ -25,10 +24,51 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
   String? _lastBackupPath;
 
   Future<void> _handleExport() async {
+    final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
+    final suggestedFileName = 'ny_kitchen_backup_$timestamp.sql';
+
+    String? chosenFilePath;
+    String? chosenDirectory;
+
+    try {
+      // 1. Try file save dialog (allows choosing exact folder and custom filename)
+      final FileSaveLocation? saveLocation = await getSaveLocation(
+        suggestedName: suggestedFileName,
+        acceptedTypeGroups: [
+          const XTypeGroup(
+            label: 'SQL Backup File',
+            extensions: ['sql'],
+          ),
+        ],
+      );
+
+      if (saveLocation != null) {
+        chosenFilePath = saveLocation.path;
+      } else {
+        // User cancelled the file picker dialog
+        return;
+      }
+    } catch (_) {
+      // Fallback: try directory picker
+      try {
+        final String? selectedDirectory = await getDirectoryPath(
+          confirmButtonText: 'Select Backup Folder',
+        );
+        if (selectedDirectory != null) {
+          chosenDirectory = selectedDirectory;
+        } else {
+          return;
+        }
+      } catch (_) {}
+    }
+
     setState(() => _isExporting = true);
-    
-    final file = await _backupRepo.exportDatabase();
-    
+
+    final file = await _backupRepo.exportDatabase(
+      targetFilePath: chosenFilePath,
+      targetDirectory: chosenDirectory,
+    );
+
     if (mounted) {
       setState(() {
         _isExporting = false;
@@ -38,19 +78,26 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
       });
 
       if (file != null) {
-        try {
-          // ignore: deprecated_member_use
-          await Share.shareXFiles(
-            [XFile(file.path)], 
-            text: 'NY Kitchen MySQL Database Backup',
-          );
-        } finally {
-          try {
-            if (await file.exists()) {
-              await file.delete();
-            }
-          } catch (_) {}
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Backup saved successfully to:\n${file.path}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.forest,
+            duration: const Duration(seconds: 5),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -157,7 +204,7 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
                   ),
                   const SizedBox(height: AppDesignTokens.space12),
                   const Text(
-                    'Creates a complete snapshot of all transactions, food items, users, and audit logs. The file will be saved directly to your Downloads or Documents folder.',
+                    'Creates a complete snapshot of all transactions, food items, users, and audit logs. Choose your preferred destination folder or custom filename when prompted.',
                     style: AppTypography.bodyMuted,
                   ),
                   const SizedBox(height: AppDesignTokens.space24),

@@ -23,7 +23,8 @@ class BackupRepository {
   };
 
   /// Exports the local database to a MySQL/SQLite-compatible .sql file.
-  Future<File?> exportDatabase() async {
+  /// If [targetDirectory] or [targetFilePath] is provided, saves directly there.
+  Future<File?> exportDatabase({String? targetDirectory, String? targetFilePath}) async {
     // SEC-01 & SEC-03: Enforce administrator authorization
     final admin = await RepositorySecurityGuard.requireAdmin(
       module: 'Backup & Restore',
@@ -69,11 +70,23 @@ class BackupRepository {
       
       sqlDump.writeln('COMMIT;');
       
-      // Save to a temporary directory so we can share it
-      final tempDir = await getTemporaryDirectory();
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
       final backupFileName = 'ny_kitchen_backup_$timestamp.sql';
-      final backupFile = File(join(tempDir.path, backupFileName));
+      
+      final File backupFile;
+      if (targetFilePath != null && targetFilePath.isNotEmpty) {
+        backupFile = File(targetFilePath);
+      } else if (targetDirectory != null && targetDirectory.isNotEmpty) {
+        backupFile = File(join(targetDirectory, backupFileName));
+      } else {
+        final tempDir = await getTemporaryDirectory();
+        backupFile = File(join(tempDir.path, backupFileName));
+      }
+      
+      // Ensure parent directory exists
+      if (!backupFile.parent.existsSync()) {
+        await backupFile.parent.create(recursive: true);
+      }
       
       await backupFile.writeAsString(sqlDump.toString());
       
