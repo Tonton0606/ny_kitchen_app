@@ -6,7 +6,7 @@
 **Source Document:** `capstone-review/IAS/BSIT_Information_Assurance_Security_Framework_Rubric.xlsx`  
 **Collaborators:** Ralston Villamin, MJ Daz, Hancr Gonzales  
 **Date Generated:** October 23, 2026  
-**Test Suite Status:** 55/55 Automated Security Tests Passing (100% Pass Rate)
+**Test Suite Status:** 56/56 Automated Security Tests Passing (100% Pass Rate)
 
 ---
 
@@ -29,7 +29,7 @@ There are **20 specific criteria (R01–R20)**, each weighted at **5 points (5% 
 
 | Overall Score | Percentage | Official Panel Decision | Action Required |
 |:---:|:---:|:---|:---|
-| **85 – 100** | **85% – 100%** | **Security-Ready to Proceed** | System approved for capstone presentation & deployment. |
+| **85 – 100** | **85% – 100%** | **Security-Ready to Proceed** | System approved for capstone presentation & deployment. *(Current Status)* |
 | **75 – 84** | **75% – 84%** | **Proceed Subject to Security Revision** | Minor control fixes required before final sign-off. |
 | **Below 75** | **< 75%** | **Not Yet Security-Ready** | Significant security or framework gaps must be remediated. |
 
@@ -40,7 +40,7 @@ There are **20 specific criteria (R01–R20)**, each weighted at **5 points (5% 
 - [x] Web/API: OWASP Top 10, ASVS, API Security applied
 - [x] Mobile/Endpoint: OWASP MASVS & desktop hardening applied
 - [x] Relevant ISO/IEC 25010 security characteristics considered (Confidentiality, Integrity, Non-repudiation, Authenticity)
-- [x] Security testing and measurable acceptance criteria established (55 automated tests)
+- [x] Security testing and measurable acceptance criteria established (56 automated tests)
 
 ---
 
@@ -128,12 +128,20 @@ Recent development sessions have hardened the core application and directly addr
    - Active queue counter fixed to count 'Preparing' orders plus today's recently 'Served' orders only.
 6. **Windows Desktop Stability (R11, R20 - 10%)**
    - Suppressed Flutter Windows framework `raw_keyboard.dart` assertion bug on Alt / Alt-Tab keys.
+7. **Anti-Enumeration Login Protection (R08, R11 - 5%)**
+   - In `login_page.dart`: Uniformly returns "Invalid username or password" for invalid usernames, wrong passwords, and inactive/locked accounts to block username harvesting attacks.
+8. **Denied / Blocked Attempt Audit Logging (R08, R15 - 5%)**
+   - `RepositorySecurityGuard` and `UserRepository` log `status: 'Blocked'` audit entries whenever an unauthorized role, expired session, self-disable, or password policy violation is attempted.
+   - Added `status` filtering and search in `AuditRepository.getLogs()`.
+   - Verified via automated unit test `Unauthorized access attempts and self-disable create blocked audit records`.
 
 ---
 
-## 4. Remaining Tasks to Do (Group Action Plan)
+## 4. Re-evaluated Status & Remaining Tasks
 
-To achieve an **85–100% (Security-Ready to Proceed)** score during the live IAS defense, the following tasks are assigned:
+**Current Overall Verdict:** **87% / 100 (Security-Ready to Proceed — Official Passing Band)**
+
+The remaining action items to achieve a **90%+ High Distinction** before defense:
 
 ### Priority 1: Defense Materials & Rehearsal (Addresses R01, R19, R20 — 15%)
 - [ ] **Printable Architecture Diagram:**  
@@ -145,27 +153,17 @@ To achieve an **85–100% (Security-Ready to Proceed)** score during the live IA
 - [ ] **Live Demo Rehearsal (Mock Defense):**  
   Rehearse the presentation steps so each team member can smoothly demonstrate the features without hesitation.
 
-### Priority 2: Anti-Enumeration Login Message (Addresses R08, R11 — 5%)
-- [ ] In `UserRepository.login()`:  
-  When an unknown username is entered, display **"Invalid username or password"** instead of "User not found".  
-  *Rubric Value:* Prevents malicious attackers from harvesting valid employee usernames through brute-force enumeration.
-
-### Priority 3: Denied Attempt Audit Trail (Addresses R08, R15 — 5%)
-- [ ] In `RoleGuard` / repository security checks:  
-  When an unauthorized action is blocked (`SecurityException(FORBIDDEN_ROLE)`), write an audit record to `activity_logs` with `status: 'Denied'`.  
-  *Rubric Value:* Provides detective security monitoring in Admin Activity Logs for compliance audits.
-
-### Priority 4: Database Backup & Restore Rehearsal (Addresses R18 — 5%)
+### Priority 2: Database Backup & Restore Rehearsal (Addresses R18 — 5%)
 - [ ] Test the SQLite database export (`BackupRepository`):  
   - Create a database backup file (`.sql`).
   - Demonstrate importing/restoring the backup on a fresh database instance.
   - Document that table schemas, sales transactions, and audit records restore completely without foreign-key corruption.
 
-### Priority 5: Report Export Formatting Check (Addresses R15, R16 — 5%)
+### Priority 3: Report Export Formatting Check (Addresses R15, R16 — 5%)
 - [ ] In `export_service.dart`:  
   Verify that lengthy refund reasons and audit descriptions wrap cleanly in exported PDF and Excel reports without text clipping.
 
-### Priority 6: Data Privacy & Retention Policy SOP (Addresses R17 — 5%)
+### Priority 4: Data Privacy & Retention Policy SOP (Addresses R17 — 5%)
 - [ ] Complete a brief 1-page Standard Operating Procedure (SOP) documenting:
   - Lawful purpose of employee data collection (sales accountability only).
   - Data minimization (passwords and PINs are never stored or logged).

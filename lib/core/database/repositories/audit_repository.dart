@@ -37,6 +37,7 @@ class AuditRepository {
   Future<List<Map<String, dynamic>>> getLogs({
     int? userId,
     String? role,
+    String? status,
     DateTime? startDate,
     DateTime? endDate,
     String? search,
@@ -65,6 +66,11 @@ class AuditRepository {
       whereArgs.add(role);
     }
 
+    if (status != null && status.isNotEmpty && status != 'All') {
+      where += ' AND status = ?';
+      whereArgs.add(status);
+    }
+
     if (startDate != null && endDate != null) {
       final startIso = startDate.toIso8601String();
       // Add 1 day to end date to make it inclusive up to the end of the day
@@ -75,7 +81,8 @@ class AuditRepository {
     }
 
     if (search != null && search.isNotEmpty) {
-      where += ' AND (username LIKE ? OR action LIKE ? OR module LIKE ?)';
+      where += ' AND (username LIKE ? OR action LIKE ? OR module LIKE ? OR status LIKE ?)';
+      whereArgs.add('%$search%');
       whereArgs.add('%$search%');
       whereArgs.add('%$search%');
       whereArgs.add('%$search%');

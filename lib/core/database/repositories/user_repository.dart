@@ -122,6 +122,13 @@ class UserRepository {
     // SEC-01 & SEC-05: Enforce password policy at logic layer and verify authorization
     final policyError = SecurityUtils.validatePassword(newPassword);
     if (policyError != null) {
+      await _auditRepo.logAction(
+        userId: userId,
+        module: 'Account',
+        action: 'Change Password',
+        status: 'Blocked',
+        description: 'Password policy violation: $policyError',
+      );
       throw SecurityException(policyError, code: 'WEAK_PASSWORD');
     }
 
@@ -183,6 +190,15 @@ class UserRepository {
     }
     final storedHash = user['password_hash'] as String? ?? '';
     if (!SecurityUtils.verifyPassword(currentPassword, storedHash)) {
+      await _auditRepo.logAction(
+        userId: userId,
+        username: user['username'] as String?,
+        role: user['role'] as String?,
+        module: 'Account',
+        action: 'Change Password',
+        status: 'Blocked',
+        description: 'Current password verification failed during self-service password update.',
+      );
       throw const SecurityException('Current password verification failed', code: 'INVALID_CURRENT_PASSWORD');
     }
     return await changePassword(userId, newPassword);
@@ -273,6 +289,15 @@ class UserRepository {
     );
 
     if (admin['id'] == id) {
+      await _auditRepo.logAction(
+        userId: admin['id'] as int?,
+        username: admin['username'] as String?,
+        role: admin['role'] as String?,
+        module: 'User Management',
+        action: 'Disable User',
+        status: 'Blocked',
+        description: 'Self-disable prohibited: Administrator attempted to disable own active account.',
+      );
       throw const SecurityException(
         'Self-lockout prohibited: Administrators cannot disable their own active account.',
         code: 'SELF_DISABLE_PROHIBITED',

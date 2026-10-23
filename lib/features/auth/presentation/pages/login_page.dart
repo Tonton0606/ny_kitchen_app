@@ -182,8 +182,8 @@ class _LoginPageState extends State<LoginPage>
         });
       } else {
         setState(() {
-          _emailError = 'Invalid credentials or inactive account';
-          _passwordError = 'Invalid credentials or inactive account';
+          _emailError = 'Invalid username or password';
+          _passwordError = 'Invalid username or password';
         });
       }
     }

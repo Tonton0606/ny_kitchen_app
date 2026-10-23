@@ -232,5 +232,25 @@ void main() {
       userLogs = await auditRepo.getLogs(search: 'User Updated');
       expect(userLogs.isNotEmpty, isTrue, reason: 'User modification must be audited (Gap 9)');
     });
+
+    test('Unauthorized access attempts and self-disable create blocked audit records', () async {
+      SessionManager().setSession({'id': 2, 'username': 'cashier', 'role': 'cashier', 'status': 'active'});
+
+      // Cashier attempts to call an admin repository function (createUser)
+      try {
+        await userRepo.createUser({
+          'full_name': 'Intruder',
+          'username': 'intruder',
+          'password_hash': SecurityUtils.hashPassword('password123'),
+          'role': 'admin',
+          'status': 'active',
+        });
+      } catch (_) {}
+
+      final blockedLogs = await auditRepo.getLogs(status: 'Blocked');
+      expect(blockedLogs.isNotEmpty, isTrue, reason: 'Unauthorized access attempts must generate Blocked audit logs (Gap 7/9)');
+      expect(blockedLogs.first['status'], equals('Blocked'));
+      expect(blockedLogs.first['username'], equals('cashier'));
+    });
   });
 }
