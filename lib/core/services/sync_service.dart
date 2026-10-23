@@ -317,6 +317,15 @@ class SyncService {
       merged['password_hash'] = existingLocal['password_hash'];
       merged['last_login'] = existingLocal['last_login'];
       merged['must_change_password'] = existingLocal['must_change_password'];
+
+      // Sticky administrative & account security status:
+      // If a user account has been disabled ('inactive') or locked out ('locked') locally,
+      // a lagged or stale cloud sync pull must never resurrect it back to 'active'.
+      final localStatus = existingLocal['status'] as String?;
+      final cloudStatus = cloudRecord['status'] as String?;
+      if ((localStatus == 'inactive' || localStatus == 'locked') && cloudStatus == 'active') {
+        merged['status'] = localStatus;
+      }
     } else {
       // A profile pulled to a new device has no local credential yet. Store an
       // unguessable device-only hash so the account cannot log in until an
@@ -460,7 +469,24 @@ class SyncService {
             // 2. Upsert to Supabase
             // Do not request returned rows: that adds a SELECT policy requirement
             // to an otherwise valid INSERT/UPDATE upsert.
-            await client.from(table).upsert(dataToSync);
+            if (table == 'users') {
+              // The cloud users table may require password_hash on INSERT (PostgreSQL NOT NULL),
+              // while device-local credential isolation intentionally omits password_hash from cloud payloads.
+              // Updating existing users row-by-row updates status/roles without violating NOT NULL.
+              for (final userRecord in dataToSync) {
+                final id = userRecord['id'];
+                if (id != null) {
+                  final updatePayload = Map<String, dynamic>.from(userRecord)..remove('id');
+                  try {
+                    await client.from('users').update(updatePayload).eq('id', id);
+                  } catch (_) {
+                    await client.from('users').upsert(userRecord);
+                  }
+                }
+              }
+            } else {
+              await client.from(table).upsert(dataToSync);
+            }
           }
         } catch (e) {
           failedTables.add('$table (${_safeErrorCode(e)})');

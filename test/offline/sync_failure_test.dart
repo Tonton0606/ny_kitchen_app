@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ny_kitchen_app/core/database/database_helper.dart';
 import 'package:ny_kitchen_app/core/database/repositories/transaction_repository.dart';
+import 'package:ny_kitchen_app/core/services/sync_service.dart';
 import 'package:ny_kitchen_app/core/session/session_manager.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -184,6 +185,73 @@ void main() {
       final txItems = await db.query('transaction_items', where: 'food_name = ?', whereArgs: ['Offline Burger']);
       expect(txItems.length, equals(1));
       expect(txItems.first['subtotal'], equals(300.0));
+    });
+
+    test('mergePulledUserRecord preserves local inactive/locked status against stale cloud active pulls', () {
+      final cloudRecord = {
+        'id': 2,
+        'full_name': 'Juan Dela Cruz',
+        'username': 'jdelacruz',
+        'role': 'cashier',
+        'status': 'active', // Stale cloud status
+        'password_hash': 'cloud_hash_should_be_stripped',
+      };
+
+      final localInactive = {
+        'id': 2,
+        'full_name': 'Juan Dela Cruz',
+        'username': 'jdelacruz',
+        'role': 'cashier',
+        'status': 'inactive', // Local admin disabled account
+        'password_hash': '600000:local_salt:local_hash',
+        'failed_login_count': 0,
+        'last_login': '2026-10-23T10:00:00Z',
+        'must_change_password': 0,
+      };
+
+      final mergedInactive = SyncService.mergePulledUserRecord(cloudRecord, localInactive);
+
+      expect(mergedInactive['status'], equals('inactive'),
+          reason: 'Local inactive status must be preserved against cloud active pull');
+      expect(mergedInactive['password_hash'], equals('600000:local_salt:local_hash'),
+          reason: 'Local password hash must be preserved');
+
+      final localLocked = {
+        'id': 3,
+        'full_name': 'Maria Santos',
+        'username': 'msantos',
+        'role': 'cashier',
+        'status': 'locked', // Account locked out due to failed attempts
+        'password_hash': '600000:local_salt:local_hash_2',
+        'failed_login_count': 5,
+        'last_login': null,
+        'must_change_password': 0,
+      };
+
+      final mergedLocked = SyncService.mergePulledUserRecord(cloudRecord, localLocked);
+      expect(mergedLocked['status'], equals('locked'),
+          reason: 'Local locked status must be preserved against cloud active pull');
+      expect(mergedLocked['failed_login_count'], equals(5));
+
+      // Propagate cloud disablement when cloud itself disabled the user
+      final cloudInactive = {
+        'id': 4,
+        'full_name': 'Pedro Penduko',
+        'username': 'pedrop',
+        'role': 'cashier',
+        'status': 'inactive',
+      };
+      final localActive = {
+        'id': 4,
+        'full_name': 'Pedro Penduko',
+        'username': 'pedrop',
+        'role': 'cashier',
+        'status': 'active',
+        'password_hash': 'local_hash',
+      };
+      final mergedCloudDisable = SyncService.mergePulledUserRecord(cloudInactive, localActive);
+      expect(mergedCloudDisable['status'], equals('inactive'),
+          reason: 'Cloud inactive status should disable locally active account');
     });
   });
 }

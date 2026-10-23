@@ -26,11 +26,13 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
   bool _showAddUser = false;
   bool _isLoading = true;
   bool _addPasswordVisible = false;
+  bool _addConfirmPasswordVisible = false;
   List<Map<String, dynamic>> _users = [];
 
   final _addFullNameController = TextEditingController();
   final _addUsernameController = TextEditingController();
   final _addPasswordController = TextEditingController();
+  final _addConfirmPasswordController = TextEditingController();
   final String _addRole = 'cashier';
 
   String _maskUsername(String username) {
@@ -65,6 +67,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     _addFullNameController.dispose();
     _addUsernameController.dispose();
     _addPasswordController.dispose();
+    _addConfirmPasswordController.dispose();
     _horizontalScrollController.dispose();
     _verticalScrollController.dispose();
     super.dispose();
@@ -102,7 +105,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     _addFullNameController.clear();
     _addUsernameController.clear();
     _addPasswordController.clear();
+    _addConfirmPasswordController.clear();
     _addPasswordVisible = false;
+    _addConfirmPasswordVisible = false;
     setState(() => _showAddUser = true);
   }
 
@@ -111,11 +116,43 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
   Future<void> _saveNewUser() async {
     final fullName = _addFullNameController.text.trim();
     final username = _addUsernameController.text.trim();
-    final password = _addPasswordController.text.trim();
+    final password = _addPasswordController.text;
+    final confirmPassword = _addConfirmPasswordController.text;
 
-    if (fullName.isEmpty || username.isEmpty || password.isEmpty) {
+    if (fullName.isEmpty || username.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
+    }
+
+    if (fullName.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Full name must be at least 2 characters long')),
+      );
+      return;
+    }
+
+    final usernameRegex = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
+    if (!usernameRegex.hasMatch(username)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Username must be 3–20 characters (letters, numbers, underscore only)')),
+      );
+      return;
+    }
+
+    final isDuplicate = _users.any((u) =>
+        (u['username'] as String? ?? '').toLowerCase() == username.toLowerCase());
+    if (isDuplicate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Username "@$username" is already in use')),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match')),
       );
       return;
     }
@@ -145,8 +182,11 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
       );
     } catch (e) {
       if (!mounted) return;
+      final errorMsg = e.toString().contains('UNIQUE')
+          ? 'Username "@$username" is already taken'
+          : 'Failed to create account. Please verify input fields.';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error creating account: $e')),
+        SnackBar(content: Text(errorMsg)),
       );
     }
   }
@@ -298,7 +338,34 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               onPressed: () async {
                 final newName = editFullNameController.text.trim();
                 final newUsername = editUsernameController.text.trim();
-                if (newName.isEmpty || newUsername.isEmpty) return;
+                if (newName.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a full name')),
+                  );
+                  return;
+                }
+                if (newName.length < 2) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Full name must be at least 2 characters long')),
+                  );
+                  return;
+                }
+                final usernameRegex = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
+                if (!usernameRegex.hasMatch(newUsername)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Username must be 3–20 characters (letters, numbers, underscore only)')),
+                  );
+                  return;
+                }
+                final isDuplicate = _users.any((u) =>
+                    u['id'] != user['id'] &&
+                    (u['username'] as String? ?? '').toLowerCase() == newUsername.toLowerCase());
+                if (isDuplicate) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Username "@$newUsername" is already taken')),
+                  );
+                  return;
+                }
                 try {
                   await _userRepo.updateUser(user['id'], {
                     'full_name': newName,
@@ -312,8 +379,11 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                   );
                 } catch (e) {
                   if (!context.mounted) return;
+                  final errorMsg = e.toString().contains('UNIQUE')
+                      ? 'Username "@$newUsername" is already in use'
+                      : 'Failed to update account. Please check inputs.';
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error updating account: $e')),
+                    SnackBar(content: Text(errorMsg)),
                   );
                 }
               },
@@ -462,9 +532,14 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final newPass = passwordController.text.trim();
-                final confirmPass = confirmPasswordController.text.trim();
-                if (newPass.isEmpty) return;
+                final newPass = passwordController.text;
+                final confirmPass = confirmPasswordController.text;
+                if (newPass.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a new password')),
+                  );
+                  return;
+                }
                 if (newPass != confirmPass) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Passwords do not match')),
@@ -491,7 +566,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                 } catch (e) {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error resetting password: $e')),
+                    const SnackBar(content: Text('Failed to reset password. Please check policy requirements.')),
                   );
                 }
               },
@@ -578,8 +653,11 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                 );
               } catch (e) {
                 if (!context.mounted) return;
+                final errorMsg = e.toString().contains('SELF_DISABLE_PROHIBITED')
+                    ? 'Self-lockout prohibited: Administrators cannot disable their own active account.'
+                    : 'Error updating account status. Please try again.';
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error updating status: $e')),
+                  SnackBar(content: Text(errorMsg)),
                 );
               }
             },
@@ -663,7 +741,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               } catch (e) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error unlocking account: $e')),
+                  const SnackBar(content: Text('Failed to unlock account. Please try again.')),
                 );
               }
             },
@@ -1265,12 +1343,20 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                   onPressed: () => _showResetPasswordDialog(context, user),
                 ),
                 const SizedBox(width: 6),
+                final isSelf = SessionManager().userId == user['id'];
                 if (isLocked)
                   _buildActionIconButton(
                     icon: LucideIcons.lock_open,
                     tooltip: 'Unlock Account',
                     color: const Color(0xFFD97706),
                     onPressed: () => _showUnlockDialog(context, user),
+                  )
+                else if (isSelf)
+                  _buildActionIconButton(
+                    icon: LucideIcons.shield_check,
+                    tooltip: 'Current Active Admin Account',
+                    color: AppColors.mutedText.withValues(alpha: 0.35),
+                    onPressed: null,
                   )
                 else
                   _buildActionIconButton(
@@ -1291,7 +1377,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     required IconData icon,
     required String tooltip,
     required Color color,
-    required VoidCallback onPressed,
+    VoidCallback? onPressed,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -1434,6 +1520,39 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                 color: AppColors.mutedText,
                               ),
                               onPressed: () => setState(() => _addPasswordVisible = !_addPasswordVisible),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+
+                        const Text('Confirm Password', style: AppTypography.cardTitle),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _addConfirmPasswordController,
+                          obscureText: !_addConfirmPasswordVisible,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(64),
+                          ],
+                          decoration: InputDecoration(
+                            hintText: 'Re-enter initial password',
+                            prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _addConfirmPasswordVisible ? LucideIcons.eye_off : LucideIcons.eye,
+                                size: 18,
+                                color: AppColors.mutedText,
+                              ),
+                              onPressed: () => setState(() => _addConfirmPasswordVisible = !_addConfirmPasswordVisible),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
