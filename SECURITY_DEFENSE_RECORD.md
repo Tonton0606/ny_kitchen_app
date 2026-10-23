@@ -1024,6 +1024,35 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Stage changes, commit cleanly, push to origin/main, and proceed to Step 4 (Printable Architecture Diagram).
 
+## Data Privacy UI Surface Integration (RA 10173 Notice) — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T18:40:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Surface the formal Data Privacy Policy and RA 10173 compliance details in the running system UI:
+1. Created reusable `AppPrivacyDialog` in `lib/features/shared/widgets/app_privacy_dialog.dart` detailing:
+   - Zero customer PII at counter checkout.
+   - PBKDF2-600k hashing and AES-256 credential encryption.
+   - Official data retention schedules (5 yrs sales, 2 yrs audit logs, 90 days login attempts).
+   - Employee data subject rights and 72-hour National Privacy Commission (NPC) breach escalation protocol.
+2. Added "Data Privacy & Compliance (RA 10173)" action tile and Help & Support modal notice to `lib/features/cashier/presentation/pages/account_settings_page.dart`.
+3. Added "Data Privacy & Retention Policy" tile and About Application action to `lib/features/admin/presentation/pages/admin_account_settings_page.dart`.
+Rubric / risk / acceptance-test IDs: R17 (Data Privacy & Governance / RA 10173), R19/R20 (Presentation & Verification).
+Files changed:
+- `lib/features/shared/widgets/app_privacy_dialog.dart`
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/features/shared/widgets/app_privacy_dialog.dart lib/features/cashier/presentation/pages/account_settings_page.dart lib/features/admin/presentation/pages/admin_account_settings_page.dart`: 0 errors.
+- `flutter test test/security/`: 67/67 security tests passed cleanly (100% pass rate).
+Evidence paths:
+- `lib/features/shared/widgets/app_privacy_dialog.dart`
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Stage changes, commit cleanly, push to origin/main, and proceed to Step 4 (Printable Architecture Diagram).
+
+
 
 
 

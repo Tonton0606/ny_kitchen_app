@@ -6,6 +6,7 @@ import '../../../../core/session/session_manager.dart';
 import '../../../../core/services/sync_service.dart';
 import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/utils/security_utils.dart';
+import '../../../shared/widgets/app_privacy_dialog.dart';
 
 class AdminAccountSettingsPage extends StatefulWidget {
   const AdminAccountSettingsPage({super.key});
@@ -273,7 +274,23 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
                         ),
                         child: const Text('v1.0.0', style: TextStyle(color: AppColors.darkCharcoal, fontWeight: FontWeight.bold, fontSize: 13)),
                       ),
-                      onTap: () {},
+                      onTap: () => AppPrivacyDialog.show(context),
+                    ),
+                    const Divider(height: 24, color: AppColors.softBorder),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.pageBackground,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.privacy_tip_outlined, color: AppColors.darkCharcoal, size: 24),
+                      ),
+                      title: const Text('Data Privacy & Retention Policy', style: TextStyle(fontWeight: FontWeight.w500, color: AppColors.darkCharcoal)),
+                      subtitle: const Text('Republic Act No. 10173 (Data Privacy Act of 2012) compliance', style: TextStyle(color: AppColors.mutedText)),
+                      trailing: const Icon(Icons.chevron_right, color: AppColors.mutedText),
+                      onTap: () => AppPrivacyDialog.show(context),
                     ),
                   ],
                 ),

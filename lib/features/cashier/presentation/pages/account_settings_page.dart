@@ -7,6 +7,7 @@ import '../../../../core/database/repositories/user_repository.dart';
 import '../../../../core/utils/security_utils.dart';
 import '../../../../core/services/sync_service.dart';
 import 'cashier_activity_logs_page.dart';
+import '../../../shared/widgets/app_privacy_dialog.dart';
 
 class AccountSettingsPage extends StatefulWidget {
   const AccountSettingsPage({super.key});
@@ -161,6 +162,11 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 icon: Icons.print_outlined,
                 title: 'Printer Settings',
                 onTap: () => _showPrinterSettingsDialog(context),
+              ),
+              _buildTile(
+                icon: Icons.privacy_tip_outlined,
+                title: 'Data Privacy & Compliance (RA 10173)',
+                onTap: () => AppPrivacyDialog.show(context),
               ),
               _buildTile(
                 icon: Icons.help_outline,
@@ -623,10 +629,31 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                 'The system operates offline using local SQLite. Changes automatically sync when network is restored.',
               ),
               const Divider(height: 20, color: AppColors.softBorder),
-              const Text('System Information', style: AppTypography.label),
+              const Text('System Information & Privacy', style: AppTypography.label),
               const SizedBox(height: 6),
               const Text('App: Nanay\'s Kitchen POS v1.0.0 (Secure Edition)', style: AppTypography.caption),
               const Text('Architecture: Offline-First SQLite + Cloud Sync', style: AppTypography.caption),
+              const Text('Compliance: Republic Act No. 10173 (Data Privacy Act of 2012)', style: AppTypography.caption),
+              const Text('Cryptography: PBKDF2-600k + AES-256-GCM', style: AppTypography.caption),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.privacy_tip_outlined, size: 16),
+                  label: const Text('View Data Privacy Policy (RA 10173)'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.darkCharcoal,
+                    side: const BorderSide(color: AppColors.slateBorder),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    AppPrivacyDialog.show(context);
+                  },
+                ),
+              ),
             ],
           ),
         ),
