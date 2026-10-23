@@ -74,7 +74,7 @@ class SyncService {
 
   String _safeErrorCode(Object error) {
     final errorText = error.toString();
-    final code = RegExp(r'\b[0-9A-Z]{5}\b').firstMatch(errorText)?.group(0);
+    final code = RegExp(r'\bPGRST\d+\b|\b[0-9A-Z]{5}\b').firstMatch(errorText)?.group(0);
     if (code == '23502') {
       // A not-null error may safely expose the column identifier, never the
       // database row or the rest of the server error (which can contain data).
@@ -83,6 +83,12 @@ class SyncService {
         caseSensitive: false,
       ).firstMatch(errorText)?.group(1);
       if (column != null) return '$code ($column required)';
+    } else if (code == 'PGRST204') {
+      final column = RegExp(
+        r"Could not find the column '([A-Za-z_][A-Za-z0-9_]*)'",
+        caseSensitive: false,
+      ).firstMatch(errorText)?.group(1);
+      if (column != null) return '$code (unknown column $column)';
     }
     return code ?? error.runtimeType.toString();
   }
@@ -302,10 +308,11 @@ class SyncService {
     _syncTimer = null;
   }
 
-  /// Strips sensitive credentials (password_hash) before syncing to cloud.
+  /// Strips sensitive credentials (password_hash) and residual columns before syncing to cloud.
   static Map<String, dynamic> sanitizeUserForCloudSync(Map<String, dynamic> record) {
     final sanitized = Map<String, dynamic>.from(record);
     sanitized.remove('password_hash');
+    sanitized.remove('face_encoding');
     return sanitized;
   }
 
@@ -317,8 +324,9 @@ class SyncService {
     Map<String, dynamic>? existingLocal,
   ) {
     final merged = Map<String, dynamic>.from(cloudRecord);
-    // Cloud sync carries user profiles only. Never accept cloud credentials.
+    // Cloud sync carries user profiles only. Never accept cloud credentials or residual fields.
     merged.remove('password_hash');
+    merged.remove('face_encoding');
     if (existingLocal != null) {
       merged['failed_login_count'] = existingLocal['failed_login_count'];
       merged['password_hash'] = existingLocal['password_hash'];
@@ -462,6 +470,7 @@ class SyncService {
               }
               if (table == 'users') {
                 mutableRecord.remove('password_hash'); // Do NOT sync password_hash to cloud
+                mutableRecord.remove('face_encoding'); // Residual column from older local SQLite schemas
               }
               if (table == 'food_categories') {
                 mutableRecord.remove('updated_at');

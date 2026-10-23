@@ -1206,3 +1206,25 @@ Checks actually run and actual results:
 Evidence paths: `docs/DEFENSE_BACKEND_PRESENTATION_NOTES.md`; `docs/security/evidence/2026-10-defense/backend_verification.md`; `PROJECT_STATE.md`; no token or credential value recorded.
 Unverified items / remaining risks: This was a direct Windows-to-Ubuntu API request, not Flutter-to-Ubuntu synchronization. Offline/reconnect, device/Admin denial, credential rotation/revocation, backup/restore, Flutter certificate trust, and Supabase behavior were not tested by this task. Existing Supabase/local status conflicts remain; do not run an unreviewed Production sync.
 Next concrete step: Present the optional Ubuntu segment using the notes and screenshot, say clearly that the API accepted one synthetic sale, and avoid claiming Flutter integration or full recovery was demonstrated. Stage and commit only the listed documentation files, then push to `origin/main`.
+
+## Repair Residual `face_encoding` Sync Column Mismatch and PostgREST Error Parsing — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T07:18:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Diagnose and repair "Cloud sync: Upload incomplete: users (PostgrestException)" banner during application execution.
+Rubric / risk / acceptance-test IDs: R08, R10, R13, SEC-02, AT10.
+Files changed:
+- `lib/core/services/sync_service.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- Mandatory Git sync: `git fetch origin main` and `git status` confirmed local `bug-fix` is current with `origin/bug-fix` and contains all commits from `origin/main`.
+- Live diagnostic: Inspected Supabase unified logs via MCP `query_logs` which revealed HTTP 400 with `proxy_status: PostgREST; error=PGRST204` on `PATCH /rest/v1/users?id=eq.1` and `POST /rest/v1/users`.
+- Local schema inspection: Identified residual `face_encoding` column in existing local SQLite database `ny_kitchen.db`. Commit `36195f6` removed `mutableRecord.remove('face_encoding')`, causing `face_encoding: null` to be sent in the upload payload, which Supabase schema rejected.
+- Fixed: Re-added `mutableRecord.remove('face_encoding')` to `_syncToSupabase`, `sanitizeUserForCloudSync`, and `mergePulledUserRecord` in `sync_service.dart`. Enhanced `_safeErrorCode` to parse `PGRST204` and other PostgREST error codes with column extraction.
+- Automated tests:
+  - `flutter test test/security/`: 82/82 tests passed.
+  - `flutter test test/offline/sync_failure_test.dart`: 3/3 tests passed.
+Evidence paths: `lib/core/services/sync_service.dart`, `test/offline/sync_failure_test.dart`, Supabase MCP diagnostic logs.
+Unverified items / remaining risks: Live automatic sync will now retry against Supabase on the running instance; existing 14 status differences between Supabase and local SQLite remain separate.
+Next concrete step: Commit changes cleanly and push to `origin/main` / `origin/bug-fix` per collaborative workflow.
+
