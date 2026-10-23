@@ -594,178 +594,306 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     final confirmPasswordController = TextEditingController();
     bool obscurePassword = true;
     bool obscureConfirm = true;
+    String? passwordError;
+    String? confirmError;
+    String? dialogError;
+    bool isSubmitting = false;
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-          contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-          actionsPadding: const EdgeInsets.fromLTRB(16, 8, 20, 20),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  LucideIcons.circle_check,
-                  color: Color(0xFF16A34A),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  'Enable Account',
-                  style: AppTypography.dialogTitle,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          content: SizedBox(
-            width: 400,
-            child: Column(
+        builder: (dialogContext, setDialogState) {
+          final currentPass = passwordController.text;
+          final currentConfirm = confirmPasswordController.text;
+          final hasMinLength = currentPass.length >= 8;
+          final hasLetter = RegExp(r'[A-Za-z]').hasMatch(currentPass);
+          final hasDigit = RegExp(r'\d').hasMatch(currentPass);
+          final passwordsMatch = currentPass.isNotEmpty && currentConfirm.isNotEmpty && currentPass == currentConfirm;
+
+          Widget buildRequirementBadge({required bool isMet, required String text}) {
+            return Row(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Set a password for ${user['full_name']} (@${user['username']}) to re-enable access:',
-                  style: AppTypography.cardSubtitle,
+                Icon(
+                  isMet ? LucideIcons.circle_check : LucideIcons.circle,
+                  size: 13,
+                  color: isMet ? const Color(0xFF16A34A) : AppColors.mutedSlate,
                 ),
-                const SizedBox(height: 16),
-                const Text('New Password', style: AppTypography.cardTitle),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: passwordController,
-                  obscureText: obscurePassword,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(64),
-                  ],
-                  decoration: InputDecoration(
-                    hintText: 'Enter new password',
-                    prefixIcon: const Icon(LucideIcons.lock, size: 18),
-                    suffixIcon: IconButton(
-                      icon: Icon(obscurePassword ? LucideIcons.eye_off : LucideIcons.eye, size: 18),
-                      onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
+                const SizedBox(width: 5),
+                Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isMet ? FontWeight.w700 : FontWeight.w500,
+                    color: isMet ? const Color(0xFF16A34A) : AppColors.mutedSlate,
                   ),
                 ),
-                const SizedBox(height: 14),
-                const Text('Confirm Password', style: AppTypography.cardTitle),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: confirmPasswordController,
-                  obscureText: obscureConfirm,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(64),
-                  ],
-                  decoration: InputDecoration(
-                    hintText: 'Re-enter new password',
-                    prefixIcon: const Icon(LucideIcons.lock, size: 18),
-                    suffixIcon: IconButton(
-                      icon: Icon(obscureConfirm ? LucideIcons.eye_off : LucideIcons.eye, size: 18),
-                      onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
+              ],
+            );
+          }
+
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 8, 20, 20),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    LucideIcons.circle_check,
+                    color: Color(0xFF16A34A),
+                    size: 20,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  SecurityUtils.passwordPolicyMessage,
-                  style: AppTypography.caption.copyWith(color: AppColors.mutedText, fontSize: 11),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    'Enable Account',
+                    style: AppTypography.dialogTitle,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.mutedText,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-              child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final newPass = passwordController.text;
-                final confirmPass = confirmPasswordController.text;
-                if (newPass.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a password')),
-                  );
-                  return;
-                }
-                if (newPass != confirmPass) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Passwords do not match')),
-                  );
-                  return;
-                }
-                final policyError = SecurityUtils.validatePassword(newPass);
-                if (policyError != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(policyError)),
-                  );
-                  return;
-                }
-                try {
-                  await _userRepo.enableUserWithTemporaryPassword(user['id'], newPass);
-                  if (!context.mounted) return;
-                  Navigator.pop(ctx);
-                  _loadUsers();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Account enabled successfully with new password.')),
-                  );
-                } catch (e) {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Failed to enable account. Please check password policy.')),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF16A34A),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            content: SizedBox(
+              width: 420,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Set a new password for ${user['full_name']} (@${user['username']}) to re-enable access:',
+                      style: AppTypography.cardSubtitle,
+                    ),
+                    if (dialogError != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.brandRed.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(LucideIcons.circle_alert, size: 16, color: AppColors.brandRed),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                dialogError!,
+                                style: const TextStyle(fontSize: 12, color: AppColors.brandRed, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    const Text('New Password', style: AppTypography.cardTitle),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: obscurePassword,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(64),
+                      ],
+                      onChanged: (_) {
+                        setDialogState(() {
+                          passwordError = null;
+                          dialogError = null;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Enter new password',
+                        errorText: passwordError,
+                        prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                        suffixIcon: IconButton(
+                          icon: Icon(obscurePassword ? LucideIcons.eye_off : LucideIcons.eye, size: 18),
+                          onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: passwordError != null ? AppColors.brandRed : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: passwordError != null ? AppColors.brandRed : AppColors.goldenYellow,
+                            width: 1.5,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text('Confirm Password', style: AppTypography.cardTitle),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: confirmPasswordController,
+                      obscureText: obscureConfirm,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(64),
+                      ],
+                      onChanged: (_) {
+                        setDialogState(() {
+                          confirmError = null;
+                          dialogError = null;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Re-enter new password',
+                        errorText: confirmError,
+                        prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                        suffixIcon: IconButton(
+                          icon: Icon(obscureConfirm ? LucideIcons.eye_off : LucideIcons.eye, size: 18),
+                          onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: confirmError != null ? AppColors.brandRed : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: confirmError != null ? AppColors.brandRed : AppColors.goldenYellow,
+                            width: 1.5,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
+                      children: [
+                        buildRequirementBadge(isMet: hasMinLength, text: '8+ characters'),
+                        buildRequirementBadge(isMet: hasLetter && hasDigit, text: 'Letters & numbers'),
+                        if (currentConfirm.isNotEmpty)
+                          buildRequirementBadge(isMet: passwordsMatch, text: 'Passwords match'),
+                      ],
+                    ),
+                  ],
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
-              child: const Text('Enable Account', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
-          ],
-        ),
+            actions: [
+              TextButton(
+                onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.mutedText,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+              ),
+              ElevatedButton(
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        final newPass = passwordController.text;
+                        final confirmPass = confirmPasswordController.text;
+
+                        String? pErr;
+                        String? cErr;
+
+                        if (newPass.isEmpty) {
+                          pErr = 'Password is required';
+                        } else if (newPass.length < 8) {
+                          pErr = 'Must be at least 8 characters long';
+                        } else if (!RegExp(r'[A-Za-z]').hasMatch(newPass)) {
+                          pErr = 'Must contain at least one letter';
+                        } else if (!RegExp(r'\d').hasMatch(newPass)) {
+                          pErr = 'Must contain at least one number';
+                        }
+
+                        if (confirmPass.isEmpty) {
+                          cErr = 'Please re-enter the password';
+                        } else if (newPass != confirmPass) {
+                          cErr = 'Passwords do not match';
+                        }
+
+                        if (pErr != null || cErr != null) {
+                          setDialogState(() {
+                            passwordError = pErr;
+                            confirmError = cErr;
+                          });
+                          return;
+                        }
+
+                        setDialogState(() {
+                          isSubmitting = true;
+                          dialogError = null;
+                        });
+
+                        try {
+                          await _userRepo.enableUserWithTemporaryPassword(user['id'], newPass);
+                          if (!context.mounted) return;
+                          Navigator.pop(ctx);
+                          _loadUsers();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Account for ${user['full_name']} enabled successfully.'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        } catch (e) {
+                          setDialogState(() {
+                            isSubmitting = false;
+                            dialogError = e.toString().contains('WEAK_PASSWORD')
+                                ? SecurityUtils.passwordPolicyMessage
+                                : 'Failed to enable account: $e';
+                          });
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF16A34A),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFF16A34A).withValues(alpha: 0.5),
+                  disabledForegroundColor: Colors.white70,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Enable Account', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
