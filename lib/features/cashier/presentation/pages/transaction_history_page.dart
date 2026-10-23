@@ -6,7 +6,6 @@ import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/database/repositories/transaction_repository.dart';
-import '../../../../core/session/session_manager.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../shared/widgets/app_state_placeholders.dart';

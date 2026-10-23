@@ -1219,6 +1219,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
     final status = (user['status'] as String? ?? 'active').toLowerCase();
     final isActive = status == 'active';
     final isLocked = status == 'locked';
+    final isSelf = SessionManager().userId == user['id'];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -1343,7 +1344,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                   onPressed: () => _showResetPasswordDialog(context, user),
                 ),
                 const SizedBox(width: 6),
-                final isSelf = SessionManager().userId == user['id'];
                 if (isLocked)
                   _buildActionIconButton(
                     icon: LucideIcons.lock_open,
