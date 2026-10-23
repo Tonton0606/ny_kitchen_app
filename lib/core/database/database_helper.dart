@@ -48,10 +48,13 @@ class DatabaseHelper {
       onConfigure: _onConfigure,
     );
 
-    // Normalize legacy mock transaction statuses to 'Served'
+    // Normalize legacy mock transaction statuses to 'Served' or 'Preparing'
     try {
       await db.rawUpdate(
         "UPDATE transactions SET status = 'Served' WHERE status IN ('Taken', 'Ready', 'Completed', 'completed')",
+      );
+      await db.rawUpdate(
+        "UPDATE transactions SET status = 'Preparing' WHERE status = 'preparing'",
       );
     } catch (_) {}
 
@@ -120,11 +123,7 @@ class DatabaseHelper {
         await db.execute('ALTER TABLE transactions ADD COLUMN order_number INTEGER');
       } catch (_) {}
     }
-    if (oldVersion < 7) {
-      try {
-        await db.execute('ALTER TABLE users ADD COLUMN face_encoding TEXT');
-      } catch (_) {}
-    }
+
     if (oldVersion < 8) {
       try {
         await db.execute('ALTER TABLE users ADD COLUMN must_change_password INTEGER DEFAULT 0');
@@ -158,7 +157,6 @@ class DatabaseHelper {
         status TEXT NOT NULL,
         last_login TEXT,
         failed_login_count INTEGER DEFAULT 0,
-        face_encoding TEXT,
         must_change_password INTEGER DEFAULT 0,
         created_at TEXT NOT NULL
       )

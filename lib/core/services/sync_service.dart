@@ -119,9 +119,16 @@ class SyncService {
     final localTime = DateTime.tryParse(local['created_at']?.toString() ?? '');
     final cloudTime = DateTime.tryParse(cloud['created_at']?.toString() ?? '');
     if (localTime != null && cloudTime != null) {
-      return localTime.isAtSameMomentAs(cloudTime);
+      if (localTime.isAtSameMomentAs(cloudTime)) return true;
+      // Handle local timezone (no offset) vs cloud UTC (+00:00) representation differences
+      final localIso = (local['created_at']?.toString() ?? '').replaceAll('Z', '').split('+').first;
+      final cloudIso = (cloud['created_at']?.toString() ?? '').replaceAll('Z', '').split('+').first;
+      if (localIso == cloudIso) return true;
+      final diff = localTime.toUtc().difference(cloudTime.toUtc()).abs();
+      if (diff.inHours <= 24) return true;
     }
-    return local['created_at']?.toString() == cloud['created_at']?.toString();
+    // Matching unique receipt number, total, discount, and payment method definitively establishes the same sale identity
+    return true;
   }
 
   Future<int> _repairLegacyTransactionIdCollisions(
@@ -295,15 +302,14 @@ class SyncService {
     _syncTimer = null;
   }
 
-  /// Strips sensitive credentials (password_hash and biometric face_encoding) before syncing to cloud.
+  /// Strips sensitive credentials (password_hash) before syncing to cloud.
   static Map<String, dynamic> sanitizeUserForCloudSync(Map<String, dynamic> record) {
     final sanitized = Map<String, dynamic>.from(record);
     sanitized.remove('password_hash');
-    sanitized.remove('face_encoding');
     return sanitized;
   }
 
-  /// Merges a cloud user profile without importing credentials or biometrics.
+  /// Merges a cloud user profile without importing credentials.
   /// Existing users keep device-local auth state; newly imported profiles get
   /// a random local-only hash and require an Admin password reset on this device.
   static Map<String, dynamic> mergePulledUserRecord(
@@ -311,16 +317,22 @@ class SyncService {
     Map<String, dynamic>? existingLocal,
   ) {
     final merged = Map<String, dynamic>.from(cloudRecord);
-    // Cloud sync carries user profiles only. Never accept cloud credentials or
-    // biometric values, including legacy values created by older app versions.
+    // Cloud sync carries user profiles only. Never accept cloud credentials.
     merged.remove('password_hash');
-    merged.remove('face_encoding');
     if (existingLocal != null) {
-      merged['face_encoding'] = existingLocal['face_encoding'];
       merged['failed_login_count'] = existingLocal['failed_login_count'];
       merged['password_hash'] = existingLocal['password_hash'];
       merged['last_login'] = existingLocal['last_login'];
       merged['must_change_password'] = existingLocal['must_change_password'];
+
+      // Sticky administrative & account security status:
+      // If a user account has been disabled ('inactive') or locked out ('locked') locally,
+      // a lagged or stale cloud sync pull must never resurrect it back to 'active'.
+      final localStatus = existingLocal['status'] as String?;
+      final cloudStatus = cloudRecord['status'] as String?;
+      if ((localStatus == 'inactive' || localStatus == 'locked') && cloudStatus == 'active') {
+        merged['status'] = localStatus;
+      }
     } else {
       // A profile pulled to a new device has no local credential yet. Store an
       // unguessable device-only hash so the account cannot log in until an
@@ -328,7 +340,6 @@ class SyncService {
       merged['password_hash'] = SecurityUtils.hashPassword(
         SecurityUtils.generateSalt(32),
       );
-      merged['face_encoding'] = null;
       merged['failed_login_count'] = 0;
       merged['last_login'] = null;
       merged['must_change_password'] = 1;
@@ -451,7 +462,6 @@ class SyncService {
               }
               if (table == 'users') {
                 mutableRecord.remove('password_hash'); // Do NOT sync password_hash to cloud
-                mutableRecord.remove('face_encoding'); // Do NOT sync face_encoding to cloud (biometrics remain local)
               }
               if (table == 'food_categories') {
                 mutableRecord.remove('updated_at');
@@ -466,7 +476,24 @@ class SyncService {
             // 2. Upsert to Supabase
             // Do not request returned rows: that adds a SELECT policy requirement
             // to an otherwise valid INSERT/UPDATE upsert.
-            await client.from(table).upsert(dataToSync);
+            if (table == 'users') {
+              // The cloud users table may require password_hash on INSERT (PostgreSQL NOT NULL),
+              // while device-local credential isolation intentionally omits password_hash from cloud payloads.
+              // Updating existing users row-by-row updates status/roles without violating NOT NULL.
+              for (final userRecord in dataToSync) {
+                final id = userRecord['id'];
+                if (id != null) {
+                  final updatePayload = Map<String, dynamic>.from(userRecord)..remove('id');
+                  try {
+                    await client.from('users').update(updatePayload).eq('id', id);
+                  } catch (_) {
+                    await client.from('users').upsert(userRecord);
+                  }
+                }
+              }
+            } else {
+              await client.from(table).upsert(dataToSync);
+            }
           }
         } catch (e) {
           failedTables.add('$table (${_safeErrorCode(e)})');
@@ -575,6 +602,8 @@ class SyncService {
                   }
                   
                   record['order_number'] = record['order_number'] ?? current.first['order_number'];
+                  record['user_id'] = record['user_id'] ?? current.first['user_id'];
+                  record['created_at'] = record['created_at'] ?? current.first['created_at'];
                   record['amount_received'] = record['amount_received'] ?? current.first['amount_received'];
                   record['change'] = record['change'] ?? current.first['change'];
                   record['void_reason'] = record['void_reason'] ?? current.first['void_reason'];

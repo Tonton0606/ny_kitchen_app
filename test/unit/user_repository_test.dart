@@ -36,7 +36,6 @@ void main() {
                   status TEXT NOT NULL,
                   last_login TEXT,
                   failed_login_count INTEGER DEFAULT 0,
-                  face_encoding TEXT,
                   must_change_password INTEGER DEFAULT 0,
                   created_at TEXT NOT NULL
                 )
@@ -137,5 +136,49 @@ void main() {
       final successLogin = await userRepository.login('testuser', 'newpassword123');
       expect(successLogin, isNotNull);
     });
+
+    test('enableUser resets failed_login_count and restores active status', () async {
+      await db.insert('users', {
+        'id': 2,
+        'full_name': 'Cashier User',
+        'username': 'cashier2',
+        'password_hash': SecurityUtils.hashPassword('cashier123'),
+        'role': 'cashier',
+        'status': 'inactive',
+        'failed_login_count': 4,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      await userRepository.enableUser(2);
+
+      final rows = await db.query('users', where: 'id = ?', whereArgs: [2]);
+      expect(rows.first['status'], equals('active'));
+      expect(rows.first['failed_login_count'], equals(0));
+    });
+
+    test('enableUserWithTemporaryPassword sets active, resets failed count, and forces password change', () async {
+      await db.insert('users', {
+        'id': 3,
+        'full_name': 'Another Cashier',
+        'username': 'cashier3',
+        'password_hash': SecurityUtils.hashPassword('oldpassword123'),
+        'role': 'cashier',
+        'status': 'inactive',
+        'failed_login_count': 3,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      await userRepository.enableUserWithTemporaryPassword(3, 'TempPass2026!');
+
+      final rows = await db.query('users', where: 'id = ?', whereArgs: [3]);
+      expect(rows.first['status'], equals('active'));
+      expect(rows.first['failed_login_count'], equals(0));
+      expect(rows.first['must_change_password'], equals(0));
+      expect(
+        SecurityUtils.verifyPassword('TempPass2026!', rows.first['password_hash'] as String),
+        isTrue,
+      );
+    });
   });
 }
+

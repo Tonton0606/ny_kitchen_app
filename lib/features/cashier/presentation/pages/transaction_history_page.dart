@@ -6,7 +6,6 @@ import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/database/repositories/transaction_repository.dart';
-import '../../../../core/session/session_manager.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../shared/widgets/app_state_placeholders.dart';
@@ -52,20 +51,21 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     super.dispose();
   }
 
+  bool _isFetching = false;
+
   Future<void> _loadTransactions({bool silent = false}) async {
+    if (_isFetching) return;
+    _isFetching = true;
+
     if (!silent && mounted) {
       setState(() => _isLoading = true);
     }
     try {
       final data = await _repository.getAllTransactions();
-      List<Map<String, dynamic>> enrichedData = [];
-      for (var tx in data) {
-        final items = await _repository.getTransactionItems(tx['id']);
-        enrichedData.add({
-          ...tx,
-          'itemCount': items.length,
-        });
-      }
+      final enrichedData = data.map((tx) => {
+        ...tx,
+        'itemCount': tx['item_count'] ?? 1,
+      }).toList();
 
       if (mounted) {
         setState(() {
@@ -80,6 +80,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    } finally {
+      _isFetching = false;
     }
   }
 
@@ -249,7 +251,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                             // Status Filter Pills
                             Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: ['All', 'Served', 'Voided'].map((f) {
+                              children: ['All', 'Preparing', 'Served', 'Refunded', 'Voided'].map((f) {
                                 final isSelected = _statusFilter == f;
                                 final count = _countForStatus(f);
 
@@ -672,8 +674,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
 
                             // Items List
                             ...items.map((item) {
-                              final qty = item['quantity'] as int;
-                              final subtotal = (item['subtotal'] as num).toDouble();
+                              final qty = (item['quantity'] as num?)?.toInt() ?? 1;
+                              final subtotal = (item['subtotal'] as num?)?.toDouble() ?? 0.0;
                               return Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 5),
                                 child: Row(

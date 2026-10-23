@@ -84,7 +84,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   Future<void> _loadDataSilent() async {
     if (!mounted || _isEditingSelected || _showAddFood) return;
     final repo = FoodRepository();
-    final foods = await repo.getAllFoodItems();
+    final foods = await repo.getAllFoodItems(includeArchived: true);
     final categories = await repo.getCategories();
     if (!mounted || _isEditingSelected || _showAddFood) return;
     setState(() {
@@ -107,7 +107,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     if (!mounted) return;
     setState(() => _isLoading = true);
     final repo = FoodRepository();
-    final foods = await repo.getAllFoodItems();
+    final foods = await repo.getAllFoodItems(includeArchived: true);
     final categories = await repo.getCategories();
     if (!mounted) return;
     setState(() {
@@ -179,32 +179,54 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     }
     final foodId = _selectedFood!['id'] as int;
 
-    final repo = FoodRepository();
-    await repo.updateFoodItem(foodId, {
-      'name': _editNameController.text.trim(),
-      'price': price,
-      'category_id': _editCategoryId,
-      'availability': _editIsAvailable ? 'available' : 'unavailable',
-      'image_path': _editImageUrl,
-    });
-    if (!mounted) return;
-    final updatedFoods = await repo.getAllFoodItems();
-    final updatedItem = updatedFoods.firstWhere(
-      (f) => f['id'] == foodId,
-      orElse: () => {
-        ..._selectedFood!,
+    try {
+      final repo = FoodRepository();
+      await repo.updateFoodItem(foodId, {
         'name': _editNameController.text.trim(),
         'price': price,
         'category_id': _editCategoryId,
         'availability': _editIsAvailable ? 'available' : 'unavailable',
         'image_path': _editImageUrl,
-      },
-    );
-    setState(() {
-      _foods = updatedFoods;
-      _selectedFood = updatedItem;
-      _isEditingSelected = false;
-    });
+      });
+      if (!mounted) return;
+      final updatedFoods = await repo.getAllFoodItems(includeArchived: true);
+      final updatedItem = updatedFoods.firstWhere(
+        (f) => f['id'] == foodId,
+        orElse: () => {
+          ..._selectedFood!,
+          'name': _editNameController.text.trim(),
+          'price': price,
+          'category_id': _editCategoryId,
+          'availability': _editIsAvailable ? 'available' : 'unavailable',
+          'image_path': _editImageUrl,
+        },
+      );
+      if (!mounted) return;
+      setState(() {
+        _foods = updatedFoods;
+        _selectedFood = updatedItem;
+        _isEditingSelected = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Food item updated successfully.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e
+          .toString()
+          .replaceFirst('SecurityException: ', '')
+          .replaceFirst('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Future<void> _toggleSelectedFoodAvailability(bool val) async {
@@ -215,7 +237,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
       'availability': val ? 'available' : 'unavailable',
     });
     if (!mounted) return;
-    final updatedFoods = await repo.getAllFoodItems();
+    final updatedFoods = await repo.getAllFoodItems(includeArchived: true);
     final updatedItem = updatedFoods.firstWhere(
       (f) => f['id'] == foodId,
       orElse: () => {
@@ -240,22 +262,43 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
       return;
     }
 
-    final repo = FoodRepository();
-    await repo.insertFoodItem({
-      'name': name,
-      'price': price,
-      'category_id': _addCategoryId,
-      'availability': _addIsAvailable ? 'available' : 'unavailable',
-      'status': 'active',
-      'image_path': _addImageUrl ?? '',
-    });
-    if (!mounted) return;
-    _closeAddFood();
-    await _loadData();
+    try {
+      final repo = FoodRepository();
+      await repo.insertFoodItem({
+        'name': name,
+        'price': price,
+        'category_id': _addCategoryId,
+        'availability': _addIsAvailable ? 'available' : 'unavailable',
+        'status': 'active',
+        'image_path': _addImageUrl ?? '',
+      });
+      if (!mounted) return;
+      _closeAddFood();
+      await _loadData();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Dish "$name" added successfully.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e
+          .toString()
+          .replaceFirst('SecurityException: ', '')
+          .replaceFirst('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
-
-  void _showDeleteDialog(BuildContext context, Map<String, dynamic> food) {
+  void _showArchiveDialog(BuildContext context, Map<String, dynamic> food) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -273,21 +316,19 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.error.withValues(alpha: 0.1),
+                color: const Color(0xFFD97706).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.delete_outline,
-                color: AppColors.brandRed,
+              child: const Icon(
+                Icons.archive_outlined,
+                color: Color(0xFFD97706),
                 size: 28,
               ),
             ),
             const SizedBox(width: 16),
             const Expanded(
               child: Text(
-                'Delete Food Item',
+                'Archive Food Item',
                 style: AppTypography.dialogTitle,
               ),
             ),
@@ -295,18 +336,28 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Are you sure you want to delete "${food['name']}"?',
-              style: TextStyle(fontSize: 15, color: AppColors.mutedText),
+              'Are you sure you want to archive "${food['name']}"?',
+              style: const TextStyle(fontSize: 15, color: AppColors.mutedText),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'This action cannot be undone.',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.brandRed,
-                fontWeight: FontWeight.w500,
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: const Text(
+                'This dish will be removed from the active cashier menu. Past sales and receipts will remain intact. You can restore it anytime from the Archived filter.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF92400E),
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                ),
               ),
             ),
           ],
@@ -331,10 +382,16 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                   _isEditingSelected = false;
                 });
               }
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('"${food['name']}" archived successfully.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
               _loadData();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brandRed,
+              backgroundColor: const Color(0xFFD97706),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -342,7 +399,117 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text(
-              'Delete',
+              'Archive Dish',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUnarchiveDialog(BuildContext context, Map<String, dynamic> food) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.unarchive_outlined,
+                color: AppColors.success,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Text(
+                'Restore Food Item',
+                style: AppTypography.dialogTitle,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Restore "${food['name']}" to the active menu?',
+              style: const TextStyle(fontSize: 15, color: AppColors.mutedText),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.successSurface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+              ),
+              child: const Text(
+                'This dish will become active again and available for cashiers to order.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final repo = FoodRepository();
+              await repo.unarchiveFoodItem(food['id'] as int);
+              if (!context.mounted) return;
+              Navigator.pop(ctx);
+              if (_selectedFood != null && _selectedFood!['id'] == food['id']) {
+                setState(() {
+                  _selectedFood = null;
+                  _isEditingSelected = false;
+                });
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('"${food['name']}" restored to active menu.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              _loadData();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Restore Dish',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
           ),
@@ -369,7 +536,13 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
           return false;
         }
       }
-      if (_selectedStatus != 'All') {
+      final status = (f['status'] as String? ?? 'active').toLowerCase();
+      if (_selectedStatus == 'All') {
+        if (status == 'archived') return false;
+      } else if (_selectedStatus == 'archived') {
+        if (status != 'archived') return false;
+      } else {
+        if (status == 'archived') return false;
         if ((f['availability'] as String?) != _selectedStatus) {
           return false;
         }
@@ -535,7 +708,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                   items: const [
                                     DropdownMenuItem(
                                       value: 'All',
-                                      child: Text('All Statuses'),
+                                      child: Text('All Active'),
                                     ),
                                     DropdownMenuItem(
                                       value: 'available',
@@ -544,6 +717,10 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                     DropdownMenuItem(
                                       value: 'unavailable',
                                       child: Text('Unavailable'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'archived',
+                                      child: Text('Archived'),
                                     ),
                                   ],
                                 ),
@@ -864,6 +1041,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                         ),
                         itemBuilder: (context, index) {
                           final food = pagedFoods[index];
+                          final isArchived = (food['status'] as String? ?? '').toLowerCase() == 'archived';
                           final isAvailable = food['availability'] == 'available';
                           final isSelected = _selectedFood != null && _selectedFood!['id'] == food['id'];
                           final catName = (food['category_name'] as String?) ?? 'Uncategorized';
@@ -888,7 +1066,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                               ),
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                               child: Opacity(
-                                opacity: isAvailable ? 1.0 : 0.45,
+                                opacity: isArchived ? 0.65 : (isAvailable ? 1.0 : 0.45),
                                 child: Row(
                                   children: [
                                     ClipRRect(
@@ -975,16 +1153,22 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                               width: 7,
                                               height: 7,
                                               decoration: BoxDecoration(
-                                                color: isAvailable ? AppColors.success : AppColors.brandRed,
+                                                color: isArchived
+                                                    ? const Color(0xFFD97706)
+                                                    : (isAvailable ? AppColors.success : AppColors.brandRed),
                                                 shape: BoxShape.circle,
                                               ),
                                             ),
                                             const SizedBox(width: 6),
                                             Flexible(
                                               child: Text(
-                                                isAvailable ? 'Available' : 'Unavailable',
+                                                isArchived
+                                                    ? 'Archived'
+                                                    : (isAvailable ? 'Available' : 'Unavailable'),
                                                 style: AppTypography.badgeLabel.copyWith(
-                                                  color: isAvailable ? AppColors.success : AppColors.brandRed,
+                                                  color: isArchived
+                                                      ? const Color(0xFFD97706)
+                                                      : (isAvailable ? AppColors.success : AppColors.brandRed),
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -997,22 +1181,31 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                       width: 80,
                                       child: Row(
                                         children: [
-                                          _buildActionButton(
-                                            icon: Icons.edit_outlined,
-                                            color: AppColors.goldenYellow,
-                                            tooltip: 'Edit in Panel',
-                                            onPressed: () {
-                                              _selectFood(food);
-                                              _startEditingSelectedFood();
-                                            },
-                                          ),
-                                          const SizedBox(width: 6),
-                                          _buildActionButton(
-                                            icon: Icons.delete_outline,
-                                            color: AppColors.brandRed,
-                                            tooltip: 'Delete',
-                                            onPressed: () => _showDeleteDialog(context, food),
-                                          ),
+                                          if (!isArchived) ...[
+                                            _buildActionButton(
+                                              icon: Icons.edit_outlined,
+                                              color: AppColors.goldenYellow,
+                                              tooltip: 'Edit in Panel',
+                                              onPressed: () {
+                                                _selectFood(food);
+                                                _startEditingSelectedFood();
+                                              },
+                                            ),
+                                            const SizedBox(width: 6),
+                                            _buildActionButton(
+                                              icon: Icons.archive_outlined,
+                                              color: const Color(0xFFD97706),
+                                              tooltip: 'Archive Dish',
+                                              onPressed: () => _showArchiveDialog(context, food),
+                                            ),
+                                          ] else ...[
+                                            _buildActionButton(
+                                              icon: Icons.unarchive_outlined,
+                                              color: AppColors.success,
+                                              tooltip: 'Restore Dish',
+                                              onPressed: () => _showUnarchiveDialog(context, food),
+                                            ),
+                                          ],
                                         ],
                                       ),
                                     ),
@@ -1202,6 +1395,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
 
   Widget _buildFoodDetailsPanelContent() {
     final food = _selectedFood!;
+    final isArchived = (food['status'] as String? ?? '').toLowerCase() == 'archived';
     final isAvailable = food['availability'] == 'available';
     final catName = (food['category_name'] as String?) ?? 'Uncategorized';
     final catIcon = _categories.firstWhere(
@@ -1310,17 +1504,23 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                   width: 7,
                                   height: 7,
                                   decoration: BoxDecoration(
-                                    color: isAvailable ? AppColors.success : AppColors.brandRed,
+                                    color: isArchived
+                                        ? const Color(0xFFD97706)
+                                        : (isAvailable ? AppColors.success : AppColors.brandRed),
                                     shape: BoxShape.circle,
                                   ),
                                 ),
                                 const SizedBox(width: 5),
                                 Text(
-                                  isAvailable ? 'Available' : 'Unavailable',
+                                  isArchived
+                                      ? 'Archived'
+                                      : (isAvailable ? 'Available' : 'Unavailable'),
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: isAvailable ? AppColors.success : AppColors.brandRed,
+                                    color: isArchived
+                                        ? const Color(0xFFD97706)
+                                        : (isAvailable ? AppColors.success : AppColors.brandRed),
                                   ),
                                 ),
                               ],
@@ -1402,94 +1602,148 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                // Availability quick toggle
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceWhite,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.softBorder),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Menu Availability',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.darkCharcoal,
+                if (isArchived)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.archive_outlined, size: 20, color: Color(0xFFD97706)),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'This dish is archived. It is hidden from active orders in the cashier POS.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF92400E),
+                              fontWeight: FontWeight.w500,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  // Availability quick toggle
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceWhite,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.softBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Menu Availability',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.darkCharcoal,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              isAvailable ? 'Visible and orderable in POS' : 'Hidden from active orders',
-                              style: const TextStyle(fontSize: 11, color: AppColors.mutedText),
-                            ),
-                          ],
+                              const SizedBox(height: 2),
+                              Text(
+                                isAvailable ? 'Visible and orderable in POS' : 'Hidden from active orders',
+                                style: const TextStyle(fontSize: 11, color: AppColors.mutedText),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: isAvailable,
+                          activeTrackColor: AppColors.goldenYellow.withValues(alpha: 0.5),
+                          activeThumbColor: AppColors.goldenYellow,
+                          onChanged: (val) => _toggleSelectedFoodAvailability(val),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 24),
+                if (isArchived) ...[
+                  // Restore Dish Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showUnarchiveDialog(context, food),
+                      icon: const Icon(Icons.unarchive_outlined, size: 18),
+                      label: const Text(
+                        'Restore Dish to Menu',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Switch(
-                        value: isAvailable,
-                        activeTrackColor: AppColors.goldenYellow.withValues(alpha: 0.5),
-                        activeThumbColor: AppColors.goldenYellow,
-                        onChanged: (val) => _toggleSelectedFoodAvailability(val),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Edit Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 46,
-                  child: ElevatedButton.icon(
-                    onPressed: _startEditingSelectedFood,
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: const Text(
-                      'Edit Food Item',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.goldenYellow,
-                      foregroundColor: AppColors.darkCharcoal,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                // Delete Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 42,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showDeleteDialog(context, food),
-                    icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.brandRed),
-                    label: const Text(
-                      'Delete Item',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.brandRed,
+                ] else ...[
+                  // Edit Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: ElevatedButton.icon(
+                      onPressed: _startEditingSelectedFood,
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text(
+                        'Edit Food Item',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppColors.brandRed.withValues(alpha: 0.4)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.goldenYellow,
+                        foregroundColor: AppColors.darkCharcoal,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 10),
+                  // Archive Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 42,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showArchiveDialog(context, food),
+                      icon: const Icon(Icons.archive_outlined, size: 18, color: Color(0xFFD97706)),
+                      label: const Text(
+                        'Archive Dish',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFD97706),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: const Color(0xFFD97706).withValues(alpha: 0.4)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

@@ -86,7 +86,6 @@ void main() async {
     'SYNC_BACKEND',
     'BACKEND_URL',
     'BACKEND_DEVICE_TOKEN',
-    'AI_SERVICE_KEY',
   ];
   final processEnvVars = <String, String>{};
   for (final key in configKeys) {

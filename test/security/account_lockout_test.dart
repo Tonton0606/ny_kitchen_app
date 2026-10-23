@@ -41,7 +41,6 @@ void main() {
                   status TEXT NOT NULL,
                   last_login TEXT,
                   failed_login_count INTEGER DEFAULT 0,
-                  face_encoding TEXT,
                   created_at TEXT NOT NULL
                 )
               ''');

@@ -55,6 +55,10 @@ class _OrdersPageState extends State<OrdersPage> {
         txn['id'] as int,
       );
       final receiptNumber = txn['receipt_number']?.toString() ?? '';
+      final parsedTime = DateTime.tryParse(txn['created_at']?.toString() ?? '');
+      final formattedTime = parsedTime != null
+          ? DateFormat('h:mm a').format(parsedTime)
+          : (txn['created_at']?.toString() ?? '');
       loadedOrders.add({
         'id': txn['id'],
         'orderNo': txn['order_number'] != null
@@ -64,7 +68,7 @@ class _OrdersPageState extends State<OrdersPage> {
         'status': txn['status'],
         'total': txn['total_amount'],
         'customer': txn['cashier_name'] ?? 'User ${txn['user_id']}',
-        'time': txn['created_at'],
+        'time': formattedTime,
         'items': items
             .map(
               (i) => {
@@ -95,9 +99,13 @@ class _OrdersPageState extends State<OrdersPage> {
       _orders.where((o) => o['status'] == 'Preparing').length;
 
   Future<void> _advanceStatus(Map<String, dynamic> order) async {
-    final currentIdx = _flow.indexOf(order['status']);
-    if (currentIdx >= _flow.length - 1) return;
-    final nextStatus = _flow[currentIdx + 1];
+    final status = order['status'] as String? ?? '';
+    if (status == 'Served') return;
+
+    final currentIdx = _flow.indexOf(status);
+    final nextStatus = (currentIdx >= 0 && currentIdx < _flow.length - 1)
+        ? _flow[currentIdx + 1]
+        : 'Served';
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -268,12 +276,24 @@ class _OrdersPageState extends State<OrdersPage> {
     if (confirmed != true) return;
 
     try {
-      await _transactionRepo.updateTransactionStatus(
+      final updatedCount = await _transactionRepo.updateTransactionStatus(
         order['id'],
         nextStatus,
+        receiptNumber: order['receipt']?.toString(),
       );
       await _loadOrders();
       if (!mounted) return;
+      if (updatedCount == 0) {
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Order was updated during background sync. Please try again.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        return;
+      }
       ScaffoldMessenger.of(context)
         ..clearSnackBars()
         ..showSnackBar(
@@ -432,12 +452,24 @@ class _OrdersPageState extends State<OrdersPage> {
     if (confirmed != true) return;
 
     try {
-      await _transactionRepo.cancelOrder(
+      final cancelledCount = await _transactionRepo.cancelOrder(
         order['id'],
         reason: 'Cancelled by cashier',
+        receiptNumber: order['receipt']?.toString(),
       );
       await _loadOrders();
       if (!mounted) return;
+      if (cancelledCount == 0) {
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Order was updated during background sync. Please try again.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        return;
+      }
       ScaffoldMessenger.of(context)
         ..clearSnackBars()
         ..showSnackBar(

@@ -26,8 +26,10 @@ class TransactionRepository {
       module: 'Transactions',
       action: 'Create Transaction',
     );
-    final effectiveUserId = actor['id'] as int? ?? userId;
-    final effectiveUsername = actor['username'] as String? ?? username ?? 'User $userId';
+    final effectiveUserId = int.tryParse(actor['id']?.toString() ?? '') ??
+        (actor['id'] as int?) ??
+        userId;
+    final effectiveUsername = actor['username'] as String? ?? username ?? 'User $effectiveUserId';
     final effectiveRole = actor['role'] as String? ?? role ?? 'cashier';
 
     final db = await _dbHelper.database;
@@ -138,7 +140,8 @@ class TransactionRepository {
             t.*, 
             u.full_name as cashier_name, 
             u.username as cashier_username, 
-            u.role as cashier_role
+            u.role as cashier_role,
+            (SELECT COUNT(*) FROM transaction_items WHERE transaction_id = t.id) as item_count
           FROM transactions t
           LEFT JOIN users u ON t.user_id = u.id
           WHERE t.user_id = ?
@@ -152,7 +155,8 @@ class TransactionRepository {
         t.*, 
         u.full_name as cashier_name, 
         u.username as cashier_username, 
-        u.role as cashier_role
+        u.role as cashier_role,
+        (SELECT COUNT(*) FROM transaction_items WHERE transaction_id = t.id) as item_count
       FROM transactions t
       LEFT JOIN users u ON t.user_id = u.id
       ORDER BY t.created_at DESC
@@ -172,7 +176,7 @@ class TransactionRepository {
     );
   }
 
-  Future<int> updateTransactionStatus(int id, String newStatus, {int? userId, String? username, String? role, String? reason}) async {
+  Future<int> updateTransactionStatus(int id, String newStatus, {int? userId, String? username, String? role, String? reason, String? receiptNumber}) async {
     final actor = await RepositorySecurityGuard.requireAuthenticated(
       module: 'Transactions',
       action: 'Update Transaction Status',
@@ -193,6 +197,19 @@ class TransactionRepository {
       whereArgs: [id],
     );
 
+    if (count == 0 && receiptNumber != null && receiptNumber.trim().isNotEmpty) {
+      count = await db.update(
+        'transactions',
+        updateValues,
+        where: 'receipt_number = ?',
+        whereArgs: [receiptNumber.trim()],
+      );
+    }
+
+    if (count == 0) {
+      return 0;
+    }
+
     // Audit status update - authoritative actor identity
     await _auditRepo.logAction(
       userId: actor['id'] as int?,
@@ -212,7 +229,7 @@ class TransactionRepository {
     return count;
   }
 
-  Future<int> cancelOrder(int id, {String? reason, int? userId, String? username, String? role}) async {
+  Future<int> cancelOrder(int id, {String? reason, int? userId, String? username, String? role, String? receiptNumber}) async {
     final actor = await RepositorySecurityGuard.requireAuthenticated(
       module: 'Transactions',
       action: 'Cancel Order',
@@ -225,6 +242,19 @@ class TransactionRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+
+    if (count == 0 && receiptNumber != null && receiptNumber.trim().isNotEmpty) {
+      count = await db.update(
+        'transactions',
+        {'status': 'Voided', 'void_reason': voidReason},
+        where: 'receipt_number = ?',
+        whereArgs: [receiptNumber.trim()],
+      );
+    }
+
+    if (count == 0) {
+      return 0;
+    }
 
     // Audit transaction cancellation / void (Gap 9 / SEC-01) - authoritative actor identity
     await _auditRepo.logAction(
@@ -255,7 +285,7 @@ class TransactionRepository {
         u.role as cashier_role
       FROM transactions t
       LEFT JOIN users u ON t.user_id = u.id
-      WHERE date(t.created_at) = date('now', 'localtime')
+      WHERE (date(t.created_at) = date('now', 'localtime') OR date(t.created_at, 'localtime') = date('now', 'localtime'))
         AND t.status IN ('Preparing', 'Served')
       ORDER BY t.created_at ASC
     ''');

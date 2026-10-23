@@ -46,7 +46,6 @@ void main() {
               status TEXT NOT NULL,
               last_login TEXT,
               failed_login_count INTEGER DEFAULT 0,
-              face_encoding TEXT,
               must_change_password INTEGER DEFAULT 0,
               created_at TEXT NOT NULL
             )

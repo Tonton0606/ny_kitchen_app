@@ -403,6 +403,90 @@ class UserRepository {
       );
     }
   }
+
+  // Enable a disabled user account with a mandatory temporary password and reset failed login counter
+  Future<int> enableUserWithTemporaryPassword(
+    int id,
+    String temporaryPassword, {
+    int? adminId,
+    String? adminUsername,
+  }) async {
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'User Management',
+      action: 'Enable User',
+    );
+
+    final policyError = SecurityUtils.validatePassword(temporaryPassword);
+    if (policyError != null) {
+      await _auditRepo.logAction(
+        userId: admin['id'] as int?,
+        username: admin['username'] as String? ?? adminUsername ?? 'Admin',
+        role: 'admin',
+        module: 'User Management',
+        action: 'Enable User',
+        status: 'Blocked',
+        description: 'Password policy violation while enabling user ID $id: $policyError',
+      );
+      throw SecurityException(policyError, code: 'WEAK_PASSWORD');
+    }
+
+    final db = await _dbHelper.database;
+    final hashedPassword = SecurityUtils.hashPassword(temporaryPassword);
+    final count = await db.update(
+      'users',
+      {
+        'status': 'active',
+        'failed_login_count': 0,
+        'must_change_password': 0,
+        'password_hash': hashedPassword,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    await _auditRepo.logAction(
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? adminUsername ?? 'Admin',
+      role: 'admin',
+      module: 'User Management',
+      action: 'User Enabled',
+      status: 'Success',
+      description: 'Enabled user account ID $id and set new password',
+    );
+
+    return count;
+  }
+
+  // Enable a user account without resetting credentials
+  Future<int> enableUser(int id, {int? adminId, String? adminUsername}) async {
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'User Management',
+      action: 'Enable User',
+    );
+
+    final db = await _dbHelper.database;
+    final count = await db.update(
+      'users',
+      {
+        'status': 'active',
+        'failed_login_count': 0,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    await _auditRepo.logAction(
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? adminUsername ?? 'Admin',
+      role: 'admin',
+      module: 'User Management',
+      action: 'User Enabled',
+      status: 'Success',
+      description: 'Enabled user account ID $id and reset failed login attempts',
+    );
+
+    return count;
+  }
 }
 
 

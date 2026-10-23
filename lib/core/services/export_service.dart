@@ -10,12 +10,11 @@ import 'package:printing/printing.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart' as excel;
 
 /// Enterprise Export and Print Service for Sales Reports and Activity Logs.
-/// Guarantees that sensitive credentials (password_hash, face_encoding, secrets)
+/// Guarantees that sensitive credentials (password_hash, secrets)
 /// are strictly excluded from all exports and printouts.
 class ExportService {
   static const Set<String> _sensitiveKeys = {
     'password_hash',
-    'face_encoding',
     'password',
     'secret',
     'service_key',
