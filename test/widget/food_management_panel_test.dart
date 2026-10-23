@@ -48,7 +48,7 @@ void main() {
     await tester.pump();
 
     // 1. Verify main page elements
-    expect(find.text('Food Management'), findsWidgets);
+    expect(find.text('Categories'), findsWidgets);
     expect(find.text('Add Food'), findsWidgets);
 
     // 2. Click "Add Food" -> Right panel appears with "Add Food Item"

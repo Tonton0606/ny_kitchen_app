@@ -97,7 +97,7 @@ class _ForceChangePasswordDialogState extends State<ForceChangePasswordDialog> {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
-        _errorMessage = 'Error: $e';
+        _errorMessage = 'An error occurred while updating password. Please try again.';
       });
     }
   }

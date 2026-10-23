@@ -38,11 +38,19 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
       });
 
       if (file != null) {
-        // ignore: deprecated_member_use
-        await Share.shareXFiles(
-          [XFile(file.path)], 
-          text: 'NY Kitchen MySQL Database Backup',
-        );
+        try {
+          // ignore: deprecated_member_use
+          await Share.shareXFiles(
+            [XFile(file.path)], 
+            text: 'NY Kitchen MySQL Database Backup',
+          );
+        } finally {
+          try {
+            if (await file.exists()) {
+              await file.delete();
+            }
+          } catch (_) {}
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

@@ -271,9 +271,7 @@ class SyncService {
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
-      } catch (e) {
-        print('Failed to persist sync_mode: $e');
-      }
+      } catch (_) {}
     }
   }
 
@@ -364,8 +362,7 @@ class SyncService {
           );
 
       return _supabase?.storage.from('food_images').getPublicUrl(fileName);
-    } catch (e) {
-      print('Image upload failed: $e');
+    } catch (_) {
       return localPath; // fallback to local path if upload fails
     }
   }

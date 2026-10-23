@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ny_kitchen_app/core/database/database_helper.dart';
 import 'package:ny_kitchen_app/core/database/repositories/transaction_repository.dart';
+import 'package:ny_kitchen_app/core/session/session_manager.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -89,6 +90,29 @@ void main() {
                 )
               ''');
               
+              await db.execute('''
+                CREATE TABLE app_settings (
+                  key TEXT PRIMARY KEY,
+                  value TEXT NOT NULL,
+                  updated_at TEXT NOT NULL
+                )
+              ''');
+
+              await db.execute('''
+                CREATE TABLE audit_logs (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  user_id INTEGER,
+                  username TEXT,
+                  role TEXT,
+                  module TEXT NOT NULL,
+                  action TEXT NOT NULL,
+                  status TEXT NOT NULL,
+                  description TEXT,
+                  ip_address TEXT,
+                  created_at TEXT NOT NULL
+                )
+              ''');
+              
               await db.insert('users', {
                 'id': 1,
                 'full_name': 'Test Cashier',
@@ -101,10 +125,17 @@ void main() {
             }));
             
     DatabaseHelper.setMockDatabase(db);
+    SessionManager().setSession({
+      'id': 1,
+      'username': 'admin',
+      'role': 'Admin',
+      'full_name': 'Test Admin',
+    });
     transactionRepository = TransactionRepository();
   });
 
   tearDown(() async {
+    SessionManager().clearSession();
     await db.close();
   });
 

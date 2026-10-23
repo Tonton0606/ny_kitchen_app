@@ -213,9 +213,7 @@ class FoodRepository {
     });
     try {
       await _syncService.syncToCloud();
-    } catch (e) {
-      print('Cloud sync deferred: $e');
-    }
+    } catch (_) {}
     return id;
   }
 
@@ -246,9 +244,7 @@ class FoodRepository {
     );
     try {
       await _syncService.syncToCloud();
-    } catch (e) {
-      print('Cloud sync deferred: $e');
-    }
+    } catch (_) {}
     return count;
   }
 

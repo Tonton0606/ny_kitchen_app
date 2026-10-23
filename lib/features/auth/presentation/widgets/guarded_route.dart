@@ -54,19 +54,37 @@ class _GuardedRouteState extends State<GuardedRoute> {
 
   void _redirectToLogin(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.brandRed),
-    );
+    try {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: AppColors.brandRed),
+      );
+    } catch (_) {}
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginPage()),
       (route) => false,
     );
   }
 
+  bool get _isAuthorized {
+    final session = SessionManager();
+    if (!session.isLoggedIn || session.isSessionExpired()) {
+      return false;
+    }
+    if (session.mustChangePassword) {
+      return false;
+    }
+    final role = session.role;
+    if (role == null || !widget.allowedRoles.contains(role)) {
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // If we make it here, the frame renders while the check runs post-frame.
-    // If unauthorized, they will be kicked out immediately.
+    if (!_isAuthorized) {
+      return const SizedBox.shrink();
+    }
     return widget.child;
   }
 }

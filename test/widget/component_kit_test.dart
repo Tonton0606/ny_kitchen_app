@@ -109,7 +109,7 @@ void main() {
       expect(find.text('Deactivate Account'), findsOneWidget);
 
       // Verify Cancel button has autofocus
-      final cancelButton = tester.widget<TextButton>(find.widgetWithText(TextButton, 'Cancel'));
+      final cancelButton = tester.widget<OutlinedButton>(find.widgetWithText(OutlinedButton, 'Cancel'));
       expect(cancelButton.autofocus, isTrue);
     });
   });

@@ -23,6 +23,21 @@ class UserRepository {
     );
 
     if (userCheck.isEmpty) {
+      // Audit log failed login for non-existent username (never log password)
+      await _auditRepo.logAction(
+        username: username,
+        module: 'Auth',
+        action: 'Failed Login',
+        status: 'Warning',
+        description: 'Failed login attempt: username not found',
+      );
+      try {
+        await db.insert('login_attempts', {
+          'username': username,
+          'status': 'failed_unknown_user',
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
       return null; // User does not exist
     }
 
@@ -32,6 +47,23 @@ class UserRepository {
     final int failedAttempts = (userRow['failed_login_count'] as int?) ?? 0;
 
     if (status != 'active') {
+      // Audit log failed login for inactive/locked account (never log password)
+      await _auditRepo.logAction(
+        userId: userId,
+        username: username,
+        role: userRow['role'] as String?,
+        module: 'Auth',
+        action: 'Failed Login',
+        status: 'Warning',
+        description: 'Failed login attempt on $status account',
+      );
+      try {
+        await db.insert('login_attempts', {
+          'username': username,
+          'status': 'failed_account_$status',
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
       return null; // Account is locked or inactive
     }
 
@@ -66,6 +98,14 @@ class UserRepository {
         status: 'Success',
         description: 'User logged in successfully',
       );
+
+      try {
+        await db.insert('login_attempts', {
+          'username': username,
+          'status': 'success',
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
 
       // Re-fetch the updated user to return
       final updatedMaps = await db.query(
@@ -105,6 +145,14 @@ class UserRepository {
           description: 'Failed login attempt ($newFailedCount/5)',
         );
       }
+
+      try {
+        await db.insert('login_attempts', {
+          'username': username,
+          'status': newFailedCount >= 5 ? 'locked' : 'failed_password',
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
 
       await db.update(
         'users',

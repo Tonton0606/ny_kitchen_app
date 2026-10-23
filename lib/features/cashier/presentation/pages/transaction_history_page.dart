@@ -1,10 +1,10 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/database/repositories/audit_repository.dart';
 import '../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../core/session/session_manager.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -26,7 +26,6 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   );
 
   final TransactionRepository _repository = TransactionRepository();
-  final AuditRepository _auditRepo = AuditRepository();
 
   List<Map<String, dynamic>> _transactions = [];
   bool _isLoading = true;
@@ -75,7 +74,9 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
         });
       }
     } catch (e) {
-      debugPrint('Error loading transactions: $e');
+      if (kDebugMode) {
+        debugPrint('Error loading transactions: $e');
+      }
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -982,15 +983,6 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                             'Voided',
                             reason: finalReason,
                           );
-                          await _auditRepo.logAction(
-                            userId: SessionManager().userId ?? 1,
-                            username: SessionManager().fullName ?? 'unknown',
-                            role: SessionManager().role ?? 'cashier',
-                            module: 'Transactions',
-                            action: 'Void Transaction',
-                            status: 'Success',
-                            description: 'Voided receipt ${tx['receipt_number']} (Reason: $finalReason)',
-                          );
                           _loadTransactions();
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -1131,15 +1123,6 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                             tx['id'],
                             'Refunded',
                             reason: finalReason,
-                          );
-                          await _auditRepo.logAction(
-                            userId: SessionManager().userId ?? 1,
-                            username: SessionManager().fullName ?? 'unknown',
-                            role: SessionManager().role ?? 'cashier',
-                            module: 'Transactions',
-                            action: 'Refund Transaction',
-                            status: 'Success',
-                            description: 'Refunded receipt ${tx['receipt_number']} for ${_currencyFormat.format(totalAmount)} (Reason: $finalReason)',
                           );
                           _loadTransactions();
                           if (mounted) {

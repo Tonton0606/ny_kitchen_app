@@ -34,7 +34,9 @@ void main() async {
         (errorStr.contains('keysPressed') && errorStr.contains('RawKeyDownEvent'))) {
       return true; // Harmless framework assertion on Windows Alt-key; ignore
     }
-    print('Async Error Caught: $error');
+    if (kDebugMode) {
+      debugPrint('Async Error Caught: $error');
+    }
     return true; // Prevent app crash
   };
   
@@ -48,7 +50,11 @@ void main() async {
             const SizedBox(height: 16),
             const Text('Something went wrong', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text(details.exceptionAsString(), textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+            const Text(
+              'An unexpected error occurred. Please restart the application.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
@@ -126,7 +132,9 @@ void main() async {
         }
       }
     } catch (_) {
-      debugPrint('No cloud configuration found; continuing with local storage.');
+      if (kDebugMode) {
+        debugPrint('No cloud configuration found; continuing with local storage.');
+      }
     }
   }
   envVars.addAll(processEnvVars);
@@ -175,7 +183,9 @@ void main() async {
       BackendSyncService.instance = service;
     } catch (_) {
       SyncService.syncStatusNotifier.value = 'Backend configuration unavailable';
-      debugPrint('Backend configuration unavailable; local operation remains available.');
+      if (kDebugMode) {
+        debugPrint('Backend configuration unavailable; local operation remains available.');
+      }
     }
   } else if (envVars['SUPABASE_URL']?.isNotEmpty == true &&
       envVars['SUPABASE_ANON_KEY']?.isNotEmpty == true) {
@@ -187,7 +197,9 @@ void main() async {
       );
     } catch (_) {
       SyncService.syncStatusNotifier.value = 'Cloud initialization failed';
-      debugPrint('Cloud initialization unavailable; continuing with local storage.');
+      if (kDebugMode) {
+        debugPrint('Cloud initialization unavailable; continuing with local storage.');
+      }
     }
   } else {
     SyncService.syncStatusNotifier.value = 'Cloud credentials unavailable';

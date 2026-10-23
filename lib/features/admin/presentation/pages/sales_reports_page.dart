@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
@@ -74,7 +75,9 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
         });
       }
     } catch (e) {
-      debugPrint('Sales reports load error: $e');
+      if (kDebugMode) {
+        debugPrint('Sales reports load error: $e');
+      }
       if (mounted) {
         setState(() {
           _isLoading = false;
