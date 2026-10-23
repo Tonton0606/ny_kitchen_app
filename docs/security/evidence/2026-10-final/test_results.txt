@@ -1,0 +1,349 @@
+Resolving dependencies...
+Downloading packages...
+  app_links 7.2.1 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.4 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  archive 4.0.9 (4.5.2 available)
+  clock 1.1.2 (1.1.3 available)
+  code_assets 1.2.1 (2.1.0 available)
+  cross_file 0.3.5+4 (0.4.0 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  equatable 2.1.0 (3.0.0 available)
+  file_selector_ios 0.5.3+6 (0.5.3+7 available)
+  file_selector_linux 0.9.4 (0.9.4+1 available)
+  file_selector_macos 0.9.5 (0.9.5+2 available)
+  file_selector_windows 0.9.3+5 (0.9.3+6 available)
+  fl_chart 1.2.0 (1.3.0 available)
+  flutter_lucide 1.59.0 (1.61.0 available)
+  flutter_secure_storage 9.2.4 (11.2.0 available)
+  flutter_secure_storage_linux 1.2.3 (3.0.3 available)
+  flutter_secure_storage_macos 3.1.3 (4.0.0 available)
+  flutter_secure_storage_platform_interface 1.1.2 (2.1.1 available)
+  flutter_secure_storage_web 1.2.1 (2.1.1 available)
+  flutter_secure_storage_windows 3.1.2 (4.2.2 available)
+  functions_client 2.6.4 (2.7.1 available)
+  glob 2.1.3 (2.2.0 available)
+  gotrue 2.26.0 (2.27.3 available)
+  hooks 2.0.2 (2.2.0 available)
+  image 4.9.1 (4.12.0 available)
+  image_picker 1.2.3 (1.2.4 available)
+  image_picker_android 0.8.13+19 (0.8.13+25 available)
+  image_picker_ios 0.8.13+6 (0.8.13+13 available)
+  image_picker_platform_interface 2.11.1 (2.11.2 available)
+  jni 1.0.0 (1.1.0 available)
+  jni_flutter 1.0.1 (1.0.4+1 available)
+  js 0.6.7 (0.7.2 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  material_symbols_icons 4.2951.0 (4.2960.0 available)
+  mime 2.0.0 (2.1.0 available)
+  native_toolchain_c 0.19.2 (0.19.5 available)
+  objective_c 9.4.1 (9.6.2 available)
+  package_config 2.2.0 (3.0.0 available)
+  passkeys_platform_interface 2.9.0 (2.10.0 available)
+  pdf 3.13.0 (3.13.1 available)
+  petitparser 7.0.2 (7.1.0 available)
+  platform 3.1.6 (3.2.0 available)
+  posix 6.5.0 (6.5.2 available)
+  postgrest 2.8.0 (2.9.1 available)
+  printing 5.15.0 (5.15.1 available)
+  process 5.0.5 (5.0.6 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  qr 3.0.2 (4.0.0 available)
+  realtime_client 2.11.0 (2.13.2 available)
+  record_use 0.6.0 (1.1.1 available)
+  screen_retriever 0.2.2 (0.3.0 available)
+  share_plus 12.0.2 (13.3.1 available)
+  share_plus_platform_interface 6.1.0 (7.2.0 available)
+  shared_preferences 2.5.5 (2.5.6 available)
+  shared_preferences_android 2.4.27 (2.5.3 available)
+  shared_preferences_foundation 2.5.6 (2.6.0 available)
+  sqflite 2.4.3 (2.4.5 available)
+  sqflite_android 2.4.3 (2.4.5 available)
+  sqflite_common 2.5.11 (2.5.14 available)
+  sqflite_common_ffi 2.4.2 (2.4.5 available)
+  sqflite_darwin 2.4.3+1 (2.4.4+1 available)
+  sqflite_platform_interface 2.4.1 (2.4.3 available)
+  sqlite3 3.5.0 (3.7.1 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  storage_client 2.6.0 (2.8.1 available)
+  supabase 2.14.0 (2.16.5 available)
+  supabase_flutter 2.16.0 (2.18.3 available)
+  syncfusion_flutter_core 34.1.33 (35.1.41 available)
+  syncfusion_flutter_xlsio 34.1.33 (35.1.41 available)
+  syncfusion_officecore 34.1.33 (35.1.41 available)
+  synchronized 3.4.1 (3.5.0 available)
+  test_api 0.7.12 (0.7.15 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.32 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vm_service 15.2.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+  webdriver 3.1.0 (3.2.0 available)
+  win32 5.15.0 (6.4.0 available)
+  xml 7.0.1 (7.1.0 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+85 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/integration/auth_flow_test.dart
+00:00 +0: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/integration/auth_flow_test.dart: Authentication Flow Integration Tests Full flow: login -> session active -> logout -> session cleared
+00:00 +0 ~1: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/integration/pos_flow_test.dart: POS Flow Integration Tests Add food items to order -> complete checkout -> void transaction
+00:01 +0 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/offline/database_failure_test.dart: Database Failure Offline Tests DatabaseException on read -> UI shows StatePlaceholders.error (no crash)
+00:02 +1 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/offline/database_failure_test.dart: Database Failure Offline Tests DatabaseException on read -> UI shows StatePlaceholders.error (no crash)
+00:02 +2 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/offline/database_failure_test.dart: Database Failure Offline Tests DatabaseException on read -> UI shows StatePlaceholders.error (no crash)
+00:02 +3 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/offline/database_failure_test.dart: Database Failure Offline Tests DatabaseException on read -> UI shows StatePlaceholders.error (no crash)
+00:02 +4 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/account_lockout_test.dart: Account Lockout Tests 5 failed attempts → account locked
+00:02 +5 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/account_lockout_test.dart: Account Lockout Tests 5 failed attempts → account locked
+00:02 +6 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/account_lockout_test.dart: Account Lockout Tests Attempt 6 on locked account keeps it locked and returns null
+00:02 +7 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/account_lockout_test.dart: Account Lockout Tests Successful login resets failed login counter
+00:03 +8 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/audit_logging_test.dart: (setUpAll)
+00:03 +8 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/account_lockout_test.dart: Account Lockout Tests unlockUser() clears counter and resets status to active
+00:03 +9 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/audit_logging_test.dart: A4 - Audit Logging (Gaps 7-9) Successful login logs an audit record
+00:03 +10 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/audit_logging_test.dart: A4 - Audit Logging (Gaps 7-9) Logout logs an audit record without credentials
+00:03 +11 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/audit_logging_test.dart: A4 - Audit Logging (Gaps 7-9) Food item CRUD operations create audit records
+00:03 +12 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/audit_logging_test.dart: A4 - Audit Logging (Gaps 7-9) Transaction creation and voiding create audit records
+00:03 +13 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/audit_logging_test.dart: A4 - Audit Logging (Gaps 7-9) Admin user creation and modification create audit records
+00:03 +14 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/audit_logging_test.dart: A4 - Audit Logging (Gaps 7-9) Unauthorized access attempts and self-disable create blocked audit records
+00:03 +15 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/audit_logging_test.dart: (tearDownAll)
+00:04 +15 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: (setUpAll)
+00:04 +15 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:04 +16 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:04 +17 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:04 +18 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:04 +19 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:04 +20 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +21 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +22 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +23 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +24 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +25 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +26 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +27 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +28 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +29 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +30 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +31 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:05 +32 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests GuardedRoute blocks cashier from admin pages
+00:06 +33 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests Expired session → redirect to login
+00:06 +34 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: (setUpAll)
+00:06 +34 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) Seeded admin and cashier accounts have must_change_password set to 1
+00:07 +35 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests Valid session → renders child widget
+00:07 +36 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests Valid session → renders child widget
+00:07 +37 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests Valid session → renders child widget
+00:07 +38 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests Valid session → renders child widget
+00:07 +39 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests Valid session → renders child widget
+00:07 +40 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests Valid session → renders child widget
+00:07 +41 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests Valid session → renders child widget
+00:07 +42 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/authorization_guard_test.dart: Authorization Guard Tests Valid session → renders child widget
+00:07 +43 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/password_hashing_test.dart: SecurityUtils Password Hashing (Task B1 - 600,000 Iterations & Metadata) Backward compatibility: Legacy 2-part hash (10,000 iter) verifies successfully
+00:07 +44 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/password_hashing_test.dart: SecurityUtils Password Hashing (Task B1 - 600,000 Iterations & Metadata) Backward compatibility: Legacy 2-part hash (10,000 iter) verifies successfully
+00:07 +45 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/password_hashing_test.dart: SecurityUtils Password Hashing (Task B1 - 600,000 Iterations & Metadata) Backward compatibility: Legacy 2-part hash (10,000 iter) verifies successfully
+00:07 +46 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/password_hashing_test.dart: SecurityUtils Password Hashing (Task B1 - 600,000 Iterations & Metadata) Backward compatibility: Legacy 2-part hash (10,000 iter) verifies successfully
+00:07 +47 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/password_hashing_test.dart: SecurityUtils Password Hashing (Task B1 - 600,000 Iterations & Metadata) Backward compatibility: Legacy 2-part hash (10,000 iter) verifies successfully
+00:07 +48 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:07 +49 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:07 +50 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:07 +51 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:08 +52 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +53 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +54 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +55 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +56 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +57 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +58 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +59 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +60 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +61 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +62 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/force_password_change_test.dart: A6 - Force Password Change on First Login (Gap 3) GuardedRoute blocks access and redirects to Login when mustChangePassword is true
+00:10 +63 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:10 +64 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:10 +65 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:12 +66 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:12 +67 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:12 +68 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:12 +69 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:12 +70 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:12 +71 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:13 +72 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:13 +73 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:13 +74 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:13 +75 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:13 +76 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:13 +77 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:13 +78 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:14 +79 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:14 +80 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:14 +81 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:15 +82 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:15 +83 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:15 +84 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:15 +85 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:15 +86 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:15 +87 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:15 +88 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:16 +89 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:16 +90 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +91 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +92 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +92 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/export_service_test.dart: Track 2 - Reporting Actions: ExportService Security & Sanitization generateSalesPdfBytes and generateSalesExcelBytes never leak sensitive credentials in output
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:17 +93 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +94 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +94 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/export_service_test.dart: Track 2 - Reporting Actions: ExportService Security & Sanitization generateLogsPdfBytes and generateLogsExcelBytes never leak sensitive credentials in output
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:17 +95 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +96 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +96 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/export_service_test.dart: Track 2 - Reporting Actions: File Contents & Signatures generateSalesPdfBytes produces valid PDF format (%PDF- signature)
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:17 +97 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +98 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +99 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +99 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/export_service_test.dart: Track 2 - Reporting Actions: File Contents & Signatures generateLogsPdfBytes produces valid PDF format (%PDF- signature)
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:17 +100 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +101 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +101 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/export_service_test.dart: Track 2 - Reporting Actions: Empty Data Handling generateSalesPdfBytes handles empty transaction list gracefully
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:17 +102 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +103 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +103 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/export_service_test.dart: Track 2 - Reporting Actions: Empty Data Handling generateLogsPdfBytes handles empty logs list gracefully
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:17 +104 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:17 +105 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:19 +106 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:19 +107 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:19 +108 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:19 +109 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:19 +110 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:20 +111 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:20 +112 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:21 +113 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:21 +114 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:21 +115 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:21 +116 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:21 +117 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:21 +117 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/export_service_test.dart: Track 2 - Reporting Actions: Large Data Resilience generateSalesPdfBytes and generateSalesExcelBytes handle 500+ records cleanly without overflow
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:21 +118 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:21 +118 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/export_service_test.dart: Track 2 - Reporting Actions: Large Data Resilience generateLogsPdfBytes and generateLogsExcelBytes handle 500+ records cleanly without overflow
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:22 +118 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +119 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +120 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +121 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +122 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +123 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +124 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +125 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +126 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +127 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +128 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +129 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +130 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:23 +130 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/export_service_test.dart: Track 2 - Reporting Actions: Disk Export Handlers exportToPDF and exportToExcel write non-empty files to disk
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:24 +131 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:24 +131 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/export_service_test.dart: Track 2 - Reporting Actions: Disk Export Handlers exportLogsToPDF and exportLogsToExcel write non-empty files to disk
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:24 +132 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:26 +133 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:26 +134 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:26 +135 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:27 +136 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:27 +137 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:30 +138 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:30 +139 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:30 +140 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:30 +141 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:30 +142 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:30 +143 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:30 +144 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:30 +145 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:31 +146 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/security/rehash_on_login_test.dart: B1 - Transparent Password Re-Hash on Login User with legacy 10,000 iteration hash is transparently upgraded to 600,000 on login
+00:34 +147 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:35 +148 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:35 +149 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:35 +150 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:36 +151 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:36 +152 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:36 +153 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:36 +154 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:36 +155 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:38 +156 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:38 +157 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:39 +158 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:40 +159 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:40 +160 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:40 +161 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:40 +162 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:41 +163 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:41 +164 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:41 +165 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:41 +166 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:42 +167 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:42 +168 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:42 +169 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:42 +170 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:42 +171 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:43 +172 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:43 +173 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:43 +174 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:43 +175 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:43 +176 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:44 +177 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:44 +178 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:45 +179 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:45 +180 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:45 +181 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:46 +182 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:46 +183 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:47 +184 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:47 +185 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns true for correct password, false for wrong
+00:57 +186 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils verifyPassword returns false on malformed hash input
+00:57 +187 ~2: C:/Users/User/OneDrive/Desktop/ny_kitchen_app/ny_kitchen_app/test/unit/security_utils_test.dart: SecurityUtils isPasswordValid and validatePassword enforce 8+ chars with letters and digits
+00:57 +188 ~2: All tests passed!
+
+
+============================================================
+PYTEST BACKEND/TESTS OUTPUT
+============================================================
+============================= test session starts =============================
+platform win32 -- Python 3.14.6, pytest-9.1.1, pluggy-1.7.0 -- C:\Users\User\AppData\Local\Python\pythoncore-3.14-64\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\User\OneDrive\Desktop\ny_kitchen_app\ny_kitchen_app
+plugins: anyio-4.14.2
+collecting ... collected 12 items
+
+backend/tests/test_api.py::test_health_and_missing_configuration PASSED  [  8%]
+backend/tests/test_api.py::test_authentication_and_roles PASSED          [ 16%]
+backend/tests/test_api.py::test_retries_revisions_and_device_isolation PASSED [ 25%]
+backend/tests/test_api.py::test_extra_fields_rejected_without_echo[password_hash] PASSED [ 33%]
+backend/tests/test_api.py::test_extra_fields_rejected_without_echo[face_encoding] PASSED [ 41%]
+backend/tests/test_api.py::test_extra_fields_rejected_without_echo[device_id] PASSED [ 50%]
+backend/tests/test_api.py::test_extra_fields_rejected_without_echo[role] PASSED [ 58%]
+backend/tests/test_api.py::test_invalid_batch_is_atomic PASSED           [ 66%]
+backend/tests/test_api.py::test_body_limit_and_schema_protection PASSED  [ 75%]
+backend/tests/test_api.py::test_rate_limit PASSED                        [ 83%]
+backend/tests/test_api.py::test_persistence_and_no_mutation_endpoint PASSED [ 91%]
+backend/tests/test_api.py::test_takeout_sale_accepted_and_wrong_total_rejected PASSED [100%]
+
+============================== warnings summary ===============================
+..\..\..\..\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\User\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 12 passed, 1 warning in 1.74s ========================

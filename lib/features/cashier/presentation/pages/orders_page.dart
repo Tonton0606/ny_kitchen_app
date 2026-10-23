@@ -80,6 +80,8 @@ class _OrdersPageState extends State<OrdersPage> {
             .toList(),
         'payment': txn['payment_method'] ?? 'Cash',
         'notes': txn['notes'],
+        'orderType': txn['order_type'] ?? 'dine_in',
+        'packagingFee': (txn['packaging_fee'] as num?)?.toDouble() ?? 0.0,
       });
     }
 
@@ -619,6 +621,9 @@ class _OrdersPageState extends State<OrdersPage> {
                           final status = order['status'] as String;
                           final items = order['items'] as List;
                           final isServed = status == 'Served';
+                          final orderType = (order['orderType'] as String? ?? 'dine_in').toLowerCase();
+                          final isTakeout = orderType == 'takeout';
+                          final packagingFee = (order['packagingFee'] as num?)?.toDouble() ?? 0.0;
 
                           return Padding(
                             padding: const EdgeInsets.only(bottom: AppDesignTokens.space12),
@@ -641,6 +646,23 @@ class _OrdersPageState extends State<OrdersPage> {
                                         type: isServed ? AppStatusType.success : AppStatusType.warning,
                                         icon: isServed ? Icons.check_circle_outline : Icons.soup_kitchen_outlined,
                                         isCompact: true,
+                                      ),
+                                      const SizedBox(width: AppDesignTokens.space8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: isTakeout ? AppColors.goldenYellow : AppColors.creamBackground,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: AppColors.softBorder),
+                                        ),
+                                        child: Text(
+                                          isTakeout ? 'TAKEOUT' : 'DINE-IN',
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.darkCharcoal,
+                                          ),
+                                        ),
                                       ),
                                       const Spacer(),
                                       Text(
@@ -718,6 +740,29 @@ class _OrdersPageState extends State<OrdersPage> {
                                       ),
                                     );
                                   }),
+                                  if (packagingFee > 0)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2.5),
+                                      child: Row(
+                                        children: [
+                                          const SizedBox(width: 40),
+                                          const Expanded(
+                                            child: Text(
+                                              'Packaging Fee (Takeout)',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontStyle: FontStyle.italic,
+                                                color: AppColors.mutedBrown,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            _currencyFormat.format(packagingFee),
+                                            style: AppTypography.figureSmall,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   const SizedBox(height: AppDesignTokens.space8),
                                   // Footer Action Row
                                   if (isServed)

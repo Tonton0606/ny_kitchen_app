@@ -456,6 +456,25 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                               style: AppTypography.tableCellSecondary.copyWith(fontSize: 12),
                             ),
                           ],
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: (tx['order_type']?.toString().toLowerCase() == 'takeout')
+                                  ? AppColors.goldenYellow
+                                  : AppColors.creamBackground,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: AppColors.softBorder),
+                            ),
+                            child: Text(
+                              (tx['order_type']?.toString().toLowerCase() == 'takeout') ? 'TAKEOUT' : 'DINE-IN',
+                              style: const TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.darkCharcoal,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -657,6 +676,31 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Order Type', style: AppTypography.tableCellSecondary),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: ((tx['order_type'] as String? ?? 'dine_in').toLowerCase() == 'takeout')
+                                        ? AppColors.goldenYellow
+                                        : AppColors.creamBackground,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: AppColors.softBorder),
+                                  ),
+                                  child: Text(
+                                    ((tx['order_type'] as String? ?? 'dine_in').toLowerCase() == 'takeout') ? 'TAKEOUT' : 'DINE-IN',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.darkCharcoal,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 16),
                             const Divider(height: 1, color: AppColors.softBorder),
                             const SizedBox(height: 12),
@@ -710,6 +754,21 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                               );
                             }),
                             const SizedBox(height: 12),
+                            if (((tx['packaging_fee'] as num?)?.toDouble() ?? 0.0) > 0) ...[
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Packaging Fee (Takeout)', style: AppTypography.tableCellSecondary),
+                                  Text(
+                                    _currencyFormat.format((tx['packaging_fee'] as num).toDouble()),
+                                    style: AppTypography.tableCellPrimary.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                            ],
                             const Divider(height: 1, color: AppColors.softBorder),
                             const SizedBox(height: 12),
 

@@ -19,6 +19,8 @@ class OrderSummaryPanel extends StatefulWidget {
   final VoidCallback onClear;
   final VoidCallback onCheckout;
   final VoidCallback? onCollapse;
+  final String orderType;
+  final ValueChanged<String>? onOrderTypeChanged;
 
   const OrderSummaryPanel({
     super.key,
@@ -30,6 +32,8 @@ class OrderSummaryPanel extends StatefulWidget {
     required this.onClear,
     required this.onCheckout,
     this.onCollapse,
+    this.orderType = 'dine_in',
+    this.onOrderTypeChanged,
   });
 
   @override
@@ -37,7 +41,59 @@ class OrderSummaryPanel extends StatefulWidget {
 }
 
 class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
+  late String _orderType;
 
+  @override
+  void initState() {
+    super.initState();
+    _orderType = widget.orderType;
+  }
+
+  @override
+  void didUpdateWidget(OrderSummaryPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.orderType != widget.orderType) {
+      _orderType = widget.orderType;
+    }
+  }
+
+  Widget _buildOrderTypeButton(String type, String label, IconData icon) {
+    final isSelected = _orderType == type;
+    return InkWell(
+      key: Key('order_type_$type'),
+      onTap: () {
+        setState(() => _orderType = type);
+        widget.onOrderTypeChanged?.call(type);
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.goldenYellow : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: isSelected ? AppColors.darkCharcoal : AppColors.mutedBrown,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? AppColors.darkCharcoal : AppColors.mutedBrown,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,8 +103,8 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
       final qty = item['quantity'] as int;
       subtotal += price * qty;
     }
-    const double discount = 0;
-    final double total = subtotal - discount;
+    final double packagingFee = (_orderType == 'takeout') ? 3.0 : 0.0;
+    final double total = subtotal + packagingFee;
 
     return Container(
       width: 360,
@@ -58,53 +114,79 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
       ),
       child: Column(
         children: [
-          // Header with Order # and Dine-In badge
+          // Header with Order # and Dine-In / Takeout selector
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 16, 16, 14),
+            padding: const EdgeInsets.fromLTRB(20, 14, 16, 12),
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.softBorder, width: 1)),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Order #${widget.orderId}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.darkCharcoal,
-                              letterSpacing: -0.3,
+                          Row(
+                            children: [
+                              Text(
+                                'Order #${widget.orderId}',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.darkCharcoal,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(LucideIcons.pencil, size: 14, color: AppColors.mutedBrown),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Live Terminal Cart',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.mutedBrown,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          const Icon(LucideIcons.pencil, size: 14, color: AppColors.mutedBrown),
                         ],
                       ),
-                      const SizedBox(height: 3),
-                      const Text(
-                        'Live Terminal Cart',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.mutedBrown,
-                        ),
+                    ),
+                    if (widget.onCollapse != null)
+                      IconButton(
+                        onPressed: widget.onCollapse,
+                        icon: const Icon(LucideIcons.panel_right_close, size: 18, color: AppColors.mutedBrown),
+                        tooltip: 'Collapse Cart',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // Dine-In / Takeout Selector
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: AppColors.creamBackground,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.softBorder),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildOrderTypeButton('dine_in', 'Dine-In', LucideIcons.utensils),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: _buildOrderTypeButton('takeout', 'Takeout (+₱3)', LucideIcons.shopping_bag),
                       ),
                     ],
                   ),
                 ),
-                if (widget.onCollapse != null)
-                  IconButton(
-                    onPressed: widget.onCollapse,
-                    icon: const Icon(LucideIcons.panel_right_close, size: 18, color: AppColors.mutedBrown),
-                    tooltip: 'Collapse Cart',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  ),
               ],
             ),
           ),
@@ -175,10 +257,12 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Subtotal & Discount
+                // Subtotal & Packaging Fee
                 _buildSummaryRow('Subtotal', subtotal, bold: false),
-                const SizedBox(height: 6),
-                _buildSummaryRow('Tax / Service', discount, bold: false),
+                if (packagingFee > 0) ...[
+                  const SizedBox(height: 6),
+                  _buildSummaryRow('Packaging Fee', packagingFee, bold: false),
+                ],
                 const SizedBox(height: 10),
 
                 // Dotted line

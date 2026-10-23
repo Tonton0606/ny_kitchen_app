@@ -11,15 +11,17 @@ class TransactionRepository {
 
   Future<Map<String, dynamic>> createTransaction({
     required int userId,
-    required double totalAmount,
-    required double discount,
-    required String paymentMethod,
+    double? totalAmount,
+    double discount = 0,
+    String paymentMethod = 'cash',
     required double amountReceived,
     required double change,
     required List<Map<String, dynamic>> items,
     int? customOrderNumber,
     String? username,
     String? role,
+    String orderType = 'dine_in',
+    double? packagingFee,
   }) async {
     // SEC-01: Ensure caller is authenticated and cannot forge another user's ID
     final actor = await RepositorySecurityGuard.requireAuthenticated(
@@ -31,6 +33,21 @@ class TransactionRepository {
         userId;
     final effectiveUsername = actor['username'] as String? ?? username ?? 'User $effectiveUserId';
     final effectiveRole = actor['role'] as String? ?? role ?? 'cashier';
+
+    // Server of truth: order type and packaging fee calculation (cash-only POS, no discounts)
+    final normalizedOrderType = orderType.trim().toLowerCase() == 'takeout' ? 'takeout' : 'dine_in';
+    final double computedPackagingFee = (normalizedOrderType == 'takeout') ? 3.00 : 0.00;
+    final double itemsSubtotal = items.fold<double>(
+      0.0,
+      (sum, item) {
+        final subtotal = item['subtotal'];
+        if (subtotal is num) return sum + subtotal.toDouble();
+        final price = (item['food_price'] as num?)?.toDouble() ?? 0.0;
+        final qty = (item['quantity'] as num?)?.toInt() ?? 1;
+        return sum + (price * qty);
+      },
+    );
+    final double authoritativeTotal = itemsSubtotal + computedPackagingFee;
 
     final db = await _dbHelper.database;
     int transactionId = 0;
@@ -62,9 +79,11 @@ class TransactionRepository {
         'receipt_number': finalReceiptNumber,
         'order_number': orderNumber,
         'user_id': effectiveUserId,
-        'total_amount': totalAmount,
-        'discount': discount,
-        'payment_method': paymentMethod,
+        'order_type': normalizedOrderType,
+        'packaging_fee': computedPackagingFee,
+        'total_amount': authoritativeTotal,
+        'discount': 0.0,
+        'payment_method': 'cash',
         'amount_received': amountReceived,
         'change': change,
         'status': 'Preparing',
@@ -85,6 +104,7 @@ class TransactionRepository {
     });
 
     // Audit transaction creation (Gap 9 / SEC-01) - authoritative session identity
+    final orderTypeLabel = normalizedOrderType == 'takeout' ? 'Takeout' : 'Dine-In';
     await _auditRepo.logAction(
       userId: effectiveUserId,
       username: effectiveUsername,
@@ -92,7 +112,7 @@ class TransactionRepository {
       module: 'Transactions',
       action: 'Transaction Created',
       status: 'Success',
-      description: 'Order #$orderNumber (Receipt: $finalReceiptNumber, Total: ₱${totalAmount.toStringAsFixed(2)}, Method: $paymentMethod)',
+      description: 'Order #$orderNumber (Receipt: $finalReceiptNumber, Type: $orderTypeLabel, Fee: ₱${computedPackagingFee.toStringAsFixed(2)}, Total: ₱${authoritativeTotal.toStringAsFixed(2)}, Method: cash)',
     );
 
     await _syncService.syncToCloud();
@@ -101,6 +121,9 @@ class TransactionRepository {
       'transaction_id': transactionId,
       'order_number': orderNumber,
       'receipt_number': finalReceiptNumber,
+      'order_type': normalizedOrderType,
+      'packaging_fee': computedPackagingFee,
+      'total_amount': authoritativeTotal,
     };
   }
 

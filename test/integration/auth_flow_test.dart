@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -7,7 +8,11 @@ import 'package:ny_kitchen_app/main.dart' as app;
 // Since these are UI driven, we'll write them assuming the default seeded database.
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  final isLive = Platform.environment.containsKey('FLUTTER_TEST_DEVICE') ||
+      Platform.environment.containsKey('INTEGRATION_TEST');
+  if (isLive) {
+    IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  }
 
   group('Authentication Flow Integration Tests', () {
     testWidgets('Full flow: login -> session active -> logout -> session cleared', (WidgetTester tester) async {
@@ -48,6 +53,6 @@ void main() {
         // 5. Verify back on login screen
         expect(find.text('Login'), findsOneWidget);
       }
-    });
+    }, skip: !isLive);
   });
 }

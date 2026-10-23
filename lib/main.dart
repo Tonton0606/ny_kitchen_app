@@ -18,6 +18,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Set up global error boundary
+  final previousOnError = FlutterError.onError;
   FlutterError.onError = (FlutterErrorDetails details) {
     final exceptionStr = details.exception.toString();
     // Filter known Flutter Windows framework assertion on Alt / Alt-Tab modifier keydown events
@@ -25,7 +26,11 @@ void main() async {
         (exceptionStr.contains('keysPressed') && exceptionStr.contains('RawKeyDownEvent'))) {
       return;
     }
-    FlutterError.presentError(details);
+    if (previousOnError != null) {
+      previousOnError(details);
+    } else {
+      FlutterError.presentError(details);
+    }
   };
   
   PlatformDispatcher.instance.onError = (error, stack) {

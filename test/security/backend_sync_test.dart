@@ -120,4 +120,36 @@ void main() {
       expect((await db.query('transactions')).length, 1);
     }
   });
+
+  test('salePayload formats order_type and packaging_fee_cents correctly', () {
+    final dineInPayload = BackendSyncService.salePayload({
+      'id': 1,
+      'receipt_number': 'REC-1',
+      'order_type': 'dine_in',
+      'packaging_fee': 0.0,
+      'total_amount': 100.0,
+      'discount': 0.0,
+      'payment_method': 'cash',
+      'status': 'Served',
+      'created_at': '2026-10-24T10:00:00',
+    }, []);
+    expect(dineInPayload['order_type'], 'dine_in');
+    expect(dineInPayload['packaging_fee_cents'], 0);
+    expect(dineInPayload['total_cents'], 10000);
+
+    final takeoutPayload = BackendSyncService.salePayload({
+      'id': 2,
+      'receipt_number': 'REC-2',
+      'order_type': 'takeout',
+      'packaging_fee': 3.0,
+      'total_amount': 103.0,
+      'discount': 0.0,
+      'payment_method': 'cash',
+      'status': 'Served',
+      'created_at': '2026-10-24T10:00:00',
+    }, []);
+    expect(takeoutPayload['order_type'], 'takeout');
+    expect(takeoutPayload['packaging_fee_cents'], 300);
+    expect(takeoutPayload['total_cents'], 10300);
+  });
 }
