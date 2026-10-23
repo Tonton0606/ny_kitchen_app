@@ -1133,3 +1133,24 @@ Checks actually run and actual results:
 Evidence paths: Owner-supplied screenshots in this Codex conversation, not copied into the repository: `codex-clipboard-3509bd11-5657-4d41-a015-389c75f760fe.png` (Production row counts), `codex-clipboard-c56f51b4-227c-46ab-b3a3-f8a7f564dc13.png` (`password_hash` nullability), plus earlier screenshots showing required columns, bigint IDs and RLS metadata. `AI_SESSION_HANDOFF.md`; `backend/README.md`; read-only SQL diagnostic source files under `docs/security/`; no tokens or credentials recorded.
 Unverified items / remaining risks: No successful Supabase synchronization or Production write; reconcile local and Production sale identities/contents before full sync; inspect effective RLS INSERT/UPDATE semantics and validate in development; no Flutter/Dart/Android trust or Ubuntu sales upload/offline-reconnect test; no demonstrated device/Admin denial, rotation/revocation, reboot persistence, or server restore. Windows trust applies to the local test CA and does not establish public or Flutter trust. The inspected workspace's automatic default could start a full Production sync when the POS is launched; inspect each target terminal and reconcile before startup. Screenshot credentials were omitted and must not be reused.
 Next concrete step: Reconcile the actual local and Production transaction/item identities without writing to Production, then test Supabase behavior only against a separate development project. Separately, validate Flutter HTTPS and one-way offline/reconnect sales synchronization against the Ubuntu VM with synthetic data. CHANGELOG was not changed because this session records verification/documentation only and adds no product feature.
+
+## Read-only Supabase/local Sales Reconciliation — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T01:15:33+08:00 (Asia/Manila)
+Session owner (self-reported): Ralston Villamin
+Requested task and scope: Compare local SQLite sales with Supabase `main` / `PRODUCTION` after the owner approved a read-only check; explain when the already-deployed Ubuntu backend will receive POS sales. No production writes, sync, credential rotation, or VM changes.
+Rubric / risk / acceptance-test IDs: SEC-02 / K02 (sale identity and sync conflict); no acceptance test executed and no score assigned.
+Files changed:
+- `AI_SESSION_HANDOFF.md`
+- `PROJECT_STATE.md`
+- `TODO.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- Read local SQLite with `sqlite3.exe -readonly`; queried Supabase via HTTP GET only using configured request credentials. No credential values or full row payloads were printed or saved.
+- Local 41 transactions / 53 items; Production 51 transactions / 64 items. Every local transaction ID and item ID exists in Production; 10 cloud-only transactions and 11 cloud-only items; no local-only IDs.
+- All 53 matching item rows agree on their compared fields. All matching transaction fields agree except `status`; 14 transaction statuses differ. For IDs `1`, `3`–`8`, `20`–`23`, `26`, and `2216799791961079831`, cloud says `Served` while local says `Ready`, `Taken`, or `Preparing`. For `2216799791961079835`, cloud says `Voided` and local says `Preparing`.
+- Source review confirmed Supabase upload upserts every local transaction row. Ubuntu mode is exclusive with Supabase; its first cycle uploads historical local sales, up to 40 requests per cycle, and does not fetch cloud-only sales/statuses.
+- No tests were requested or run. `git diff --check` completed without whitespace errors; Git showed only expected LF-to-CRLF warnings for two pre-existing generated Windows files.
+Evidence paths: Read-only SQLite/REST comparison outputs in this Codex session; no business-row export or credential stored. Source: `lib/core/services/sync_service.dart`, `lib/core/services/backend_sync_service.dart`, `backend/README.md`. Durable summary: `AI_SESSION_HANDOFF.md`, `PROJECT_STATE.md`, `TODO.md`.
+Unverified items / remaining risks: Status source of truth is not resolved; do not run Supabase full sync until statuses are reconciled. Ubuntu receives no POS sales until Flutter is configured with `SYNC_BACKEND=ubuntu`, the HTTPS URL and a current device token. The first Ubuntu run will send the 41 historical local sales, whose status values include the local side of these conflicts. Flutter TLS/device upload, offline/reconnect, authorization denial and recovery remain unverified. RLS write semantics also remain unreviewed.
+Next concrete step: Preserve/resolve the 14 Production/local status differences, then configure the local Flutter environment for Ubuntu and perform one authenticated test upload without enabling Supabase mode.
