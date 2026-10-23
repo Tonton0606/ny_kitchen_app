@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'order_item_widget.dart';
+
+final NumberFormat _currencyFormat = NumberFormat.currency(
+  symbol: '₱',
+  decimalDigits: 2,
+);
+
 
 class OrderSummaryPanel extends StatefulWidget {
   final List<Map<String, dynamic>> orderItems;
@@ -251,7 +258,7 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
                                   const SizedBox(width: 8),
                                   Flexible(
                                     child: Text(
-                                      '• ₱${total.toStringAsFixed(2)}',
+                                      '• ${_currencyFormat.format(total)}',
                                       style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
@@ -295,7 +302,7 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
         const SizedBox(width: 8),
         Flexible(
           child: Text(
-            '₱${amount.abs().toStringAsFixed(2)}',
+            _currencyFormat.format(amount.abs()),
             style: TextStyle(
               color: bold ? AppColors.darkCharcoal : AppColors.mutedBrown,
               fontWeight: bold ? FontWeight.w800 : FontWeight.w600,

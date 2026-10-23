@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/responsive.dart';
 import '../widgets/food_card.dart';
@@ -8,6 +9,12 @@ import '../widgets/order_summary_panel.dart';
 import '../../../../../core/database/repositories/food_repository.dart';
 import '../../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../../core/session/session_manager.dart';
+
+final NumberFormat _currencyFormat = NumberFormat.currency(
+  symbol: '₱',
+  decimalDigits: 2,
+);
+
 
 class CashierHomePage extends StatefulWidget {
   const CashierHomePage({super.key});
@@ -311,6 +318,74 @@ class _CashierHomePageState extends State<CashierHomePage> {
                         color: AppColors.darkCharcoal,
                         letterSpacing: -1,
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(color: Color(0xFFE2E8F0), height: 1),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total Due',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          _currencyFormat.format(total),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.darkCharcoal,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Amount Received',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          _currencyFormat.format(amountReceived),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.darkCharcoal,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Change',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          _currencyFormat.format(change),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.forest,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -912,7 +987,7 @@ class _OrderReviewDialog extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '₱${subtotal.toStringAsFixed(2)}',
+                                  _currencyFormat.format(subtotal),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.darkCharcoal,
@@ -939,7 +1014,7 @@ class _OrderReviewDialog extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '₱${total.toStringAsFixed(2)}',
+                          _currencyFormat.format(total),
                           style: const TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
@@ -1119,7 +1194,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                '₱${widget.total.toStringAsFixed(2)}',
+                                _currencyFormat.format(widget.total),
                                 style: const TextStyle(
                                   color: AppColors.darkCharcoal,
                                   fontSize: 30,
@@ -1217,7 +1292,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
-                                '₱${change > 0 ? change.toStringAsFixed(2) : '0.00'}',
+                                _currencyFormat.format(change > 0 ? change : 0),
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w800,

@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/food_image.dart';
+
+final NumberFormat _currencyFormat = NumberFormat.currency(
+  symbol: '₱',
+  decimalDigits: 2,
+);
+
 
 class FoodCard extends StatefulWidget {
   final Map<String, dynamic> food;
@@ -148,7 +155,7 @@ class _FoodCardState extends State<FoodCard> with SingleTickerProviderStateMixin
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '₱${price.toStringAsFixed(2)}',
+                    _currencyFormat.format(price),
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
                       color: AppColors.darkCharcoal,

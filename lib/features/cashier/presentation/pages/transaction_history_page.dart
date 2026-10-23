@@ -20,6 +20,11 @@ class TransactionHistoryPage extends StatefulWidget {
 }
 
 class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
+  static final NumberFormat _currencyFormat = NumberFormat.currency(
+    symbol: '₱',
+    decimalDigits: 2,
+  );
+
   final TransactionRepository _repository = TransactionRepository();
   final AuditRepository _auditRepo = AuditRepository();
 
@@ -477,7 +482,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '₱${totalAmount.toStringAsFixed(2)}',
+                        _currencyFormat.format(totalAmount),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -692,7 +697,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                       ),
                                     ),
                                     Text(
-                                      '₱${subtotal.toStringAsFixed(2)}',
+                                      _currencyFormat.format(subtotal),
                                       style: AppTypography.tableCellPrimary.copyWith(
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -711,7 +716,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                               children: [
                                 const Text('Total', style: AppTypography.heading),
                                 Text(
-                                  '₱${((tx['total_amount'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)}',
+                                  _currencyFormat.format((tx['total_amount'] as num?)?.toDouble() ?? 0.0),
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,
@@ -731,7 +736,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                   const Text('Amount Received',
                                       style: AppTypography.tableCellSecondary),
                                   Text(
-                                    '₱${((tx['amount_received'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)}',
+                                    _currencyFormat.format((tx['amount_received'] as num?)?.toDouble() ?? 0.0),
                                     style: AppTypography.tableCellPrimary,
                                   ),
                                 ],
@@ -742,7 +747,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                                 children: [
                                   const Text('Change', style: AppTypography.tableCellSecondary),
                                   Text(
-                                    '₱${((tx['change'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)}',
+                                    _currencyFormat.format((tx['change'] as num?)?.toDouble() ?? 0.0),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 14,
@@ -1047,7 +1052,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Issue cash refund for receipt ${tx['receipt_number']} (₱${totalAmount.toStringAsFixed(2)})? This will record the refund in the shift report and cannot be undone.',
+                      'Issue cash refund for receipt ${tx['receipt_number']} (${_currencyFormat.format(totalAmount)})? This will record the refund in the shift report and cannot be undone.',
                       style: AppTypography.body,
                     ),
                     const SizedBox(height: 16),
@@ -1134,13 +1139,13 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                             module: 'Transactions',
                             action: 'Refund Transaction',
                             status: 'Success',
-                            description: 'Refunded receipt ${tx['receipt_number']} for ₱${totalAmount.toStringAsFixed(2)} (Reason: $finalReason)',
+                            description: 'Refunded receipt ${tx['receipt_number']} for ${_currencyFormat.format(totalAmount)} (Reason: $finalReason)',
                           );
                           _loadTransactions();
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Receipt ${tx['receipt_number']} refunded successfully (₱${totalAmount.toStringAsFixed(2)} returned).'),
+                                content: Text('Receipt ${tx['receipt_number']} refunded successfully (${_currencyFormat.format(totalAmount)} returned).'),
                                 behavior: SnackBarBehavior.floating,
                                 backgroundColor: const Color(0xFFD97706),
                               ),

@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/food_image.dart';
+
+final NumberFormat _currencyFormat = NumberFormat.currency(
+  symbol: '₱',
+  decimalDigits: 2,
+);
+
 
 class OrderItemWidget extends StatelessWidget {
   final Map<String, dynamic> item;
@@ -68,7 +75,7 @@ class OrderItemWidget extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              '₱${price.toStringAsFixed(2)}',
+                              _currencyFormat.format(price),
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppColors.mutedBrown,
@@ -92,7 +99,7 @@ class OrderItemWidget extends StatelessWidget {
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
-                        '₱${total.toStringAsFixed(2)}',
+                        _currencyFormat.format(total),
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 13,

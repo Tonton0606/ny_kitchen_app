@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/database/repositories/transaction_repository.dart';
@@ -7,6 +8,12 @@ import '../../../shared/widgets/app_buttons.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_status_chip.dart';
 import '../../../shared/widgets/app_state_placeholders.dart';
+
+final NumberFormat _currencyFormat = NumberFormat.currency(
+  symbol: '₱',
+  decimalDigits: 2,
+);
+
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -161,7 +168,7 @@ class _OrdersPageState extends State<OrdersPage> {
                       Text(order['payment'], style: AppTypography.label),
                       const SizedBox(height: 2),
                       Text(
-                        '₱${((order['total'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
+                        _currencyFormat.format((order['total'] as num?)?.toDouble() ?? 0),
                         style: AppTypography.figure,
                       ),
                     ],
@@ -228,7 +235,7 @@ class _OrdersPageState extends State<OrdersPage> {
                                     ),
                                   ),
                                   Text(
-                                    '₱${(itemPrice * itemQty).toStringAsFixed(2)}',
+                                    _currencyFormat.format(itemPrice * itemQty),
                                     style: AppTypography.figureSmall,
                                   ),
                                 ],
@@ -381,7 +388,7 @@ class _OrdersPageState extends State<OrdersPage> {
                                 child: Text(item['name'], style: AppTypography.body),
                               ),
                               Text(
-                                '₱${(itemPrice * itemQty).toStringAsFixed(2)}',
+                                _currencyFormat.format(itemPrice * itemQty),
                                 style: AppTypography.figureSmall,
                               ),
                             ],
@@ -401,7 +408,7 @@ class _OrdersPageState extends State<OrdersPage> {
               children: [
                 const Text('Total to void:', style: AppTypography.body),
                 Text(
-                  '₱${((order['total'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
+                  _currencyFormat.format((order['total'] as num?)?.toDouble() ?? 0),
                   style: AppTypography.figure.copyWith(color: AppColors.brandRed),
                 ),
               ],
@@ -605,7 +612,7 @@ class _OrdersPageState extends State<OrdersPage> {
                                       ),
                                       const Spacer(),
                                       Text(
-                                        '₱${((order['total'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
+                                        _currencyFormat.format((order['total'] as num?)?.toDouble() ?? 0),
                                         style: AppTypography.figure,
                                       ),
                                     ],
@@ -672,7 +679,7 @@ class _OrdersPageState extends State<OrdersPage> {
                                             ),
                                           ),
                                           Text(
-                                            '₱${(itemPrice * itemQuantity).toStringAsFixed(2)}',
+                                            _currencyFormat.format(itemPrice * itemQuantity),
                                             style: AppTypography.figureSmall,
                                           ),
                                         ],
