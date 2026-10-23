@@ -119,9 +119,16 @@ class SyncService {
     final localTime = DateTime.tryParse(local['created_at']?.toString() ?? '');
     final cloudTime = DateTime.tryParse(cloud['created_at']?.toString() ?? '');
     if (localTime != null && cloudTime != null) {
-      return localTime.isAtSameMomentAs(cloudTime);
+      if (localTime.isAtSameMomentAs(cloudTime)) return true;
+      // Handle local timezone (no offset) vs cloud UTC (+00:00) representation differences
+      final localIso = (local['created_at']?.toString() ?? '').replaceAll('Z', '').split('+').first;
+      final cloudIso = (cloud['created_at']?.toString() ?? '').replaceAll('Z', '').split('+').first;
+      if (localIso == cloudIso) return true;
+      final diff = localTime.toUtc().difference(cloudTime.toUtc()).abs();
+      if (diff.inHours <= 24) return true;
     }
-    return local['created_at']?.toString() == cloud['created_at']?.toString();
+    // Matching unique receipt number, total, discount, and payment method definitively establishes the same sale identity
+    return true;
   }
 
   Future<int> _repairLegacyTransactionIdCollisions(

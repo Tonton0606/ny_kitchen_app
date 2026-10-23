@@ -48,10 +48,13 @@ class DatabaseHelper {
       onConfigure: _onConfigure,
     );
 
-    // Normalize legacy mock transaction statuses to 'Served'
+    // Normalize legacy mock transaction statuses to 'Served' or 'Preparing'
     try {
       await db.rawUpdate(
         "UPDATE transactions SET status = 'Served' WHERE status IN ('Taken', 'Ready', 'Completed', 'completed')",
+      );
+      await db.rawUpdate(
+        "UPDATE transactions SET status = 'Preparing' WHERE status = 'preparing'",
       );
     } catch (_) {}
 
