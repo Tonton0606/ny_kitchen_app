@@ -1106,3 +1106,30 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Stage changes, commit cleanly, and push to origin/main.
 
+## Supabase Production Snapshot and Ubuntu VM Evidence — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T00:51:04+08:00 (Asia/Manila)
+Session owner (self-reported): Ralston Villamin
+Requested task and scope: Persist the owner's Supabase database screenshots and Ubuntu VM setup/health-check progress in the repository's durable project memory. Documentation/evidence updates only; no cloud change, sync, credential handling, or VM operation was initiated by this session.
+Rubric / risk / acceptance-test IDs: R08–R15 (design and assurance evidence), SEC-02 (Supabase RLS/conflict behavior), AT07/AT09/AT10 (backend trust, authorization and resilience); these are observations only and no acceptance test is marked passed by this record.
+Files changed:
+- `AI_SESSION_HANDOFF.md`
+- `PROJECT_STATE.md`
+- `TODO.md`
+- `SECURITY_DEFENSE_RECORD.md`
+- `DECISIONS.md`
+- `backend/README.md`
+Checks actually run and actual results:
+- Mandatory Git sync: `git fetch origin main`; `git pull --ff-only origin main` fast-forwarded two incoming commits (`47673e4`, `7f3e150`), no conflicts.
+- Required `C:\src\flutter\bin\flutter.bat test test/security/ --no-pub -r expanded`: 82 tests passed. The sandboxed attempts produced no output and were interrupted; the final approved elevated run completed successfully.
+- Read-only `git status --short` confirmed pre-existing unrelated modifications/untracked files remained present and were not staged or edited.
+- Owner-supplied Supabase SQL Editor screenshots for `N.Y Kitchen POS`, `main` / `PRODUCTION`: `transactions` 51 rows (min ID 1, max ID 650922048191935287); `transaction_items` 64 rows (same displayed min/max); `public.users.password_hash` nullable (`YES`). Earlier 2026-10-23 screenshot said this column was NOT NULL; current result supersedes that observation, but migration/change provenance is unknown.
+- Direct read-only REST probing from this workspace did not obtain authoritative metadata: one schema request returned HTTP 401, count requests returned HTTP 406 before a retry ended without a response. This is inconclusive and is not evidence that credentials are invalid.
+- Other owner-supplied read-only diagnostics: required non-null `users` fields are `id bigint`, `full_name text`, `username text`, `role text`, `status text`, `created_at timestamp with time zone`; each of seven sync tables has RLS enabled/not forced and one permissive `ALL` policy with role `public`; screenshot metadata indicates `check_device_secret` in `USING`, no explicit `WITH CHECK` expression, and anon/authenticated SELECT/INSERT/UPDATE grants. PostgreSQL may use the `USING` expression as the default check when `WITH CHECK` is omitted; inspect the policy/function and validate effective authorization before drawing a conclusion.
+- A separate local SQLite snapshot in the conversation had 41 transactions and 53 items. Aggregate counts differ from Production; no record-level reconciliation was performed, and no full sync was run.
+- Local workspace inspection found `SYNC_BACKEND` unset and saved app sync mode `automatic`. The current default starts a Supabase full sync on app startup and repeats every 15 seconds. No POS process was running in this workspace when checked; other terminals may differ. Inspect target-terminal configuration and reconcile data before starting it against Production.
+- Owner-supplied Ubuntu/Windows screenshots show Ubuntu VM `ny-kitchen-ubuntu`, host-only `192.168.56.101`, Caddy 2.11.7 and `ny-kitchen-api.service` active, UFW default-deny incoming with 22/tcp and 443/tcp allowed from `192.168.56.0/24` on `enp0s8`, and later HTTP 200 health JSON through Windows HTTPS using `--ssl-revoke-best-effort`. The local Caddy root DER hash matched before the owner approved and installed it in Windows CurrentUser Root. The initial immediate health probe failed during service startup; a later probe succeeded. The owner-supplied `pip-audit` output reported “No known vulnerabilities found” for that environment's package snapshot.
+- `git diff --check`: completed with no whitespace errors. Git printed expected LF-to-CRLF working-copy warnings for edited README and pre-existing generated Windows files.
+Evidence paths: Owner-supplied screenshots in this Codex conversation, not copied into the repository: `codex-clipboard-3509bd11-5657-4d41-a015-389c75f760fe.png` (Production row counts), `codex-clipboard-c56f51b4-227c-46ab-b3a3-f8a7f564dc13.png` (`password_hash` nullability), plus earlier screenshots showing required columns, bigint IDs and RLS metadata. `AI_SESSION_HANDOFF.md`; `backend/README.md`; read-only SQL diagnostic source files under `docs/security/`; no tokens or credentials recorded.
+Unverified items / remaining risks: No successful Supabase synchronization or Production write; reconcile local and Production sale identities/contents before full sync; inspect effective RLS INSERT/UPDATE semantics and validate in development; no Flutter/Dart/Android trust or Ubuntu sales upload/offline-reconnect test; no demonstrated device/Admin denial, rotation/revocation, reboot persistence, or server restore. Windows trust applies to the local test CA and does not establish public or Flutter trust. The inspected workspace's automatic default could start a full Production sync when the POS is launched; inspect each target terminal and reconcile before startup. Screenshot credentials were omitted and must not be reused.
+Next concrete step: Reconcile the actual local and Production transaction/item identities without writing to Production, then test Supabase behavior only against a separate development project. Separately, validate Flutter HTTPS and one-way offline/reconnect sales synchronization against the Ubuntu VM with synthetic data. CHANGELOG was not changed because this session records verification/documentation only and adds no product feature.

@@ -1,6 +1,12 @@
 # PROJECT_STATE.md
 # N.Y Kitchen — Project State Tracker
 
+> 2026-10-24 update: Owner-supplied read-only Supabase `main` / `PRODUCTION` screenshots show `transactions` = 51 rows and `transaction_items` = 64; `public.users.password_hash` exists and is nullable (`YES`), superseding the 2026-10-23 required-column observation. A separate local SQLite snapshot had 41 transactions and 53 items; these aggregate counts do not identify specific missing or duplicate sales. RLS is enabled but not forced on the seven sync tables; each shows a permissive `ALL` policy with a `check_device_secret` call in `USING`, no explicit `WITH CHECK` expression, and anon/authenticated SELECT/INSERT/UPDATE grants. Check PostgreSQL's default check behavior and the policy function before concluding whether writes are correctly authorized. Do not full-sync Production until record identities are reconciled. No cloud write/sync was performed in this session.
+
+> 2026-10-24 update: Owner-supplied Ubuntu VirtualBox screenshots show the backend deployed at `/opt/ny-kitchen/backend`, API/Caddy active, UFW SSH/HTTPS rules limited to the host-only `/24`, and a successful Windows HTTPS health request to `nykitchen.test` after trusting the matching local Caddy root. `pip-audit` reported no known vulnerabilities in that resolved environment at the time. Flutter/Dart/Android trust, device sales upload, offline/reconnect, denial, rotation/revocation, reboot and restore remain unverified.
+
+> 2026-10-24 local configuration check: In this workspace, `SYNC_BACKEND` was unset and the saved local sync mode was `automatic`; the current default starts a Supabase full sync on app startup and repeats every 15 seconds. No POS process was running here when checked. Inspect the target terminal and reconcile records before launching against Production; this observation does not describe other devices.
+
 > 2026-10-22 update: Rubric remains mapped in `docs/SECURITY_IMPLEMENTATION_PLAN.md`. User screenshots confirm RLS is enabled, all seven device-secret policies are PERMISSIVE, and anon/authenticated table grants are present. The owner privately found and changed a local/device-secret mismatch, but reports sync still fails. No successful sync is claimed; capture the sanitized table/error status after a manual attempt.
 
 > 2026-10-23 update: The latest screenshot reports `Cloud sync incomplete (upload: users (23502))`. Supabase schema metadata confirms `public.users.password_hash` is NOT NULL; the client intentionally omits it. Code now selects profile columns only, preserves existing local auth state, and creates a random local-only hash for newly imported profiles. A reviewed nullability migration is prepared but not applied; live sync remains unverified.
@@ -19,8 +25,8 @@
 |---|---|
 | **Project Name** | N.Y Kitchen Secure Order and Sales Management System |
 | **Current Phase** | Security defense preparation and cloud synchronization repair |
-| **Current Status** | Flutter/SQLite retained; user-profile migration pending; transaction ID collision mitigation implemented but not runtime-verified; live Supabase sync remains unverified |
-| **Last Updated** | 2026-10-23 |
+| **Current Status** | Flutter/SQLite retained; Supabase Production schema and counts observed read-only; reconcile records and review RLS before sync; Ubuntu service deployed and Windows health check observed; Flutter end-to-end sync remains unverified |
+| **Last Updated** | 2026-10-24 |
 | **Updated By** | Ralston Villamin session (self-reported) |
 
 ---
@@ -369,6 +375,18 @@ Hybrid offline/online POS with online synchronization is approved. SQLite suppor
 ## Backend implementation — 2026-10-22
 
 Flutter retained. Added `backend/` FastAPI sales synchronization service, provisioner, Ubuntu systemd/Caddy templates, Flutter client/checkpoint logic and visible sync status. Select with `SYNC_BACKEND=ubuntu`; Supabase remains the legacy/default mode. No production configuration changed. 11 backend and 4 Flutter targeted tests passed. Ubuntu VM, trusted HTTPS and real-device end-to-end verification remain pending.
+
+## Supabase production snapshot and Ubuntu deployment evidence — 2026-10-24
+
+Owner-supplied SQL Editor screenshots from the Supabase project `N.Y Kitchen POS`, branch `main` marked `PRODUCTION`, report 51 rows in `transactions` and 64 in `transaction_items`; both displayed minimum ID 1 and maximum ID 650922048191935287. `public.users.password_hash` is nullable. The earlier 2026-10-23 result that it was NOT NULL is superseded; the schema-change provenance is not known. A separate local database snapshot reported 41 transactions and 53 items. Counts alone cannot reconcile the sales. Compare stable transaction identity and contents before any automatic/full Production sync.
+
+The same owner-supplied policy diagnostic reports RLS enabled and not forced on seven sync tables; one permissive `ALL` policy per table named `Enforce device secret on <table>` with role `public`; a `check_device_secret` call shown in `USING`; no explicit `WITH CHECK` expression; and anon/authenticated SELECT, INSERT and UPDATE grants. PostgreSQL may use the `USING` expression as the default check when `WITH CHECK` is omitted. Inspect the policy/function definition and validate effective write behavior in development before drawing a security conclusion.
+
+Owner-supplied VM/terminal screenshots from October 23–24 show `ny-kitchen-ubuntu` at host-only IP `192.168.56.101`, API files under `/opt/ny-kitchen/backend`, Python 3.12 dependencies installed with no known vulnerabilities reported by `pip-audit`, Caddy 2.11.7 and `ny-kitchen-api.service` active, UFW allowing ports 22 and 443 from `192.168.56.0/24` on `enp0s8`, and Windows `curl.exe` receiving HTTP 200/health JSON via `https://nykitchen.test/health` with best-effort certificate revocation handling. The Windows user installed the matching local Caddy root certificate after explicitly approving the prompt. This verifies only a local Windows health check. The initial immediate health probe raced service startup and failed; the later request succeeded.
+
+No production write or sync was performed in this session. Supabase is still the separate legacy/default path; Ubuntu mode is explicitly selected and sends one-way sales. No Flutter-to-Ubuntu request, offline/reconnect cycle, credential denial, restore, or Android trust test is demonstrated. Credential values seen in setup screenshots are intentionally excluded from records.
+
+For this workspace, `SYNC_BACKEND` was unset and saved app sync mode was `automatic`. The existing default path starts a Supabase full sync on startup and every 15 seconds; no POS process was running in this workspace when checked. Inspect the target terminal's mode and reconcile its records before starting it against Production.
 
 ## AI continuity — 2026-10-22
 

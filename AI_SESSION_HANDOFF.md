@@ -1,6 +1,6 @@
 # N.Y Kitchen — mandatory AI handoff and security plan
 
-Last updated: October 23, 2026, Asia/Manila.
+Last updated: October 24, 2026, Asia/Manila.
 Record owner for this handoff creation: **Ralston Villamin (self-reported in this conversation)**.
 
 This file is the starting guide for any AI continuing the project. Read it completely. It summarizes approved decisions and points to detailed evidence. It is not proof that security requirements have passed. Current user instructions and inspected source take precedence over stale historical summaries; record discrepancies instead of silently inventing resolutions.
@@ -46,7 +46,7 @@ Then inspect `git status --short` and relevant diffs. Read the actual implementa
 - Menu management is included; inventory management is excluded.
 - Online synchronization is approved scope. Earlier documents excluding cloud sync have been superseded by the owner's October 20 confirmation.
 - On October 22, the owner explicitly selected **“Keep Flutter POS and add a secured backend on an Ubuntu VM.”** Earlier advice that a VM was unnecessary does not cancel this later choice.
-- The owner said the VM is not yet installed and they will install it later. Do not claim deployment or infer a VM IP, Ubuntu version, hostname mapping, SSH credentials, or TLS trust.
+- Owner-supplied terminal screenshots from October 23–24 show the Ubuntu VirtualBox VM deployed and the API/Caddy service responding over the private host-only network. Observed details and limits are recorded below; this evidence does not establish Flutter-client synchronization, a production rollout, or Internet exposure.
 - Docker is not a requirement. ZAP can support API assessment; it does not verify Flutter/local SQLite business controls.
 - The defense was stated to be Thursday, October 22, 2026. For later sessions verify whether the defense schedule has changed; do not keep calling that date “tomorrow.”
 
@@ -100,7 +100,7 @@ All exact criterion names and the evidence mapping are in `docs/SECURITY_IMPLEME
 | High | Verify lockout, forced password changes, inactivity, disabled-account revocation and audit coverage | SEC-09/11, AT01/AT03 |
 | High | Validate existing Supabase conflict/RLS behavior if that mode is demonstrated; preserve protected records | SEC-02, K02, AT10 |
 | High | Implement and demonstrate protected backup plus actual successful restore and corruption rejection | SEC-03, K03, AT08 |
-| High | Deploy Ubuntu service, validate HTTPS/firewall, device/Admin denial and actual offline/reconnect behavior | Backend deployment guide; AT07/AT09/AT10 coverage |
+| High | Finish Flutter-to-Ubuntu trust/sync validation, device/Admin denial, and actual offline/reconnect behavior; preserve server recovery evidence | Backend deployment guide; AT07/AT09/AT10 coverage |
 | Further hardening | Password KDF migration, authenticated biometric encryption if used, safe errors, API/input limits, secrets and dependency review | SEC-04–SEC-10; AT04/AT06/AT09/AT10 |
 | Defense | Privacy/retention/incident procedures, risk treatment, evidence traceability, scored review and rehearsal | R17–R20 |
 
@@ -121,11 +121,37 @@ On 2026-10-22, the manual/automatic cloud sync paths were updated to report tabl
 
 Follow-up: the owner privately changed a local device-secret mismatch, but still sees a Sync error. The latest Windows log shows Supabase initialization and repeated `RadioListTile` Material assertions, but no fresh sync failure code/table. The settings warning was addressed, and the top-bar manual action now shows the sanitized sync status. Live sync remains **unverified**; test only with synthetic data in a development project.
 
-On 2026-10-23, the owner supplied a fresh `users (23502)` upload error and read-only schema output. `public.users.password_hash` is required, while the client deliberately omits it; `created_at` is also required and is sent. The Flutter pull path now requests profile columns only, preserves existing device-local auth state, and generates an unguessable local-only password hash for imported profiles. Admin must reset an imported account's password on each device. A nullability migration is prepared at `docs/security/supabase_users_profile_sync_migration.sql` but has not been applied. No live sync or database write is verified; apply and validate in development before Production, and review any legacy cloud hashes separately.
+On 2026-10-23, the owner supplied a `users (23502)` upload error and read-only schema output showing `password_hash` required. A later owner-supplied SQL Editor screenshot from the `main` / `PRODUCTION` project on 2026-10-24 shows `public.users.password_hash` exists and is nullable (`YES`). This supersedes the earlier schema observation; the cause/provenance of the change is unknown, and no migration application by this assistant is claimed. The Flutter pull path requests profile columns only, preserves existing device-local auth state, and generates a local-only password hash for imported profiles. No successful sync or database write is verified. Do not apply the prepared migration to Production based solely on the older observation; first inspect the current schema in the intended environment and validate the workflow with synthetic data in development.
 
 On 2026-10-23, two device screenshots showed distinct sales sharing local transaction/order ID `#1` with different receipts and amounts. SQLite auto-increment IDs are per installation, while Supabase upserts on `id`; this can overwrite one device's sale and explains the differing dashboard totals. New sales and line items now use a local-only installation namespace plus monotonic counter, receipts include the generated ID suffix, and sync rekeys a legacy local sale and its items when the same cloud ID represents a different sale. Before deploying, use `docs/security/supabase_transaction_id_diagnostic.sql` in development to confirm the cloud ID columns are `bigint`. This code has not been runtime-verified. Re-test with both devices and synthetic sales; only data still present on a device can be recovered.
 
-Not yet demonstrated: Ubuntu deployment, trusted HTTPS from Flutter, real-device offline/reconnect round trip, server backup/restore, rotation/revocation on the VM, Android provisioning, comprehensive dependency audit, or a complete rubric pass.
+### Owner-supplied infrastructure and Supabase evidence — 2026-10-24
+
+The following are observations from screenshots supplied by the owner in this conversation. They are not independently captured machine logs, and no production write or synchronization was performed by this assistant.
+
+**Supabase `main` / `PRODUCTION`, read-only SQL Editor results:**
+
+- `transactions`: 51 rows, minimum `id` 1, maximum `id` 650922048191935287.
+- `transaction_items`: 64 rows, minimum `id` 1, maximum `id` 650922048191935287.
+- `public.users.password_hash` exists and `is_nullable = YES`. The separate required-column query showed `id bigint`, `full_name text`, `username text`, `role text`, `status text`, and `created_at timestamp with time zone` as non-nullable.
+- The policy diagnostic showed RLS enabled and not forced on each of seven sync tables, one permissive `ALL` policy per table named `Enforce device secret on <table>` for role `public`. The displayed condition metadata showed a `check_device_secret` call in `USING`, no explicit `WITH CHECK` expression, and `references_request_headers = false`. The query also showed anon/authenticated SELECT, INSERT, and UPDATE table privileges. Because PostgreSQL may use the `USING` expression as the default check when `WITH CHECK` is omitted, inspect the policy definition/function and effective INSERT/UPDATE behavior before judging whether writes are safely authorized.
+- A separate owner-supplied local SQLite snapshot showed 41 `transactions` and 53 `transaction_items`. These aggregate snapshots differ from Production (51/64), but counts alone cannot identify missing, duplicate, overwritten, or unsynchronized sales. Reconcile record identities and sale contents before starting the POS's automatic full sync; do not run a full sync against Production as a comparison test.
+- A direct read-only REST probe from this workspace did not obtain authoritative counts/schema: one schema request returned HTTP 401, count requests returned HTTP 406 before a retry ended without a response. This does not establish that credentials are invalid. Use the owner-supplied SQL Editor results for the recorded Production observations; do not repeat a sync/write probe against Production.
+
+**Ubuntu VirtualBox backend and Windows HTTPS check, observed October 23–24:**
+
+- VM hostname shown as `ny-kitchen-ubuntu`; host-only IP `192.168.56.101`; hostname `nykitchen.test`; host-only subnet `192.168.56.0/24`.
+- `/opt/ny-kitchen/backend` was populated with the approved backend files. A Python 3.12 virtual environment was created and production requirements installed; the separate `pip-audit --path .../site-packages` command reported “No known vulnerabilities found” for that resolved environment at that time.
+- Caddy 2.11.7 and `ny-kitchen-api.service` were shown active. The API's initial immediate health probe raced service startup and failed; a subsequent local probe returned HTTP 200 with `{"status":"ok","service":"ny-kitchen-sync"}`.
+- UFW was active with default-deny incoming; SSH 22/tcp and HTTPS 443/tcp were allowed on `enp0s8` only from `192.168.56.0/24`. Caddy's local root certificate was copied to Windows and its SHA-256 matched the Ubuntu-exported DER hash. The owner approved and installed that root CA into the Windows CurrentUser Root store. Windows `curl.exe --ssl-revoke-best-effort --resolve ... https://nykitchen.test/health` returned HTTP 200 and the expected JSON. Schannel's default attempt failed because revocation status could not be checked for this local CA; the best-effort retry tolerated that revocation-check limitation while still succeeding on the certificate connection.
+- The Windows trust is scoped to that user profile and local test authority. Do not treat this as public CA trust, Internet exposure, or Flutter/Dart/Android trust validation. No Flutter app connection, device-authenticated sale upload, offline/reconnect cycle, server restore, or end-to-end device/Admin denial test is evidenced.
+- Tokens appeared in setup screenshots and were rotated during setup; their values are intentionally omitted. Do not reuse or copy any screenshot token. Confirm current server/client credentials privately before use.
+
+Supabase and Ubuntu are separate sync paths. Supabase is still the existing legacy/default path; `SYNC_BACKEND=ubuntu` selects the on-prem one-way sales API and disables Supabase sync for that app run. Do not enable both paths together. No evidence here establishes a successful Supabase sync or that the Flutter POS has been configured to use the Ubuntu API.
+
+At this session's workspace inspection, `SYNC_BACKEND` was unset and the saved local app sync mode was `automatic`; with the current default, starting that POS can launch a Supabase full sync immediately and then repeat every 15 seconds. No POS process was running in this workspace when checked. This describes only the inspected local configuration, not every terminal. Check and reconcile the target terminal's mode/data before launching it against Production.
+
+Remaining: reconcile Production and local sales by stable IDs/receipt/content; review the Production RLS policy's write semantics; validate Supabase schema/auth in development; validate Flutter HTTPS trust and device sync to Ubuntu; exercise offline/reconnect, denial, credential rotation/revocation and server recovery; complete the rubric review.
 
 ## 8. Evidence and safety rules
 
@@ -161,4 +187,4 @@ No need to invent the AI model name, team job titles, identity validation, or a 
 
 ## 10. Immediate continuation
  
-Ask the session owner's name, read the required files, inspect the working tree, and immediately run `git fetch origin main` to check for remote commits. If incoming commits exist, pull and merge them, resolve any conflicts (preserving both collaborators' defense records chronologically), run verification tests, commit the merge, and push. Then proceed with the authorized task, committing and pushing upon completion. If Ubuntu is available, follow the deployment guide and capture real HTTPS/offline-reconnect evidence. If it is not ready, continue authorized local security work, starting with repository authorization and its negative tests. Do not perform a full web conversion or claim that backend preparation completes the rubric.
+Ask the session owner's name, read the required files, inspect the working tree, and immediately run `git fetch origin main` to check for remote commits. If incoming commits exist, pull and merge them, resolve any conflicts (preserving both collaborators' defense records chronologically), run verification tests, commit the merge, and push. Then proceed with the authorized task, committing and pushing upon completion. The Ubuntu VM deployment and Windows-side local HTTPS health check have now been observed; continue with Flutter trust/device sync and offline-reconnect validation, and reconcile cloud/local Production records before any full sync. Do not perform a full web conversion or claim that backend deployment completes the rubric.

@@ -371,8 +371,11 @@
 - [ ] Confirm development/production project separation and apply reviewed RLS policies.
 - [ ] Configure deployment environment variables without embedding client secrets.
 - [ ] Document deployment steps in `docs/SUPABASE_DEPLOYMENT.md`
-- [x] Inspect required columns for `public.users` using `docs/security/supabase_users_sync_diagnostic.sql`; confirmed `password_hash` is NOT NULL.
-- [ ] Apply and verify `docs/security/supabase_users_profile_sync_migration.sql` in a development project before Production; review whether old cloud password hashes need cleanup after confirming local backups.
+- [x] Inspect `public.users` required columns; the 2026-10-23 result showed `password_hash` NOT NULL. **Superseded:** the owner-supplied `main` / `PRODUCTION` SQL Editor result on 2026-10-24 shows `password_hash` exists and is nullable (`YES`). The reason for the schema change is unknown; no migration application by this assistant is claimed.
+- [ ] Confirm the current schema and migration provenance in the intended development project; validate profile upload/pull with synthetic data before Production use. Do not apply the prepared nullable-column migration based only on the stale 2026-10-23 result.
+- [ ] Reconcile Production `transactions` and `transaction_items` against local SQLite by stable sale identity/content before any automatic or full sync. Owner-supplied read-only Production counts are 51 transactions and 64 items; a separate local snapshot was 41 and 53, respectively. Counts alone do not show which records differ.
+- [ ] Before starting the POS, inspect the target terminal's sync mode. This workspace had `SYNC_BACKEND` unset and saved sync mode `automatic`; its current default starts a Supabase full sync on startup and every 15 seconds. No POS process was running here when checked.
+- [ ] Review the live Production RLS policy's effective write checks. The 2026-10-24 screenshot showed RLS enabled/not forced, one permissive `ALL` policy per sync table with a `check_device_secret` call in `USING`, no explicit `WITH CHECK` expression, and anon/authenticated SELECT/INSERT/UPDATE grants. Check PostgreSQL's default check behavior, inspect the policy function and verify effective INSERT/UPDATE authorization before claiming safe sync.
 - [ ] Verify new-device account provisioning: cloud profiles do not transfer passwords; an Admin must reset each imported account's local password on that device.
 
 ---
@@ -396,14 +399,15 @@
 - [ ] Prepare Q&A responses for security topics
 - [ ] Prepare Q&A responses for architecture decisions
 
-## Ubuntu backend — 2026-10-22
+## Ubuntu backend — deployment status updated 2026-10-24
 
 - [x] Prepare isolated sales API, provisioner and Ubuntu deployment configuration.
 - [x] Connect Flutter backend mode with safe retries and no concurrent Supabase sync.
 - [x] Run targeted backend and Flutter tests (11 + 4 passed).
-- [ ] Install Ubuntu VM and deploy with trusted HTTPS and firewall controls.
+- [x] Deploy Ubuntu VM backend; owner-supplied screenshots show systemd API/Caddy active, UFW scoped to the host-only subnet, and a Windows-side HTTPS health check succeeding with the local Caddy root trusted. Evidence is limited to screenshots and a health endpoint.
 - [ ] Demonstrate real Flutter offline/reconnect sync and server role denial.
-- [ ] Verify credential rotation, server recovery and dependency vulnerabilities.
+- [x] Run `pip-audit` against the deployed VM's resolved Python packages; the owner-supplied output reported “No known vulnerabilities found” for that scan snapshot.
+- [ ] Verify Flutter/Dart/Android HTTPS trust, credential rotation/revocation, server recovery and reboot persistence over the running VM.
 - [ ] Resolve local repository authorization findings separately.
 
 ## AI session continuity
