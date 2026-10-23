@@ -55,6 +55,10 @@ class _OrdersPageState extends State<OrdersPage> {
         txn['id'] as int,
       );
       final receiptNumber = txn['receipt_number']?.toString() ?? '';
+      final parsedTime = DateTime.tryParse(txn['created_at']?.toString() ?? '');
+      final formattedTime = parsedTime != null
+          ? DateFormat('h:mm a').format(parsedTime)
+          : (txn['created_at']?.toString() ?? '');
       loadedOrders.add({
         'id': txn['id'],
         'orderNo': txn['order_number'] != null
@@ -64,7 +68,7 @@ class _OrdersPageState extends State<OrdersPage> {
         'status': txn['status'],
         'total': txn['total_amount'],
         'customer': txn['cashier_name'] ?? 'User ${txn['user_id']}',
-        'time': txn['created_at'],
+        'time': formattedTime,
         'items': items
             .map(
               (i) => {

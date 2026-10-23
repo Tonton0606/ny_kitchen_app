@@ -66,7 +66,7 @@ class TransactionRepository {
         'amount_received': amountReceived,
         'change': change,
         'status': 'Preparing',
-        'created_at': now.toUtc().toIso8601String(),
+        'created_at': now.toIso8601String(),
       });
 
       for (var item in items) {
@@ -138,7 +138,8 @@ class TransactionRepository {
             t.*, 
             u.full_name as cashier_name, 
             u.username as cashier_username, 
-            u.role as cashier_role
+            u.role as cashier_role,
+            (SELECT COUNT(*) FROM transaction_items WHERE transaction_id = t.id) as item_count
           FROM transactions t
           LEFT JOIN users u ON t.user_id = u.id
           WHERE t.user_id = ?
@@ -152,7 +153,8 @@ class TransactionRepository {
         t.*, 
         u.full_name as cashier_name, 
         u.username as cashier_username, 
-        u.role as cashier_role
+        u.role as cashier_role,
+        (SELECT COUNT(*) FROM transaction_items WHERE transaction_id = t.id) as item_count
       FROM transactions t
       LEFT JOIN users u ON t.user_id = u.id
       ORDER BY t.created_at DESC
@@ -281,7 +283,7 @@ class TransactionRepository {
         u.role as cashier_role
       FROM transactions t
       LEFT JOIN users u ON t.user_id = u.id
-      WHERE date(t.created_at, 'localtime') = date('now', 'localtime')
+      WHERE (date(t.created_at) = date('now', 'localtime') OR date(t.created_at, 'localtime') = date('now', 'localtime'))
         AND t.status IN ('Preparing', 'Served')
       ORDER BY t.created_at ASC
     ''');
