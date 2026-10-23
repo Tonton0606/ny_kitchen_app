@@ -1154,3 +1154,27 @@ Checks actually run and actual results:
 Evidence paths: Read-only SQLite/REST comparison outputs in this Codex session; no business-row export or credential stored. Source: `lib/core/services/sync_service.dart`, `lib/core/services/backend_sync_service.dart`, `backend/README.md`. Durable summary: `AI_SESSION_HANDOFF.md`, `PROJECT_STATE.md`, `TODO.md`.
 Unverified items / remaining risks: Status source of truth is not resolved; do not run Supabase full sync until statuses are reconciled. Ubuntu receives no POS sales until Flutter is configured with `SYNC_BACKEND=ubuntu`, the HTTPS URL and a current device token. The first Ubuntu run will send the 41 historical local sales, whose status values include the local side of these conflicts. Flutter TLS/device upload, offline/reconnect, authorization denial and recovery remain unverified. RLS write semantics also remain unreviewed.
 Next concrete step: Preserve/resolve the 14 Production/local status differences, then configure the local Flutter environment for Ubuntu and perform one authenticated test upload without enabling Supabase mode.
+
+## Ubuntu Backend Defense Presentation Notes — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T02:50:53+08:00 (Asia/Manila)
+Session owner (self-reported): Ralston Villamin
+Requested task and scope: Prepare defense presentation notes from owner-supplied Ubuntu and Windows evidence, with an accurate talk track for the direct synthetic HTTPS sale upload. Documentation only; no VM, Supabase, credential, or application changes.
+Rubric / risk / acceptance-test IDs: R08–R15, R19, SEC-02, AT07/AT09/AT10 as contextual evidence only; no score or acceptance test assigned or claimed passed.
+Files changed:
+- `AI_SESSION_HANDOFF.md`
+- `CHANGELOG.md`
+- `PROJECT_STATE.md`
+- `TODO.md`
+- `docs/DEFENSE_PLAN.md`
+- `docs/PRESENTATION.md`
+- `docs/DEFENSE_BACKEND_PRESENTATION_NOTES.md`
+- `docs/security/evidence/2026-10-defense/backend_verification.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- Mandatory Git sync: `git fetch origin main` required the approved elevated execution because the sandbox could not write `.git/FETCH_HEAD`; fetch succeeded, and local `main` matched `origin/main` (0 commits ahead, 0 behind).
+- `git diff --check` completed with no whitespace errors. No tests were run; the requested work is presentation documentation.
+- Owner-supplied screenshot `codex-clipboard-f0d9e227-fbe7-479b-80d1-9ece72253561.png` showed the synthetic direct API request returned HTTP 200, `{"accepted":1,"new_revisions":1}`, and `Via: 1.1 Caddy`. It is in the conversation, not repository evidence.
+Evidence paths: `docs/DEFENSE_BACKEND_PRESENTATION_NOTES.md`; `docs/security/evidence/2026-10-defense/backend_verification.md`; `PROJECT_STATE.md`; no token or credential value recorded.
+Unverified items / remaining risks: This was a direct Windows-to-Ubuntu API request, not Flutter-to-Ubuntu synchronization. Offline/reconnect, device/Admin denial, credential rotation/revocation, backup/restore, Flutter certificate trust, and Supabase behavior were not tested by this task. Existing Supabase/local status conflicts remain; do not run an unreviewed Production sync.
+Next concrete step: Present the optional Ubuntu segment using the notes and screenshot, say clearly that the API accepted one synthetic sale, and avoid claiming Flutter integration or full recovery was demonstrated. Stage and commit only the listed documentation files, then push to `origin/main`.

@@ -406,7 +406,8 @@
 - [x] Prepare isolated sales API, provisioner and Ubuntu deployment configuration.
 - [x] Connect Flutter backend mode with safe retries and no concurrent Supabase sync.
 - [x] Run targeted backend and Flutter tests (11 + 4 passed).
-- [x] Deploy Ubuntu VM backend; owner-supplied screenshots show systemd API/Caddy active, UFW scoped to the host-only subnet, and a Windows-side HTTPS health check succeeding with the local Caddy root trusted. Evidence is limited to screenshots and a health endpoint.
+- [x] Deploy Ubuntu VM backend; owner-supplied screenshots show systemd API/Caddy active, UFW scoped to the host-only subnet, and Windows HTTPS health checks succeeding with the local Caddy root trusted.
+- [x] Owner-operated direct API demo: one synthetic sale from Windows PowerShell returned HTTP 200, `accepted=1`, `new_revisions=1` through Caddy. This proves the manual HTTPS API path, not Flutter synchronization; see `docs/security/evidence/2026-10-defense/backend_verification.md`.
 - [ ] Demonstrate real Flutter offline/reconnect sync and server role denial.
 - [x] Run `pip-audit` against the deployed VM's resolved Python packages; the owner-supplied output reported “No known vulnerabilities found” for that scan snapshot.
 - [ ] Verify Flutter/Dart/Android HTTPS trust, credential rotation/revocation, server recovery and reboot persistence over the running VM.

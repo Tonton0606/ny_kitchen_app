@@ -2,6 +2,8 @@
 
 Updated 2026-10-20. Use [DEFENSE_PLAN.md](DEFENSE_PLAN.md) and the rubric mapping in [SECURITY_IMPLEMENTATION_PLAN.md](SECURITY_IMPLEMENTATION_PLAN.md).
 
+For the optional Ubuntu backend segment, use [DEFENSE_BACKEND_PRESENTATION_NOTES.md](DEFENSE_BACKEND_PRESENTATION_NOTES.md). It records the owner-operated synthetic HTTPS API upload and explicitly distinguishes it from an unverified Flutter-to-Ubuntu sync.
+
 Suggested slides: business problem/scope; assets and boundaries; applicable frameworks; prioritized risks; controls linked to risks; demonstration; measured test evidence; privacy/recovery/incident handling; rubric coverage and remaining limitations.
 
 Explain every security claim with its threat, implementation and test. State whether a result is source inspection, automated execution, device demonstration or planned work. Avoid absolute claims such as tamper-proof logs, guaranteed cloud recovery, or certified compliance.

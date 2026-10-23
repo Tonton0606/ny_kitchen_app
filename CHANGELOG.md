@@ -9,6 +9,10 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ## [Unreleased]
 
+### Documentation — 2026-10-24
+
+- Added defense notes for the owner-operated Ubuntu HTTPS API demonstration, including the successful synthetic sale response and the explicit limitation that Flutter-to-Ubuntu sync remains unverified.
+
 ### Added — 2026-10-22
 
 - Added a read-only Supabase RLS/grant diagnostic query with secret-safe condition indicators; it omits policy expressions and business rows.
