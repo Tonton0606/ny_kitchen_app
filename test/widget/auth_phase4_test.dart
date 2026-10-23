@@ -19,7 +19,7 @@ void main() {
   }
 
   group('Phase 4: Auth UI Tests', () {
-    testWidgets('LoginPage renders branding, inputs, and tactile button without face biometric', (tester) async {
+    testWidgets('LoginPage renders branding, inputs, and tactile button', (tester) async {
       await tester.pumpWidget(buildTestableWidget(const LoginPage()));
       await tester.pump();
 
@@ -27,7 +27,6 @@ void main() {
       expect(find.widgetWithText(TextField, 'Email or username'), findsOneWidget);
       expect(find.widgetWithText(TextField, 'Password'), findsOneWidget);
       expect(find.text('Login'), findsOneWidget);
-      expect(find.text('Login with Face'), findsNothing);
       expect(find.text('Remember Me'), findsOneWidget);
       expect(find.text('Forgot Password?'), findsOneWidget);
     });

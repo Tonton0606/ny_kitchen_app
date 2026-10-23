@@ -295,15 +295,14 @@ class SyncService {
     _syncTimer = null;
   }
 
-  /// Strips sensitive credentials (password_hash and biometric face_encoding) before syncing to cloud.
+  /// Strips sensitive credentials (password_hash) before syncing to cloud.
   static Map<String, dynamic> sanitizeUserForCloudSync(Map<String, dynamic> record) {
     final sanitized = Map<String, dynamic>.from(record);
     sanitized.remove('password_hash');
-    sanitized.remove('face_encoding');
     return sanitized;
   }
 
-  /// Merges a cloud user profile without importing credentials or biometrics.
+  /// Merges a cloud user profile without importing credentials.
   /// Existing users keep device-local auth state; newly imported profiles get
   /// a random local-only hash and require an Admin password reset on this device.
   static Map<String, dynamic> mergePulledUserRecord(
@@ -311,12 +310,9 @@ class SyncService {
     Map<String, dynamic>? existingLocal,
   ) {
     final merged = Map<String, dynamic>.from(cloudRecord);
-    // Cloud sync carries user profiles only. Never accept cloud credentials or
-    // biometric values, including legacy values created by older app versions.
+    // Cloud sync carries user profiles only. Never accept cloud credentials.
     merged.remove('password_hash');
-    merged.remove('face_encoding');
     if (existingLocal != null) {
-      merged['face_encoding'] = existingLocal['face_encoding'];
       merged['failed_login_count'] = existingLocal['failed_login_count'];
       merged['password_hash'] = existingLocal['password_hash'];
       merged['last_login'] = existingLocal['last_login'];
@@ -328,7 +324,6 @@ class SyncService {
       merged['password_hash'] = SecurityUtils.hashPassword(
         SecurityUtils.generateSalt(32),
       );
-      merged['face_encoding'] = null;
       merged['failed_login_count'] = 0;
       merged['last_login'] = null;
       merged['must_change_password'] = 1;
@@ -451,7 +446,6 @@ class SyncService {
               }
               if (table == 'users') {
                 mutableRecord.remove('password_hash'); // Do NOT sync password_hash to cloud
-                mutableRecord.remove('face_encoding'); // Do NOT sync face_encoding to cloud (biometrics remain local)
               }
               if (table == 'food_categories') {
                 mutableRecord.remove('updated_at');

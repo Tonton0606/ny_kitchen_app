@@ -6,13 +6,12 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Track 2 - Reporting Actions: ExportService Security & Sanitization', () {
-    test('sanitizeRecord removes password_hash, face_encoding, and other credential fields', () {
+    test('sanitizeRecord removes password_hash, token, and other credential fields', () {
       final inputRecord = {
         'id': 101,
         'username': 'cashier1',
         'role': 'cashier',
         'password_hash': '600000:salt:hash_secret',
-        'face_encoding': 'v2:nonce:cipher_biometrics',
         'password': 'plain_text_password',
         'secret': 'super_secret_value',
         'service_key': 'internal_service_key',
@@ -24,8 +23,6 @@ void main() {
 
       expect(sanitized.containsKey('password_hash'), isFalse,
           reason: 'password_hash must be stripped');
-      expect(sanitized.containsKey('face_encoding'), isFalse,
-          reason: 'face_encoding must be stripped');
       expect(sanitized.containsKey('password'), isFalse,
           reason: 'password must be stripped');
       expect(sanitized.containsKey('secret'), isFalse,
@@ -46,7 +43,7 @@ void main() {
         'metadata': json.encode({
           'user_id': 5,
           'password_hash': '600000:metadata_hash',
-          'face_encoding': 'v2:metadata_face_cipher',
+          'secret': 'metadata_secret_value',
           'role': 'admin',
         }),
       };
@@ -56,15 +53,15 @@ void main() {
 
       expect(metadataStr.contains('password_hash'), isFalse,
           reason: 'password_hash inside metadata JSON must be purged');
-      expect(metadataStr.contains('face_encoding'), isFalse,
-          reason: 'face_encoding inside metadata JSON must be purged');
+      expect(metadataStr.contains('secret'), isFalse,
+          reason: 'secret inside metadata JSON must be purged');
       expect(metadataStr.contains('user_id'), isTrue);
       expect(metadataStr.contains('admin'), isTrue);
     });
 
     test('generateSalesPdfBytes and generateSalesExcelBytes never leak sensitive credentials in output', () async {
       const secretHash = 'LEAK_CHECK_HASH_99999';
-      const secretFace = 'LEAK_CHECK_FACE_88888';
+      const secretToken = 'LEAK_CHECK_TOKEN_88888';
 
       final poisonedTransactions = [
         {
@@ -76,7 +73,7 @@ void main() {
           'total_amount': 350.00,
           'status': 'Completed',
           'password_hash': secretHash,
-          'face_encoding': secretFace,
+          'token': secretToken,
         },
       ];
 
@@ -84,20 +81,20 @@ void main() {
       final pdfString = utf8.decode(pdfBytes, allowMalformed: true);
       expect(pdfString.contains(secretHash), isFalse,
           reason: 'Sales PDF must never contain password_hash');
-      expect(pdfString.contains(secretFace), isFalse,
-          reason: 'Sales PDF must never contain face_encoding');
+      expect(pdfString.contains(secretToken), isFalse,
+          reason: 'Sales PDF must never contain token');
 
       final excelBytes = ExportService.generateSalesExcelBytes(poisonedTransactions);
       final excelString = utf8.decode(excelBytes, allowMalformed: true);
       expect(excelString.contains(secretHash), isFalse,
           reason: 'Sales Excel must never contain password_hash');
-      expect(excelString.contains(secretFace), isFalse,
-          reason: 'Sales Excel must never contain face_encoding');
+      expect(excelString.contains(secretToken), isFalse,
+          reason: 'Sales Excel must never contain token');
     });
 
     test('generateLogsPdfBytes and generateLogsExcelBytes never leak sensitive credentials in output', () async {
       const secretHash = 'LEAK_CHECK_LOG_HASH_77777';
-      const secretFace = 'LEAK_CHECK_LOG_FACE_66666';
+      const secretToken = 'LEAK_CHECK_LOG_TOKEN_66666';
 
       final poisonedLogs = [
         {
@@ -110,8 +107,8 @@ void main() {
           'status': 'SUCCESS',
           'description': 'Admin user logged in',
           'password_hash': secretHash,
-          'face_encoding': secretFace,
-          'metadata': json.encode({'password_hash': secretHash, 'face_encoding': secretFace}),
+          'token': secretToken,
+          'metadata': json.encode({'password_hash': secretHash, 'token': secretToken}),
         },
       ];
 
@@ -119,15 +116,15 @@ void main() {
       final pdfString = utf8.decode(pdfBytes, allowMalformed: true);
       expect(pdfString.contains(secretHash), isFalse,
           reason: 'Logs PDF must never contain password_hash');
-      expect(pdfString.contains(secretFace), isFalse,
-          reason: 'Logs PDF must never contain face_encoding');
+      expect(pdfString.contains(secretToken), isFalse,
+          reason: 'Logs PDF must never contain token');
 
       final excelBytes = ExportService.generateLogsExcelBytes(poisonedLogs);
       final excelString = utf8.decode(excelBytes, allowMalformed: true);
       expect(excelString.contains(secretHash), isFalse,
           reason: 'Logs Excel must never contain password_hash');
-      expect(excelString.contains(secretFace), isFalse,
-          reason: 'Logs Excel must never contain face_encoding');
+      expect(excelString.contains(secretToken), isFalse,
+          reason: 'Logs Excel must never contain token');
     });
   });
 
