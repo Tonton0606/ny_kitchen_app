@@ -993,5 +993,37 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Stage changes, commit cleanly, push to origin/main, and proceed to Step 2 (PDF & Excel Export Polish).
 
+## Report Export Polish & Data Privacy SOP Implementation (Steps 2 & 3 / R15 / R16 / R17) — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T18:32:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Implement Step 2 and Step 3 from DEFENSE_RUBRIC_AND_REMAINING_TASKS.md:
+1. Polish report export formatting in `lib/core/services/export_service.dart`:
+   - Sales PDF: Display structured refund and void reasons cleanly in the Status column without truncation.
+   - Sales Excel: Add column H (`Reason / Notes`), set 220px width, and enable cell text wrapping (`wrapText = true`).
+   - Activity Logs PDF: Switch to A4 Landscape layout, add dedicated `Description` column with custom column widths, and expand MultiPage threshold to `maxPages: 100` for large report resilience.
+   - Activity Logs Excel: Enable cell text wrapping (`wrapText = true`) and expand Description column to 300px.
+2. Complete Data Privacy, Protection, and Retention Policy SOP (`docs/DATA_PRIVACY_AND_RETENTION_SOP.md` / SOP-SEC-01):
+   - Aligned with Philippine Data Privacy Act of 2012 (RA 10173) and NPC regulations.
+   - Formalized lawful purpose and zero customer PII at counter checkout.
+   - Codified PBKDF2-600k hashing, AES-256 biometric encryption, and automated export sanitization.
+   - Defined concrete retention schedules (5 yrs sales, 2 yrs audit logs, 90 days login attempts, terminal decommissioning wipe standards).
+   - Documented employee data subject rights and 72-hour security incident escalation protocol.
+Rubric / risk / acceptance-test IDs: R15 (Audit Logging & Reporting), R16 (ISO 25010 Quality/Integrity), R17 (Data Privacy & Governance / RA 10173).
+Files changed:
+- `lib/core/services/export_service.dart`
+- `docs/DATA_PRIVACY_AND_RETENTION_SOP.md`
+- `DEFENSE_RUBRIC_AND_REMAINING_TASKS.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter test test/unit/export_service_test.dart`: 16/16 tests passed cleanly.
+- `flutter test test/security/`: 67/67 security tests passed cleanly (100% pass rate).
+Evidence paths:
+- `lib/core/services/export_service.dart`
+- `docs/DATA_PRIVACY_AND_RETENTION_SOP.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Stage changes, commit cleanly, push to origin/main, and proceed to Step 4 (Printable Architecture Diagram).
+
+
 
 

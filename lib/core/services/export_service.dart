@@ -130,6 +130,16 @@ class ExportService {
           : (double.tryParse(amountRaw?.toString() ?? '0') ?? 0.0);
       final cashier = _getCashierName(tx);
 
+      final status = (tx['status']?.toString() ?? 'Completed').trim();
+      final refundReason = tx['refund_reason']?.toString()?.trim();
+      final voidReason = tx['void_reason']?.toString()?.trim();
+      String statusDisplay = status;
+      if (refundReason != null && refundReason.isNotEmpty) {
+        statusDisplay = '$status\n($refundReason)';
+      } else if (voidReason != null && voidReason.isNotEmpty) {
+        statusDisplay = '$status\n($voidReason)';
+      }
+
       return [
         tx['receipt_number']?.toString() ?? 'N/A',
         formattedDate,
@@ -137,13 +147,14 @@ class ExportService {
         tx['itemCount']?.toString() ?? '1',
         tx['payment_method']?.toString() ?? 'Cash',
         'Php ${amount.toStringAsFixed(2)}',
-        tx['status']?.toString() ?? 'Completed',
+        statusDisplay,
       ];
     }).toList();
 
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
+        maxPages: 100,
         margin: const pw.EdgeInsets.all(32),
         header: (pw.Context context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -205,7 +216,7 @@ class ExportService {
               headerDecoration: const pw.BoxDecoration(color: PdfColors.brown800),
               rowDecoration: const pw.BoxDecoration(color: PdfColors.white),
               oddRowDecoration: const pw.BoxDecoration(color: PdfColors.grey100),
-              cellStyle: const pw.TextStyle(fontSize: 9),
+              cellStyle: const pw.TextStyle(fontSize: 8.5),
               cellAlignment: pw.Alignment.centerLeft,
               cellAlignments: {
                 0: pw.Alignment.centerLeft,
@@ -244,8 +255,9 @@ class ExportService {
     sheet.getRangeByName('E1').setText('Payment');
     sheet.getRangeByName('F1').setText('Total');
     sheet.getRangeByName('G1').setText('Status');
+    sheet.getRangeByName('H1').setText('Reason / Notes');
 
-    final headerRange = sheet.getRangeByName('A1:G1');
+    final headerRange = sheet.getRangeByName('A1:H1');
     headerRange.cellStyle.bold = true;
 
     sheet.setColumnWidthInPixels(1, 120);
@@ -255,6 +267,7 @@ class ExportService {
     sheet.setColumnWidthInPixels(5, 100);
     sheet.setColumnWidthInPixels(6, 120);
     sheet.setColumnWidthInPixels(7, 100);
+    sheet.setColumnWidthInPixels(8, 220);
 
     int row = 2;
     double grossTotal = 0.0;
@@ -278,6 +291,8 @@ class ExportService {
         voidedTotal += amount;
       }
 
+      final reason = tx['refund_reason']?.toString() ?? tx['void_reason']?.toString() ?? '';
+
       sheet.getRangeByIndex(row, 1).setText(tx['receipt_number']?.toString() ?? '');
       sheet.getRangeByIndex(row, 2).setText(formattedDate);
       sheet.getRangeByIndex(row, 3).setText(cashier);
@@ -285,6 +300,7 @@ class ExportService {
       sheet.getRangeByIndex(row, 5).setText(tx['payment_method']?.toString() ?? 'Cash');
       sheet.getRangeByIndex(row, 6).setNumber(amount);
       sheet.getRangeByIndex(row, 7).setText(status);
+      sheet.getRangeByIndex(row, 8).setText(reason);
 
       row++;
     }
@@ -292,6 +308,7 @@ class ExportService {
     final double netTotal = grossTotal - voidedTotal;
 
     if (row > 2) {
+      sheet.getRangeByName('A1:H${row - 1}').cellStyle.wrapText = true;
       final totalCol = sheet.getRangeByName('F2:F${row - 1}');
       totalCol.cellStyle.numberFormat = '₱#,##0.00';
 
@@ -354,13 +371,15 @@ class ExportService {
         log['module']?.toString() ?? '',
         log['action']?.toString() ?? '',
         log['status']?.toString() ?? '',
+        log['description']?.toString() ?? '',
       ];
     }).toList();
 
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
+        pageFormat: PdfPageFormat.a4.landscape,
+        maxPages: 100,
+        margin: const pw.EdgeInsets.all(28),
         header: (pw.Context context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
@@ -411,17 +430,26 @@ class ExportService {
           else
             pw.TableHelper.fromTextArray(
               context: context,
-              headers: ['Timestamp', 'User', 'Role', 'Module', 'Action', 'Status'],
+              headers: ['Timestamp', 'User', 'Role', 'Module', 'Action', 'Status', 'Description'],
               data: tableData,
+              columnWidths: {
+                0: const pw.FixedColumnWidth(95),
+                1: const pw.FixedColumnWidth(80),
+                2: const pw.FixedColumnWidth(55),
+                3: const pw.FixedColumnWidth(85),
+                4: const pw.FixedColumnWidth(105),
+                5: const pw.FixedColumnWidth(65),
+                6: const pw.FlexColumnWidth(),
+              },
               headerStyle: pw.TextStyle(
                 fontWeight: pw.FontWeight.bold,
-                fontSize: 10,
+                fontSize: 9.5,
                 color: PdfColors.white,
               ),
               headerDecoration: const pw.BoxDecoration(color: PdfColors.brown800),
               rowDecoration: const pw.BoxDecoration(color: PdfColors.white),
               oddRowDecoration: const pw.BoxDecoration(color: PdfColors.grey100),
-              cellStyle: const pw.TextStyle(fontSize: 8.5),
+              cellStyle: const pw.TextStyle(fontSize: 8),
               cellAlignment: pw.Alignment.centerLeft,
             ),
         ],
@@ -460,7 +488,7 @@ class ExportService {
     sheet.setColumnWidthInPixels(4, 120);
     sheet.setColumnWidthInPixels(5, 180);
     sheet.setColumnWidthInPixels(6, 100);
-    sheet.setColumnWidthInPixels(7, 240);
+    sheet.setColumnWidthInPixels(7, 300);
 
     int row = 2;
     for (var log in sanitized) {
@@ -485,6 +513,10 @@ class ExportService {
       sheet.getRangeByIndex(row, 7).setText(log['description']?.toString() ?? '');
 
       row++;
+    }
+
+    if (row > 2) {
+      sheet.getRangeByName('A1:G${row - 1}').cellStyle.wrapText = true;
     }
 
     final List<int> bytes = workbook.saveAsStream();

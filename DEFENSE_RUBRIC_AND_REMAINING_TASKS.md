@@ -160,15 +160,19 @@ The remaining action items to achieve a **90%+ High Distinction** before defense
   - Document that table schemas, sales transactions, and audit records restore completely without foreign-key corruption.
   - Full automated defense test suite created in `test/security/backup_restore_test.dart` (9/9 passing).
 
-### Priority 3: Report Export Formatting Check (Addresses R15, R16 — 5%)
-- [ ] In `export_service.dart`:  
-  Verify that lengthy refund reasons and audit descriptions wrap cleanly in exported PDF and Excel reports without text clipping.
+### Priority 3: Report Export Formatting & Text Wrapping (Addresses R15, R16 — COMPLETED)
+- [x] In `export_service.dart`:
+  - Added clean text wrapping for lengthy refund reasons and void reasons in Sales PDF and Excel reports (`wrapText = true`, custom column width).
+  - Added dedicated Description column to Activity Logs PDF with A4 Landscape layout and MultiPage handling (`maxPages: 100`).
+  - Verified 16/16 unit tests passing in `test/unit/export_service_test.dart`.
 
-### Priority 4: Data Privacy & Retention Policy SOP (Addresses R17 — 5%)
-- [ ] Complete a brief 1-page Standard Operating Procedure (SOP) documenting:
-  - Lawful purpose of employee data collection (sales accountability only).
-  - Data minimization (passwords and PINs are never stored or logged).
-  - Retention schedule for sales transactions and audit history.
+### Priority 4: Data Privacy & Retention Policy SOP (Addresses R17 — COMPLETED)
+- [x] Completed formal Standard Operating Procedure in `docs/DATA_PRIVACY_AND_RETENTION_SOP.md` (SOP-SEC-01):
+  - Compliance with Philippine Data Privacy Act of 2012 (RA 10173) and NPC circulars.
+  - Declared lawful purpose of employee data collection (sales accountability only, zero customer PII at checkout).
+  - Cryptographic standard definitions (PBKDF2-600k hashing, AES-256 biometric encryption, export credential sanitization).
+  - Concrete retention and disposal schedule (5 years sales, 2 years logs, 90 days login attempts, terminal decommissioning wipe standards).
+  - Data subject rights and 72-hour breach notification escalation protocol.
 
 ---
 
