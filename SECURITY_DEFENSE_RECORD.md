@@ -1106,3 +1106,30 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Stage changes, commit cleanly, and push to origin/main.
 
+## Food Archiving, Unarchiving, and Duplicate Name Validation Session — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T00:24:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+1. Replace destructive "Delete Food" functionality with non-destructive Archiving and Unarchiving/Restore in Food Management to ensure relational integrity with existing order and sales records.
+2. Provide filterable UI to view Active vs Archived dishes in `FoodManagementPage`, with distinct status pill badges and clear visual hierarchy (opacity dimming for archived dishes).
+3. Implement "Restore to Menu" action both in the table row actions and inside the food details side panel drawer.
+4. Replace availability toggle with an archive notification banner when viewing an archived dish in the side drawer.
+5. Implement duplicate dish name validation at repository level in `FoodRepository` for both `insertFoodItem` and `updateFoodItem`:
+   - Prevent creating or renaming an active dish to match an existing active dish (`DUPLICATE_ACTIVE_FOOD`).
+   - Prevent creating or renaming an active dish to match an archived dish (`DUPLICATE_ARCHIVED_FOOD`), instructing administrator to restore the archived dish instead.
+6. Run static analysis and all automated security tests.
+7. Stage and push all commits to branch `bug-fix`.
+Rubric / risk / acceptance-test IDs: R16 (ISO 25010 Usability & Data Integrity), SEC-01 (Safe exception handling), AT10 (Integration & Resilience).
+Files changed:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/core/database/repositories/food_repository.dart lib/features/admin/presentation/pages/food_management_page.dart`: 0 issues found.
+- `flutter test test/security/`: 82/82 security tests passed cleanly (100% pass rate).
+Evidence paths:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Stage changes, commit, and push to origin/bug-fix as requested by user.

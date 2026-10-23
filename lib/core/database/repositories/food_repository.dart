@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import '../database_helper.dart';
 import '../../services/sync_service.dart';
 import '../../utils/repository_security_guard.dart';
+import '../../utils/security_exception.dart';
 import 'audit_repository.dart';
 
 class FoodRepository {
@@ -21,18 +22,18 @@ class FoodRepository {
   }
 
   // Retrieve ALL food items (used for Admin food management table and Cashier menu catalog)
-  Future<List<Map<String, dynamic>>> getAllFoodItems() async {
+  Future<List<Map<String, dynamic>>> getAllFoodItems({bool includeArchived = false}) async {
     await RepositorySecurityGuard.requireAuthenticated(
       module: 'Food Management',
       action: 'View All Food Items',
     );
     final db = await _dbHelper.database;
-    // Left join with categories to get the category name if we want to display it
+    final whereClause = includeArchived ? '' : "WHERE f.status != 'archived'";
     final sql = '''
       SELECT f.*, c.name as category_name 
       FROM food_items f
       LEFT JOIN food_categories c ON f.category_id = c.id
-      WHERE f.status != 'archived'
+      $whereClause
       ORDER BY f.name ASC
     ''';
     return await db.rawQuery(sql);
@@ -45,6 +46,29 @@ class FoodRepository {
       action: 'Create Food Item',
     );
     final db = await _dbHelper.database;
+
+    final name = (foodItem['name'] as String?)?.trim() ?? '';
+    if (name.isNotEmpty) {
+      final existing = await db.rawQuery(
+        'SELECT id, name, status FROM food_items WHERE LOWER(name) = LOWER(?)',
+        [name],
+      );
+      if (existing.isNotEmpty) {
+        final existingItem = existing.first;
+        if (existingItem['status'] == 'archived') {
+          throw const SecurityException(
+            'A dish with this name is currently archived. Please restore it from the Archived filter instead of creating a duplicate.',
+            code: 'DUPLICATE_ARCHIVED_FOOD',
+          );
+        } else {
+          throw const SecurityException(
+            'An active food item with this name already exists.',
+            code: 'DUPLICATE_ACTIVE_FOOD',
+          );
+        }
+      }
+    }
+
     foodItem['created_at'] = DateTime.now().toIso8601String();
     if (foodItem['image_path'] != null) {
       foodItem['image_path'] = await _syncService.uploadImage(
@@ -79,6 +103,31 @@ class FoodRepository {
       action: 'Update Food Item',
     );
     final db = await _dbHelper.database;
+
+    if (foodItem.containsKey('name')) {
+      final name = (foodItem['name'] as String?)?.trim() ?? '';
+      if (name.isNotEmpty) {
+        final existing = await db.rawQuery(
+          'SELECT id, name, status FROM food_items WHERE LOWER(name) = LOWER(?) AND id != ?',
+          [name, id],
+        );
+        if (existing.isNotEmpty) {
+          final existingItem = existing.first;
+          if (existingItem['status'] == 'archived') {
+            throw const SecurityException(
+              'A dish with this name is currently archived. Please choose a different name or restore the archived dish.',
+              code: 'DUPLICATE_ARCHIVED_FOOD',
+            );
+          } else {
+            throw const SecurityException(
+              'Another active food item with this name already exists.',
+              code: 'DUPLICATE_ACTIVE_FOOD',
+            );
+          }
+        }
+      }
+    }
+
     foodItem['updated_at'] = DateTime.now().toIso8601String();
     if (foodItem['image_path'] != null) {
       foodItem['image_path'] = await _syncService.uploadImage(
@@ -131,6 +180,35 @@ class FoodRepository {
       action: 'Food Archived',
       status: 'Success',
       description: 'Archived food item ID $id',
+    );
+
+    return count;
+  }
+
+  // Unarchive/Restore a food item to active status
+  Future<int> unarchiveFoodItem(int id, {int? adminId, String? adminUsername}) async {
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'Food Management',
+      action: 'Unarchive Food Item',
+    );
+    final db = await _dbHelper.database;
+    int count = await db.update(
+      'food_items',
+      {'status': 'active', 'updated_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    await _syncService.syncToCloud();
+
+    // Audit food unarchive (Gap 9 / SEC-01) - use authoritative admin session identity
+    await _auditRepo.logAction(
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? adminUsername ?? 'Admin',
+      role: 'admin',
+      module: 'Food Management',
+      action: 'Food Restored',
+      status: 'Success',
+      description: 'Restored archived food item ID $id to active menu',
     );
 
     return count;
