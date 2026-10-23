@@ -437,7 +437,7 @@ class UserRepository {
       {
         'status': 'active',
         'failed_login_count': 0,
-        'must_change_password': 1,
+        'must_change_password': 0,
         'password_hash': hashedPassword,
       },
       where: 'id = ?',
@@ -451,7 +451,7 @@ class UserRepository {
       module: 'User Management',
       action: 'User Enabled',
       status: 'Success',
-      description: 'Enabled user account ID $id with mandatory temporary password reset',
+      description: 'Enabled user account ID $id and set new password',
     );
 
     return count;

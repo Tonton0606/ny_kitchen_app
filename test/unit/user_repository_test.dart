@@ -173,7 +173,7 @@ void main() {
       final rows = await db.query('users', where: 'id = ?', whereArgs: [3]);
       expect(rows.first['status'], equals('active'));
       expect(rows.first['failed_login_count'], equals(0));
-      expect(rows.first['must_change_password'], equals(1));
+      expect(rows.first['must_change_password'], equals(0));
       expect(
         SecurityUtils.verifyPassword('TempPass2026!', rows.first['password_hash'] as String),
         isTrue,

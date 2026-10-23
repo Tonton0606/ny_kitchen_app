@@ -556,14 +556,14 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                 try {
                   await _userRepo.updateUser(user['id'], {
                     'password_hash': SecurityUtils.hashPassword(newPass),
-                    'must_change_password': 1,
+                    'must_change_password': 0,
                     'failed_login_count': 0,
                   });
                   if (!context.mounted) return;
                   Navigator.pop(ctx);
                   _loadUsers();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Temporary password set. User must rotate on next login.')),
+                    const SnackBar(content: Text('Password updated successfully.')),
                   );
                 } catch (e) {
                   if (!context.mounted) return;
@@ -639,11 +639,11 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Set a temporary password for ${user['full_name']} (@${user['username']}) to re-enable access. The user will be required to change it immediately upon login:',
+                  'Set a password for ${user['full_name']} (@${user['username']}) to re-enable access:',
                   style: AppTypography.cardSubtitle,
                 ),
                 const SizedBox(height: 16),
-                const Text('New Temporary Password', style: AppTypography.cardTitle),
+                const Text('New Password', style: AppTypography.cardTitle),
                 const SizedBox(height: 6),
                 TextField(
                   controller: passwordController,
@@ -652,7 +652,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                     LengthLimitingTextInputFormatter(64),
                   ],
                   decoration: InputDecoration(
-                    hintText: 'Enter temporary password',
+                    hintText: 'Enter new password',
                     prefixIcon: const Icon(LucideIcons.lock, size: 18),
                     suffixIcon: IconButton(
                       icon: Icon(obscurePassword ? LucideIcons.eye_off : LucideIcons.eye, size: 18),
@@ -671,7 +671,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                const Text('Confirm Temporary Password', style: AppTypography.cardTitle),
+                const Text('Confirm Password', style: AppTypography.cardTitle),
                 const SizedBox(height: 6),
                 TextField(
                   controller: confirmPasswordController,
@@ -680,7 +680,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                     LengthLimitingTextInputFormatter(64),
                   ],
                   decoration: InputDecoration(
-                    hintText: 'Re-enter temporary password',
+                    hintText: 'Re-enter new password',
                     prefixIcon: const Icon(LucideIcons.lock, size: 18),
                     suffixIcon: IconButton(
                       icon: Icon(obscureConfirm ? LucideIcons.eye_off : LucideIcons.eye, size: 18),
@@ -721,7 +721,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                 final confirmPass = confirmPasswordController.text;
                 if (newPass.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a temporary password')),
+                    const SnackBar(content: Text('Please enter a password')),
                   );
                   return;
                 }
@@ -744,7 +744,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                   Navigator.pop(ctx);
                   _loadUsers();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Account enabled successfully with temporary password.')),
+                    const SnackBar(content: Text('Account enabled successfully with new password.')),
                   );
                 } catch (e) {
                   if (!context.mounted) return;
