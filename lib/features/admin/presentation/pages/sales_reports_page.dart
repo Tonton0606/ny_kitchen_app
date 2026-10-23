@@ -1054,6 +1054,31 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  Text('Order Type:', style: AppTypography.bodyMuted),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: ((tx['order_type'] as String? ?? 'dine_in').toLowerCase() == 'takeout')
+                          ? AppColors.goldenYellow
+                          : AppColors.creamBackground,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: AppColors.softBorder),
+                    ),
+                    child: Text(
+                      ((tx['order_type'] as String? ?? 'dine_in').toLowerCase() == 'takeout') ? 'TAKEOUT' : 'DINE-IN',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.darkCharcoal,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
                   Text('Payment Method:', style: AppTypography.bodyMuted),
                   Text(tx['payment_method'] ?? 'Cash', style: AppTypography.body),
                 ],
@@ -1091,6 +1116,19 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                     },
                   ),
                 ),
+              if (((tx['packaging_fee'] as num?)?.toDouble() ?? 0.0) > 0) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Packaging Fee (Takeout):', style: AppTypography.bodyMuted),
+                    Text(
+                      _formatCurrency((tx['packaging_fee'] as num).toDouble()),
+                      style: AppTypography.tabularFigure.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ],
               const Divider(height: 24, color: AppColors.softBorder),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1184,9 +1222,36 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                   onSelectChanged: (_) => _showTransactionDetails(context, tx),
                   cells: [
                     DataCell(
-                      Text(
-                        tx['receipt_number'] ?? tx['order_number']?.toString() ?? '—',
-                        style: AppTypography.tableCellPrimary,
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            tx['receipt_number'] ?? tx['order_number']?.toString() ?? '—',
+                            style: AppTypography.tableCellPrimary,
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(top: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: ((tx['order_type'] as String? ?? 'dine_in').toLowerCase() == 'takeout')
+                                  ? AppColors.goldenYellow
+                                  : AppColors.creamBackground,
+                              borderRadius: BorderRadius.circular(3),
+                              border: Border.all(color: AppColors.softBorder),
+                            ),
+                            child: Text(
+                              ((tx['order_type'] as String? ?? 'dine_in').toLowerCase() == 'takeout')
+                                  ? 'TAKEOUT (+₱3)'
+                                  : 'DINE-IN',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.darkCharcoal,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     DataCell(

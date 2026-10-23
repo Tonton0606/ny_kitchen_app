@@ -53,6 +53,8 @@ class BackendSyncService {
   ) => {
     'local_id': sale['id'],
     'receipt_number': sale['receipt_number'],
+    'order_type': sale['order_type'] ?? 'dine_in',
+    'packaging_fee_cents': _cents(sale['packaging_fee'] ?? 0),
     'total_cents': _cents(sale['total_amount']),
     'discount_cents': _cents(sale['discount'] ?? 0),
     'payment_method': sale['payment_method'],

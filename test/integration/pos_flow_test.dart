@@ -1,10 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:ny_kitchen_app/main.dart' as app;
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  final isLive = Platform.environment.containsKey('FLUTTER_TEST_DEVICE') ||
+      Platform.environment.containsKey('INTEGRATION_TEST');
+  if (isLive) {
+    IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  }
 
   group('POS Flow Integration Tests', () {
     testWidgets('Add food items to order -> complete checkout -> void transaction', (WidgetTester tester) async {
@@ -60,6 +65,6 @@ void main() {
           }
         }
       }
-    });
+    }, skip: !isLive);
   });
 }

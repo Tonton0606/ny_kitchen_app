@@ -34,6 +34,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
   String _selectedCategoryId = 'all';
   String _searchQuery = '';
   final List<Map<String, dynamic>> _orderItems = [];
+  String _orderType = 'dine_in';
   bool _isOrderPanelExpanded = true;
   String _currentOrderId = _generateOrderId();
   bool _isCheckingOut = false;
@@ -110,6 +111,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
   void _clearOrder() {
     setState(() {
       _orderItems.clear();
+      _orderType = 'dine_in';
       _currentOrderId = _generateOrderId();
     });
   }
@@ -154,6 +156,8 @@ class _CashierHomePageState extends State<CashierHomePage> {
   Future<bool?> _showOrderReviewDialog({
     required double total,
     required int itemCount,
+    required String orderType,
+    required double packagingFee,
   }) {
     return showDialog<bool>(
       context: context,
@@ -161,6 +165,8 @@ class _CashierHomePageState extends State<CashierHomePage> {
         orderItems: _orderItems,
         total: total,
         itemCount: itemCount,
+        orderType: orderType,
+        packagingFee: packagingFee,
       ),
     );
   }
@@ -174,59 +180,60 @@ class _CashierHomePageState extends State<CashierHomePage> {
         (sum, item) =>
             sum + ((item['food']['price'] as num?)?.toDouble() ?? 0.0) * (item['quantity'] as int),
       );
-    // Let's assume price already includes tax or we aren't adding 12% in DB for this simple version.
-    // We will just use subtotal as total for now.
-    final total = subtotal;
-    final itemCount = _orderItems.fold<int>(
-      0,
-      (sum, item) => sum + (item['quantity'] as int),
-    );
+      final packagingFee = (_orderType == 'takeout') ? 3.0 : 0.0;
+      final total = subtotal + packagingFee;
+      final itemCount = _orderItems.fold<int>(
+        0,
+        (sum, item) => sum + (item['quantity'] as int),
+      );
 
-    final reviewed = await _showOrderReviewDialog(
-      total: total,
-      itemCount: itemCount,
-    );
+      final reviewed = await _showOrderReviewDialog(
+        total: total,
+        itemCount: itemCount,
+        orderType: _orderType,
+        packagingFee: packagingFee,
+      );
 
-    if (reviewed != true || !mounted) return;
+      if (reviewed != true || !mounted) return;
 
-    final paymentResult = await showGeneralDialog<Map<String, dynamic>?>(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.35),
-      transitionDuration: const Duration(milliseconds: 220),
-      pageBuilder: (context, animation, secondaryAnimation) => Align(
-        alignment: Alignment.centerRight,
-        child: _CheckoutDialog(total: total, itemCount: itemCount),
-      ),
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(1, 0),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
-          child: child,
-        );
-      },
-    );
+      final paymentResult = await showGeneralDialog<Map<String, dynamic>?>(
+        context: context,
+        barrierDismissible: false,
+        barrierColor: Colors.black.withValues(alpha: 0.35),
+        transitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (context, animation, secondaryAnimation) => Align(
+          alignment: Alignment.centerRight,
+          child: _CheckoutDialog(total: total, itemCount: itemCount),
+        ),
+        transitionBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            child: child,
+          );
+        },
+      );
 
-    if (paymentResult == null || !mounted) return;
-    final double amountReceived = paymentResult['amountReceived'] as double;
-    final double change = paymentResult['change'] as double;
-    final int? customOrderNumber = paymentResult['customOrderNumber'] as int?;
+      if (paymentResult == null || !mounted) return;
+      final double amountReceived = paymentResult['amountReceived'] as double;
+      final double change = paymentResult['change'] as double;
+      final int? customOrderNumber = paymentResult['customOrderNumber'] as int?;
 
-    // Build the transaction items payload
-    final List<Map<String, dynamic>> itemsForDb = _orderItems.map((item) {
-      final food = item['food'];
-      final price = (food['price'] as num).toDouble();
-      final qty = item['quantity'] as int;
-      return {
-        'food_item_id': food['id'],
-        'food_name': food['name'],
-        'food_price': price,
-        'quantity': qty,
-        'subtotal': price * qty,
-      };
-    }).toList();
+      // Build the transaction items payload
+      final List<Map<String, dynamic>> itemsForDb = _orderItems.map((item) {
+        final food = item['food'];
+        final price = (food['price'] as num).toDouble();
+        final qty = item['quantity'] as int;
+        return {
+          'food_item_id': food['id'],
+          'food_name': food['name'],
+          'food_price': price,
+          'quantity': qty,
+          'subtotal': price * qty,
+        };
+      }).toList();
 
       final session = SessionManager();
       final currentUserId = session.userId ?? 1;
@@ -236,6 +243,8 @@ class _CashierHomePageState extends State<CashierHomePage> {
       final result = await _transactionRepo.createTransaction(
         userId: currentUserId,
         totalAmount: total,
+        orderType: _orderType,
+        packagingFee: packagingFee,
         discount: 0,
         paymentMethod: 'cash',
         amountReceived: amountReceived,
@@ -469,6 +478,8 @@ class _CashierHomePageState extends State<CashierHomePage> {
                   ? OrderSummaryPanel(
                       orderId: _currentOrderId,
                       orderItems: _orderItems,
+                      orderType: _orderType,
+                      onOrderTypeChanged: (t) => setState(() => _orderType = t),
                       onIncrease: _increaseQuantity,
                       onDecrease: _decreaseQuantity,
                       onRemove: _removeItem,
@@ -530,6 +541,8 @@ class _CashierHomePageState extends State<CashierHomePage> {
                     builder: (_, controller) => OrderSummaryPanel(
                       orderId: _currentOrderId,
                       orderItems: _orderItems,
+                      orderType: _orderType,
+                      onOrderTypeChanged: (t) => setState(() => _orderType = t),
                       onIncrease: _increaseQuantity,
                       onDecrease: _decreaseQuantity,
                       onRemove: _removeItem,
@@ -876,15 +889,20 @@ class _OrderReviewDialog extends StatelessWidget {
   final List<Map<String, dynamic>> orderItems;
   final double total;
   final int itemCount;
+  final String orderType;
+  final double packagingFee;
 
   const _OrderReviewDialog({
     required this.orderItems,
     required this.total,
     required this.itemCount,
+    this.orderType = 'dine_in',
+    this.packagingFee = 0.0,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isTakeout = orderType.toLowerCase() == 'takeout';
     return AlertDialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
@@ -892,17 +910,35 @@ class _OrderReviewDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         side: const BorderSide(color: Color(0xFFE2E8F0)),
       ),
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.receipt_long_rounded, color: AppColors.darkCharcoal, size: 22),
-          SizedBox(width: 10),
-          Text(
-            'Confirm Order',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppColors.darkCharcoal,
-              letterSpacing: -0.3,
+          const Icon(Icons.receipt_long_rounded, color: AppColors.darkCharcoal, size: 22),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'Confirm Order',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.darkCharcoal,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: isTakeout ? AppColors.goldenYellow : AppColors.creamBackground,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppColors.softBorder),
+            ),
+            child: Text(
+              isTakeout ? 'TAKEOUT' : 'DINE-IN',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: AppColors.darkCharcoal,
+              ),
             ),
           ),
         ],
@@ -947,8 +983,8 @@ class _OrderReviewDialog extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(14, 10, 14, 4),
                     child: Text(
                       'Items',
                       style: TextStyle(
@@ -1000,6 +1036,33 @@ class _OrderReviewDialog extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (packagingFee > 0) ...[
+                    const Divider(height: 1, color: AppColors.softBorder),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Packaging Fee (Takeout)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.mutedBrown,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            _currencyFormat.format(packagingFee),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.darkCharcoal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   Padding(
                     padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
                     child: Row(

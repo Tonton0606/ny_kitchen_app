@@ -608,6 +608,8 @@ class SyncService {
                   record['change'] = record['change'] ?? current.first['change'];
                   record['void_reason'] = record['void_reason'] ?? current.first['void_reason'];
                   record['refund_reason'] = record['refund_reason'] ?? current.first['refund_reason'];
+                  record['order_type'] = record['order_type'] ?? current.first['order_type'];
+                  record['packaging_fee'] = record['packaging_fee'] ?? current.first['packaging_fee'];
                 }
               }
               if (table == 'users') {
