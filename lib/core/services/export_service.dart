@@ -131,8 +131,8 @@ class ExportService {
       final cashier = _getCashierName(tx);
 
       final status = (tx['status']?.toString() ?? 'Completed').trim();
-      final refundReason = tx['refund_reason']?.toString()?.trim();
-      final voidReason = tx['void_reason']?.toString()?.trim();
+      final refundReason = tx['refund_reason']?.toString().trim();
+      final voidReason = tx['void_reason']?.toString().trim();
       String statusDisplay = status;
       if (refundReason != null && refundReason.isNotEmpty) {
         statusDisplay = '$status\n($refundReason)';

@@ -67,7 +67,7 @@ class SyncService {
     final result = _operationQueue.then((_) => operation());
     _operationQueue = result.then<void>(
       (_) {},
-      onError: (Object _, StackTrace __) {},
+      onError: (Object _, StackTrace stack) {},
     );
     return result;
   }
