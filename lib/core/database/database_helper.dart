@@ -18,6 +18,18 @@ class DatabaseHelper {
     _database = mockDb;
   }
 
+  static Future<String> getDatabasePath() async {
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    return join(documentsDirectory.path, _databaseName);
+  }
+
+  static Future<void> closeDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+  }
+
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();

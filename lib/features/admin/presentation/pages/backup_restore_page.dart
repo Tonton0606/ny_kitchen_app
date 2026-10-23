@@ -1,10 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/database/repositories/backup_repository.dart';
+import '../../../../../core/utils/security_exception.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_buttons.dart';
+import '../../../shared/widgets/app_confirm_dialog.dart';
 import '../../../shared/widgets/app_status_chip.dart';
 
 class BackupRestorePage extends StatefulWidget {
@@ -17,6 +21,7 @@ class BackupRestorePage extends StatefulWidget {
 class _BackupRestorePageState extends State<BackupRestorePage> {
   final BackupRepository _backupRepo = BackupRepository();
   bool _isExporting = false;
+  bool _isRestoring = false;
   String? _lastBackupPath;
 
   Future<void> _handleExport() async {
@@ -46,6 +51,62 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
             behavior: SnackBarBehavior.floating,
           ),
         );
+      }
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    const XTypeGroup typeGroup = XTypeGroup(
+      label: 'Database backups',
+      extensions: <String>['sql', 'db'],
+    );
+    final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+    if (file == null) return;
+
+    if (!mounted) return;
+    final confirmed = await AppConfirmDialog.show(
+      context,
+      title: 'Restore Database',
+      consequenceText:
+          'Restoring will overwrite current local database records with the contents of ${file.name}. Ensure you have exported a recent backup if you need to keep current changes.',
+      confirmText: 'Restore Database',
+      isDestructive: true,
+      icon: Icons.warning_amber_rounded,
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isRestoring = true);
+
+    try {
+      await _backupRepo.restoreDatabase(File(file.path));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Database successfully restored.',
+            style: AppTypography.body,
+          ),
+          backgroundColor: AppColors.forest,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e is SecurityException ? e.message : e.toString();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Restore failed: $msg',
+            style: AppTypography.body,
+          ),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isRestoring = false);
       }
     }
   }
@@ -198,7 +259,7 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
                         SizedBox(width: AppDesignTokens.space8),
                         Expanded(
                           child: Text(
-                            'Warning: Restoring will overwrite existing data. Action is disabled pending Phase 4 security protocol.',
+                            'Warning: Restoring will overwrite existing local data with the selected backup file (.sql or .db). State will be replaced atomically.',
                             style: AppTypography.body,
                           ),
                         ),
@@ -206,12 +267,12 @@ class _BackupRestorePageState extends State<BackupRestorePage> {
                     ),
                   ),
                   const SizedBox(height: AppDesignTokens.space24),
-                  const SizedBox(
+                  SizedBox(
                     width: double.infinity,
                     child: AppSecondaryButton(
-                      text: 'Restore from File (Coming Soon)',
+                      text: _isRestoring ? 'Restoring Database...' : 'Restore Database from File',
                       icon: Icons.restore_rounded,
-                      onPressed: null,
+                      onPressed: (_isRestoring || _isExporting) ? null : _handleRestore,
                     ),
                   ),
                 ],

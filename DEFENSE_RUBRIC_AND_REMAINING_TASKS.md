@@ -6,7 +6,7 @@
 **Source Document:** `capstone-review/IAS/BSIT_Information_Assurance_Security_Framework_Rubric.xlsx`  
 **Collaborators:** Ralston Villamin, MJ Daz, Hancr Gonzales  
 **Date Generated:** October 23, 2026  
-**Test Suite Status:** 56/56 Automated Security Tests Passing (100% Pass Rate)
+**Test Suite Status:** 67/67 Automated Security Tests Passing (100% Pass Rate across 13 test suites)
 
 ---
 
@@ -153,11 +153,12 @@ The remaining action items to achieve a **90%+ High Distinction** before defense
 - [ ] **Live Demo Rehearsal (Mock Defense):**  
   Rehearse the presentation steps so each team member can smoothly demonstrate the features without hesitation.
 
-### Priority 2: Database Backup & Restore Rehearsal (Addresses R18 — 5%)
-- [ ] Test the SQLite database export (`BackupRepository`):  
-  - Create a database backup file (`.sql`).
-  - Demonstrate importing/restoring the backup on a fresh database instance.
+### Priority 2: Database Backup & Restore Implementation & Defense Validation (Addresses R18, AT08 — COMPLETED)
+- [x] Test and implement the SQLite database export and restore (`BackupRepository`):  
+  - Create a database backup file (`.sql` dump or native `.db`).
+  - Demonstrate importing/restoring the backup on a fresh database instance with atomic rollback on failure.
   - Document that table schemas, sales transactions, and audit records restore completely without foreign-key corruption.
+  - Full automated defense test suite created in `test/security/backup_restore_test.dart` (9/9 passing).
 
 ### Priority 3: Report Export Formatting Check (Addresses R15, R16 — 5%)
 - [ ] In `export_service.dart`:  

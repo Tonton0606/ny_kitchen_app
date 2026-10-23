@@ -956,4 +956,42 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Stage changes, commit cleanly, and push to origin/main.
 
+## Database Restore Implementation & Defense Validation Session (Step 1 / AT08 / Gap 12) — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T18:15:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Implement Step 1 from DEFENSE_RUBRIC_AND_REMAINING_TASKS.md (Database Restore Implementation & Defense Validation):
+1. Add native cross-platform file picking support (`file_selector: ^1.1.0`).
+2. Add database path locator and close utilities in `DatabaseHelper`.
+3. Implement `BackupRepository.restoreDatabase(File backupFile)` supporting both `.sql` statements and native `.db` database replacement.
+4. Enforce strict security policies on restore:
+   - Administrator authorization check (`RepositorySecurityGuard.requireAdmin`, SEC-01 / SEC-03).
+   - Strict file validation: existence, non-empty byte length, allowed extension (`.sql`, `.db`, `.sqlite`).
+   - SQL defense: statement allowlist (only `INSERT INTO`), table allowlist (`_allowedTables`), reject `DROP TABLE`, `DELETE FROM`, or unauthorized table mutations.
+   - Atomic rollback: wrapped in SQL transaction for `.sql` or pre-restore `.bak` copy for `.db` (AT08).
+   - Foreign key integrity verification (`PRAGMA foreign_key_check`, `PRAGMA integrity_check`).
+   - Audit logging in `activity_logs` for restore success, blocked attempts, and failures.
+5. Wire restore UI into `backup_restore_page.dart` with `file_selector`, `AppConfirmDialog`, progress state, and user feedback.
+6. Create comprehensive defense test suite `test/security/backup_restore_test.dart`.
+Rubric / risk / acceptance-test IDs: AT08 (Data Integrity & Disaster Recovery), SEC-01 / SEC-03 (Admin Authorization), R08, R10, Gap 12.
+Files changed:
+- `pubspec.yaml`
+- `pubspec.lock`
+- `lib/core/database/database_helper.dart`
+- `lib/core/database/repositories/backup_repository.dart`
+- `lib/features/admin/presentation/pages/backup_restore_page.dart`
+- `test/security/backup_restore_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/features/admin/presentation/pages/backup_restore_page.dart lib/core/database/repositories/backup_repository.dart`: 0 errors, 0 warnings.
+- `flutter test test/security/backup_restore_test.dart`: 9/9 tests passed cleanly.
+- `flutter test test/security/`: 67/67 tests passed cleanly across all 13 test suites (100% pass rate).
+Evidence paths:
+- `lib/core/database/repositories/backup_repository.dart`
+- `lib/features/admin/presentation/pages/backup_restore_page.dart`
+- `test/security/backup_restore_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Stage changes, commit cleanly, push to origin/main, and proceed to Step 2 (PDF & Excel Export Polish).
+
+
 
