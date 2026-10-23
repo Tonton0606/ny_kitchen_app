@@ -26,8 +26,10 @@ class TransactionRepository {
       module: 'Transactions',
       action: 'Create Transaction',
     );
-    final effectiveUserId = actor['id'] as int? ?? userId;
-    final effectiveUsername = actor['username'] as String? ?? username ?? 'User $userId';
+    final effectiveUserId = int.tryParse(actor['id']?.toString() ?? '') ??
+        (actor['id'] as int?) ??
+        userId;
+    final effectiveUsername = actor['username'] as String? ?? username ?? 'User $effectiveUserId';
     final effectiveRole = actor['role'] as String? ?? role ?? 'cashier';
 
     final db = await _dbHelper.database;

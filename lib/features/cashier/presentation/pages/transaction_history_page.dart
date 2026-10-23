@@ -251,7 +251,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                             // Status Filter Pills
                             Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: ['All', 'Preparing', 'Served', 'Voided'].map((f) {
+                              children: ['All', 'Preparing', 'Served', 'Refunded', 'Voided'].map((f) {
                                 final isSelected = _statusFilter == f;
                                 final count = _countForStatus(f);
 

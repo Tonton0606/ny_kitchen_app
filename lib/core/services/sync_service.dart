@@ -602,6 +602,8 @@ class SyncService {
                   }
                   
                   record['order_number'] = record['order_number'] ?? current.first['order_number'];
+                  record['user_id'] = record['user_id'] ?? current.first['user_id'];
+                  record['created_at'] = record['created_at'] ?? current.first['created_at'];
                   record['amount_received'] = record['amount_received'] ?? current.first['amount_received'];
                   record['change'] = record['change'] ?? current.first['change'];
                   record['void_reason'] = record['void_reason'] ?? current.first['void_reason'];
