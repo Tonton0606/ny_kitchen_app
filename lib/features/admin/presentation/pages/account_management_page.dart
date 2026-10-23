@@ -557,9 +557,11 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                   await _userRepo.updateUser(user['id'], {
                     'password_hash': SecurityUtils.hashPassword(newPass),
                     'must_change_password': 1,
+                    'failed_login_count': 0,
                   });
                   if (!context.mounted) return;
                   Navigator.pop(ctx);
+                  _loadUsers();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Temporary password set. User must rotate on next login.')),
                   );
@@ -587,8 +589,194 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
   );
 }
 
+  void _showEnableDialog(BuildContext context, Map<String, dynamic> user) {
+    final passwordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    bool obscurePassword = true;
+    bool obscureConfirm = true;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 8, 20, 20),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  LucideIcons.circle_check,
+                  color: Color(0xFF16A34A),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  'Enable Account',
+                  style: AppTypography.dialogTitle,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Set a temporary password for ${user['full_name']} (@${user['username']}) to re-enable access. The user will be required to change it immediately upon login:',
+                  style: AppTypography.cardSubtitle,
+                ),
+                const SizedBox(height: 16),
+                const Text('New Temporary Password', style: AppTypography.cardTitle),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(64),
+                  ],
+                  decoration: InputDecoration(
+                    hintText: 'Enter temporary password',
+                    prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscurePassword ? LucideIcons.eye_off : LucideIcons.eye, size: 18),
+                      onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text('Confirm Temporary Password', style: AppTypography.cardTitle),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: confirmPasswordController,
+                  obscureText: obscureConfirm,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(64),
+                  ],
+                  decoration: InputDecoration(
+                    hintText: 'Re-enter temporary password',
+                    prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureConfirm ? LucideIcons.eye_off : LucideIcons.eye, size: 18),
+                      onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  SecurityUtils.passwordPolicyMessage,
+                  style: AppTypography.caption.copyWith(color: AppColors.mutedText, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.mutedText,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newPass = passwordController.text;
+                final confirmPass = confirmPasswordController.text;
+                if (newPass.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a temporary password')),
+                  );
+                  return;
+                }
+                if (newPass != confirmPass) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Passwords do not match')),
+                  );
+                  return;
+                }
+                final policyError = SecurityUtils.validatePassword(newPass);
+                if (policyError != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(policyError)),
+                  );
+                  return;
+                }
+                try {
+                  await _userRepo.enableUserWithTemporaryPassword(user['id'], newPass);
+                  if (!context.mounted) return;
+                  Navigator.pop(ctx);
+                  _loadUsers();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Account enabled successfully with temporary password.')),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Failed to enable account. Please check password policy.')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF16A34A),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+              child: const Text('Enable Account', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showDisableDialog(BuildContext context, Map<String, dynamic> user) {
     final isActive = user['status'] == 'active';
+    if (!isActive) {
+      _showEnableDialog(context, user);
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -606,26 +794,24 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isActive
-                    ? AppColors.brandRed.withValues(alpha: 0.12)
-                    : const Color(0xFFDCFCE7),
+                color: AppColors.brandRed.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                isActive ? LucideIcons.ban : LucideIcons.circle_check,
-                color: isActive ? AppColors.brandRed : const Color(0xFF16A34A),
+              child: const Icon(
+                LucideIcons.ban,
+                color: AppColors.brandRed,
                 size: 20,
               ),
             ),
             const SizedBox(width: 14),
-            Text(
-              '${isActive ? 'Disable' : 'Enable'} Account',
+            const Text(
+              'Disable Account',
               style: AppTypography.dialogTitle,
             ),
           ],
         ),
         content: Text(
-          'Are you sure you want to ${isActive ? 'disable' : 'enable'} ${user['full_name']}\'s account? ${isActive ? 'This user will not be able to log in to the POS or back office until re-enabled.' : 'This will restore login and active permissions.'}',
+          'Are you sure you want to disable ${user['full_name']}\'s account? This user will not be able to log in to the POS or back office until re-enabled.',
           style: AppTypography.cardSubtitle,
         ),
         actions: [
@@ -640,16 +826,12 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
           ElevatedButton(
             onPressed: () async {
               try {
-                if (isActive) {
-                  await _userRepo.disableUser(user['id']);
-                } else {
-                  await _userRepo.updateUser(user['id'], {'status': 'active'});
-                }
+                await _userRepo.disableUser(user['id']);
                 if (!context.mounted) return;
                 Navigator.pop(ctx);
                 _loadUsers();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Account ${isActive ? 'disabled' : 'enabled'} successfully')),
+                  const SnackBar(content: Text('Account disabled successfully')),
                 );
               } catch (e) {
                 if (!context.mounted) return;
@@ -662,7 +844,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: isActive ? AppColors.brandRed : const Color(0xFF16A34A),
+              backgroundColor: AppColors.brandRed,
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -670,9 +852,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: Text(
-              isActive ? 'Disable Account' : 'Enable Account',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            child: const Text(
+              'Disable Account',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -1363,7 +1545,9 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                     icon: isActive ? LucideIcons.ban : LucideIcons.circle_check,
                     tooltip: isActive ? 'Disable Account' : 'Enable Account',
                     color: isActive ? AppColors.brandRed : const Color(0xFF16A34A),
-                    onPressed: () => _showDisableDialog(context, user),
+                    onPressed: () => isActive
+                        ? _showDisableDialog(context, user)
+                        : _showEnableDialog(context, user),
                   ),
               ],
             ),
