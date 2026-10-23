@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:intl/intl.dart';
 
@@ -124,14 +125,7 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
   }
 
   List<String> get _availableStatuses {
-    final statuses = <String>{'All', 'Completed', 'Served', 'Voided', 'Refunded'};
-    for (final tx in _transactions) {
-      final s = tx['status'] as String?;
-      if (s != null && s.trim().isNotEmpty) {
-        statuses.add(s.trim());
-      }
-    }
-    return statuses.toList();
+    return const ['All', 'Served', 'Preparing', 'Voided', 'Refunded'];
   }
 
   List<Map<String, dynamic>> _getFilteredTransactions() {
@@ -173,7 +167,13 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
       // 2. Status filter
       if (_selectedStatus != 'All') {
         final status = (tx['status'] as String? ?? '').toLowerCase();
-        if (status != _selectedStatus.toLowerCase()) return false;
+        if (_selectedStatus == 'Served') {
+          if (status != 'served' && status != 'completed' && status != 'taken' && status != 'ready') {
+            return false;
+          }
+        } else if (status != _selectedStatus.toLowerCase()) {
+          return false;
+        }
       }
 
       // 3. Cashier filter
@@ -701,6 +701,9 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
               height: 40,
               child: TextField(
                 controller: _searchController,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(50),
+                ],
                 onChanged: (val) => setState(() => _searchQuery = val),
                 style: AppTypography.body.copyWith(fontSize: 13),
                 decoration: InputDecoration(
@@ -889,6 +892,229 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
     );
   }
 
+  void _showTransactionDetails(BuildContext context, Map<String, dynamic> tx) async {
+    final items = await _txRepo.getTransactionItems(tx['id']);
+    if (!context.mounted) return;
+
+    final rawStatus = (tx['status'] as String? ?? 'Served').trim();
+    final isVoided = rawStatus.toLowerCase() == 'voided';
+    final isRefunded = rawStatus.toLowerCase() == 'refunded';
+    final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
+    final formattedDate = DateFormat('MMM d, yyyy • h:mm a').format(parsedDate);
+    final totalAmount = _parseAmount(tx['total_amount']);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isVoided
+                    ? AppColors.brandRed.withValues(alpha: 0.1)
+                    : isRefunded
+                        ? const Color(0xFFFEF3C7)
+                        : AppColors.forest.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                isVoided
+                    ? Icons.block
+                    : isRefunded
+                        ? Icons.assignment_return_outlined
+                        : LucideIcons.receipt,
+                color: isVoided
+                    ? AppColors.brandRed
+                    : isRefunded
+                        ? const Color(0xFFD97706)
+                        : AppColors.forest,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Receipt #${tx['receipt_number'] ?? tx['order_number']?.toString() ?? '—'}',
+                    style: AppTypography.heading,
+                  ),
+                  Text(
+                    formattedDate,
+                    style: AppTypography.caption,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isVoided) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandRed.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.brandRed.withValues(alpha: 0.25)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, size: 16, color: AppColors.brandRed),
+                          const SizedBox(width: 6),
+                          Text(
+                            'TRANSACTION VOIDED',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.brandRed,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Reason: ${tx['void_reason'] != null && tx['void_reason'].toString().trim().isNotEmpty ? tx['void_reason'] : 'Not specified'}',
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.brandRed,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ] else if (isRefunded) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.assignment_return_outlined, size: 16, color: Color(0xFFD97706)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'TRANSACTION REFUNDED',
+                            style: AppTypography.caption.copyWith(
+                              color: const Color(0xFF92400E),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Reason: ${tx['refund_reason'] != null && tx['refund_reason'].toString().trim().isNotEmpty ? tx['refund_reason'] : 'Not specified'}',
+                        style: AppTypography.body.copyWith(
+                          color: const Color(0xFF92400E),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Cashier:', style: AppTypography.bodyMuted),
+                  Text(_getCashierName(tx), style: AppTypography.body),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Payment Method:', style: AppTypography.bodyMuted),
+                  Text(tx['payment_method'] ?? 'Cash', style: AppTypography.body),
+                ],
+              ),
+              const Divider(height: 24, color: AppColors.softBorder),
+              const Text('ITEMS ORDERED', style: AppTypography.label),
+              const SizedBox(height: 8),
+              if (items.isEmpty)
+                Text('No line items recorded', style: AppTypography.bodyMuted)
+              else
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 180),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: items.length,
+                    separatorBuilder: (context, index) => const Divider(height: 8, color: AppColors.softBorder),
+                    itemBuilder: (ctx, idx) {
+                      final it = items[idx];
+                      final qty = it['quantity'] ?? 1;
+                      final price = _parseAmount(it['food_price']);
+                      final subtotal = _parseAmount(it['subtotal'] ?? (price * qty));
+                      return Row(
+                        children: [
+                          Text('$qty×', style: AppTypography.tabularFigure),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(it['food_name'] ?? 'Item', style: AppTypography.body),
+                          ),
+                          Text(
+                            _formatCurrency(subtotal),
+                            style: AppTypography.tabularFigure.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              const Divider(height: 24, color: AppColors.softBorder),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Total Amount:', style: AppTypography.heading),
+                  Text(
+                    _formatCurrency(totalAmount),
+                    style: AppTypography.heading.copyWith(
+                      color: isVoided ? AppColors.brandRed : AppColors.darkCharcoal,
+                      decoration: isVoided ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close', style: AppTypography.buttonSmall),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDataTable(BuildContext context, List<Map<String, dynamic>> filtered) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -901,7 +1127,7 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
             child: DataTable(
               headingRowHeight: 44,
               dataRowMinHeight: 48,
-              dataRowMaxHeight: 54,
+              dataRowMaxHeight: 64,
               horizontalMargin: 20,
               columnSpacing: 28,
               headingRowColor: WidgetStateProperty.all(AppColors.pageBackground),
@@ -928,15 +1154,20 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                 ),
               ],
               rows: filtered.map((tx) {
-                final status = (tx['status'] as String? ?? 'Completed').trim();
-                final statusLower = status.toLowerCase();
+                final rawStatus = (tx['status'] as String? ?? 'Served').trim();
+                final displayStatus = (rawStatus.toLowerCase() == 'completed' ||
+                        rawStatus.toLowerCase() == 'taken' ||
+                        rawStatus.toLowerCase() == 'ready')
+                    ? 'Served'
+                    : rawStatus;
+                final statusLower = displayStatus.toLowerCase();
 
                 AppStatusType chipType;
-                if (statusLower == 'completed' || statusLower == 'served') {
+                if (statusLower == 'served') {
                   chipType = AppStatusType.success;
                 } else if (statusLower == 'voided' || statusLower == 'refunded') {
                   chipType = AppStatusType.error;
-                } else if (statusLower == 'pending') {
+                } else if (statusLower == 'preparing') {
                   chipType = AppStatusType.warning;
                 } else {
                   chipType = AppStatusType.info;
@@ -947,6 +1178,7 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                 final amount = _parseAmount(tx['total_amount']);
 
                 return DataRow(
+                  onSelectChanged: (_) => _showTransactionDetails(context, tx),
                   cells: [
                     DataCell(
                       Text(
@@ -973,10 +1205,51 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                       ),
                     ),
                     DataCell(
-                      AppStatusChip(
-                        label: status,
-                        type: chipType,
-                        isCompact: true,
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppStatusChip(
+                            label: displayStatus,
+                            type: chipType,
+                            isCompact: true,
+                          ),
+                          if (statusLower == 'voided' &&
+                              tx['void_reason'] != null &&
+                              tx['void_reason'].toString().trim().isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 130),
+                              child: Text(
+                                '${tx['void_reason']}',
+                                style: AppTypography.caption.copyWith(
+                                  color: AppColors.brandRed,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ] else if (statusLower == 'refunded' &&
+                              tx['refund_reason'] != null &&
+                              tx['refund_reason'].toString().trim().isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 130),
+                              child: Text(
+                                '${tx['refund_reason']}',
+                                style: AppTypography.caption.copyWith(
+                                  color: const Color(0xFFD97706),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     DataCell(

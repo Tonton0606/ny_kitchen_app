@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/database/repositories/audit_repository.dart';
 import '../../../../../core/services/export_service.dart';
@@ -76,6 +77,9 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                   child: SizedBox(
                     height: 42,
                     child: TextField(
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(100),
+                      ],
                       onChanged: (val) {
                         setState(() => _searchQuery = val);
                         _onFilterChanged();
@@ -108,7 +112,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                 _buildFilterDropdown(
                   value: _roleFilter,
                   icon: Icons.person_outline,
-                  items: const ['All', 'admin', 'cashier', 'None'],
+                  items: const ['All', 'admin', 'cashier'],
                   onChanged: (val) {
                     setState(() => _roleFilter = val!);
                     _onFilterChanged();
@@ -339,7 +343,7 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                                   ),
                                                   DataColumn(
                                                     label: Text(
-                                                      'IP Address',
+                                                      'Station',
                                                       style: AppTypography.tableHeader,
                                                     ),
                                                   ),
@@ -453,10 +457,11 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                                             borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
                                                           ),
                                                           child: const Text(
-                                                            '127.0.0.1',
+                                                            'POS-01',
                                                             style: TextStyle(
                                                               fontFamily: 'monospace',
                                                               fontSize: 12,
+                                                              fontWeight: FontWeight.w600,
                                                               color: AppColors.mutedSlate,
                                                             ),
                                                           ),

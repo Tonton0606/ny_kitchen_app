@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -191,6 +192,9 @@ class _FoodIconPickerDialogState extends State<FoodIconPickerDialog> {
             // Search Input
             TextField(
               controller: _searchController,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(50),
+              ],
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
                 hintText: 'Search icons (e.g. coffee, chicken, rice)...',

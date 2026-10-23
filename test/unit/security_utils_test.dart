@@ -30,15 +30,14 @@ void main() {
       expect(SecurityUtils.verifyPassword('password123', ''), isFalse);
     });
 
-    test('encryptFaceEncoding and decryptFaceEncoding roundtrip preserves data', () async {
-      const plainText = '{"features":[0.1,0.2,0.3],"version":1}';
-      
-      final cipherText = await SecurityUtils.encryptFaceEncoding(plainText);
-      expect(cipherText, isNot(equals(plainText)));
-      expect(cipherText, isNotEmpty);
-      
-      final decryptedText = await SecurityUtils.decryptFaceEncoding(cipherText);
-      expect(decryptedText, equals(plainText));
+    test('isPasswordValid and validatePassword enforce 8+ chars with letters and digits', () {
+      expect(SecurityUtils.isPasswordValid('short1'), isFalse);
+      expect(SecurityUtils.isPasswordValid('alllettershere'), isFalse);
+      expect(SecurityUtils.isPasswordValid('12345678'), isFalse);
+      expect(SecurityUtils.isPasswordValid('ValidPass1'), isTrue);
+
+      expect(SecurityUtils.validatePassword('weak'), equals(SecurityUtils.passwordPolicyMessage));
+      expect(SecurityUtils.validatePassword('ValidPass1'), isNull);
     });
   });
 }

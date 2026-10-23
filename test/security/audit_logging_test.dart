@@ -103,6 +103,14 @@ void main() {
             )
           ''');
 
+          await db.execute('''
+            CREATE TABLE app_settings (
+              key TEXT PRIMARY KEY,
+              value TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            )
+          ''');
+
           // Seed user
           await db.insert('users', {
             'full_name': 'Admin User',
@@ -155,6 +163,7 @@ void main() {
     });
 
     test('Food item CRUD operations create audit records', () async {
+      SessionManager().setSession({'id': 1, 'username': 'admin', 'role': 'admin', 'status': 'active'});
       final foodId = await foodRepo.insertFoodItem({
         'name': 'Burger',
         'price': 99.0,
@@ -176,6 +185,7 @@ void main() {
     });
 
     test('Transaction creation and voiding create audit records', () async {
+      SessionManager().setSession({'id': 1, 'username': 'cashier', 'role': 'cashier', 'status': 'active'});
       final tx = await transactionRepo.createTransaction(
         userId: 1,
         totalAmount: 100.0,
@@ -205,6 +215,7 @@ void main() {
     });
 
     test('Admin user creation and modification create audit records', () async {
+      SessionManager().setSession({'id': 1, 'username': 'admin', 'role': 'admin', 'status': 'active'});
       final newUserId = await userRepo.createUser({
         'full_name': 'Cashier 2',
         'username': 'cashier2',
@@ -220,6 +231,26 @@ void main() {
       await userRepo.updateUser(newUserId, {'full_name': 'Cashier 2 Updated'});
       userLogs = await auditRepo.getLogs(search: 'User Updated');
       expect(userLogs.isNotEmpty, isTrue, reason: 'User modification must be audited (Gap 9)');
+    });
+
+    test('Unauthorized access attempts and self-disable create blocked audit records', () async {
+      SessionManager().setSession({'id': 2, 'username': 'cashier', 'role': 'cashier', 'status': 'active'});
+
+      // Cashier attempts to call an admin repository function (createUser)
+      try {
+        await userRepo.createUser({
+          'full_name': 'Intruder',
+          'username': 'intruder',
+          'password_hash': SecurityUtils.hashPassword('password123'),
+          'role': 'admin',
+          'status': 'active',
+        });
+      } catch (_) {}
+
+      final blockedLogs = await auditRepo.getLogs(status: 'Blocked');
+      expect(blockedLogs.isNotEmpty, isTrue, reason: 'Unauthorized access attempts must generate Blocked audit logs (Gap 7/9)');
+      expect(blockedLogs.first['status'], equals('Blocked'));
+      expect(blockedLogs.first['username'], equals('cashier'));
     });
   });
 }

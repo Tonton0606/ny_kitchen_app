@@ -1,6 +1,7 @@
 import '../database_helper.dart';
 import '../../services/sync_service.dart';
 import '../../utils/sync_id_generator.dart';
+import '../../utils/repository_security_guard.dart';
 import 'audit_repository.dart';
 
 class TransactionRepository {
@@ -20,6 +21,15 @@ class TransactionRepository {
     String? username,
     String? role,
   }) async {
+    // SEC-01: Ensure caller is authenticated and cannot forge another user's ID
+    final actor = await RepositorySecurityGuard.requireAuthenticated(
+      module: 'Transactions',
+      action: 'Create Transaction',
+    );
+    final effectiveUserId = actor['id'] as int? ?? userId;
+    final effectiveUsername = actor['username'] as String? ?? username ?? 'User $userId';
+    final effectiveRole = actor['role'] as String? ?? role ?? 'cashier';
+
     final db = await _dbHelper.database;
     int transactionId = 0;
     int orderNumber = 0;
@@ -49,7 +59,7 @@ class TransactionRepository {
         'id': transactionId,
         'receipt_number': finalReceiptNumber,
         'order_number': orderNumber,
-        'user_id': userId,
+        'user_id': effectiveUserId,
         'total_amount': totalAmount,
         'discount': discount,
         'payment_method': paymentMethod,
@@ -72,11 +82,11 @@ class TransactionRepository {
       }
     });
 
-    // Audit transaction creation (Gap 9)
+    // Audit transaction creation (Gap 9 / SEC-01) - authoritative session identity
     await _auditRepo.logAction(
-      userId: userId,
-      username: username ?? 'User $userId',
-      role: role ?? 'cashier',
+      userId: effectiveUserId,
+      username: effectiveUsername,
+      role: effectiveRole,
       module: 'Transactions',
       action: 'Transaction Created',
       status: 'Success',
@@ -93,6 +103,10 @@ class TransactionRepository {
   }
 
   Future<List<Map<String, dynamic>>> getTransactions({String status = 'completed'}) async {
+    await RepositorySecurityGuard.requireAuthenticated(
+      module: 'Transactions',
+      action: 'View Transactions',
+    );
     final db = await _dbHelper.database;
     return await db.rawQuery('''
       SELECT 
@@ -108,7 +122,31 @@ class TransactionRepository {
   }
 
   Future<List<Map<String, dynamic>>> getAllTransactions() async {
+    final actor = await RepositorySecurityGuard.requireAuthenticated(
+      module: 'Transactions',
+      action: 'View All Transactions',
+    );
     final db = await _dbHelper.database;
+    final role = (actor['role'] as String?)?.toLowerCase();
+
+    // SEC-01 & AT02: Non-admin callers are strictly restricted to their own transactions
+    if (role != 'admin') {
+      final userId = actor['id'] as int?;
+      if (userId != null) {
+        return await db.rawQuery('''
+          SELECT 
+            t.*, 
+            u.full_name as cashier_name, 
+            u.username as cashier_username, 
+            u.role as cashier_role
+          FROM transactions t
+          LEFT JOIN users u ON t.user_id = u.id
+          WHERE t.user_id = ?
+          ORDER BY t.created_at DESC
+        ''', [userId]);
+      }
+    }
+
     return await db.rawQuery('''
       SELECT 
         t.*, 
@@ -122,6 +160,10 @@ class TransactionRepository {
   }
 
   Future<List<Map<String, dynamic>>> getTransactionItems(int transactionId) async {
+    await RepositorySecurityGuard.requireAuthenticated(
+      module: 'Transactions',
+      action: 'View Transaction Items',
+    );
     final db = await _dbHelper.database;
     return await db.query(
       'transaction_items',
@@ -131,21 +173,37 @@ class TransactionRepository {
   }
 
   Future<int> updateTransactionStatus(int id, String newStatus, {int? userId, String? username, String? role, String? reason}) async {
+    final actor = await RepositorySecurityGuard.requireAuthenticated(
+      module: 'Transactions',
+      action: 'Update Transaction Status',
+    );
+
     final db = await _dbHelper.database;
+    final Map<String, dynamic> updateValues = {'status': newStatus};
+    if (newStatus == 'Voided' && reason != null && reason.trim().isNotEmpty) {
+      updateValues['void_reason'] = reason.trim();
+    } else if (newStatus == 'Refunded' && reason != null && reason.trim().isNotEmpty) {
+      updateValues['refund_reason'] = reason.trim();
+    }
+
     int count = await db.update(
       'transactions',
-      {'status': newStatus},
+      updateValues,
       where: 'id = ?',
       whereArgs: [id],
     );
 
-    // Audit status update (Gap 9)
+    // Audit status update - authoritative actor identity
     await _auditRepo.logAction(
-      userId: userId,
-      username: username ?? 'System',
-      role: role ?? 'System',
+      userId: actor['id'] as int?,
+      username: actor['username'] as String? ?? username ?? 'System',
+      role: actor['role'] as String? ?? role ?? 'System',
       module: 'Transactions',
-      action: newStatus == 'Voided' ? 'Transaction Voided' : newStatus == 'Refunded' ? 'Transaction Refunded' : 'Transaction Status Updated',
+      action: newStatus == 'Voided'
+          ? 'Transaction Voided'
+          : newStatus == 'Refunded'
+              ? 'Transaction Refunded'
+              : 'Transaction Status Updated',
       status: 'Success',
       description: 'Transaction ID $id status changed to $newStatus${reason != null ? ' ($reason)' : ''}',
     );
@@ -155,6 +213,10 @@ class TransactionRepository {
   }
 
   Future<int> cancelOrder(int id, {String? reason, int? userId, String? username, String? role}) async {
+    final actor = await RepositorySecurityGuard.requireAuthenticated(
+      module: 'Transactions',
+      action: 'Cancel Order',
+    );
     final db = await _dbHelper.database;
     final voidReason = reason ?? 'Cancelled by cashier';
     int count = await db.update(
@@ -164,11 +226,11 @@ class TransactionRepository {
       whereArgs: [id],
     );
 
-    // Audit transaction cancellation / void (Gap 9)
+    // Audit transaction cancellation / void (Gap 9 / SEC-01) - authoritative actor identity
     await _auditRepo.logAction(
-      userId: userId,
-      username: username ?? 'Cashier',
-      role: role ?? 'cashier',
+      userId: actor['id'] as int?,
+      username: actor['username'] as String? ?? username ?? 'Cashier',
+      role: actor['role'] as String? ?? role ?? 'cashier',
       module: 'Transactions',
       action: 'Transaction Voided',
       status: 'Success',
@@ -182,8 +244,9 @@ class TransactionRepository {
 
   Future<List<Map<String, dynamic>>> getActiveTransactions() async {
     final db = await _dbHelper.database;
-    // Get transactions that are currently active (e.g. Preparing)
-    // Served transactions are considered completed and will appear in history.
+    // Active orders in the kitchen queue are restricted to today's business day:
+    // Only 'Preparing' and 'Served' orders placed today appear in the active kitchen queue.
+    // Cutoff/unserved orders from previous days remain permanently recorded in transaction history and admin sales reports.
     return await db.rawQuery('''
       SELECT 
         t.*, 
@@ -192,9 +255,10 @@ class TransactionRepository {
         u.role as cashier_role
       FROM transactions t
       LEFT JOIN users u ON t.user_id = u.id
-      WHERE t.status IN (?, ?)
+      WHERE date(t.created_at) = date('now', 'localtime')
+        AND t.status IN ('Preparing', 'Served')
       ORDER BY t.created_at ASC
-    ''', ['Preparing', 'Served']);
+    ''');
   }
 
   Future<List<Map<String, dynamic>>> getTopSellingFoods({int limit = 5}) async {

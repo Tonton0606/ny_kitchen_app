@@ -101,4 +101,11 @@ class SecurityUtils {
     final hasDigit = RegExp(r'\d').hasMatch(password);
     return hasLetter && hasDigit;
   }
+
+  static String? validatePassword(String password) {
+    if (!isPasswordValid(password)) {
+      return passwordPolicyMessage;
+    }
+    return null;
+  }
 }

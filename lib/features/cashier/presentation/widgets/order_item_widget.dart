@@ -60,31 +60,48 @@ class OrderItemWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '₱${price.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.mutedBrown,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                    Flexible(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              '₱${price.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.mutedBrown,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            '  × $quantity',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.darkCharcoal,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      '  × $quantity',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.darkCharcoal,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '₱${total.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                        color: AppColors.darkCharcoal,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        '₱${total.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          color: AppColors.darkCharcoal,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
                       ),
                     ),
                   ],

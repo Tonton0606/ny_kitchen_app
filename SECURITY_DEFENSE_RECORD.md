@@ -576,6 +576,41 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Seek user permission before running `git push origin main`.
 
+## Transaction Status Sanitation & Cashier Transaction Tab UI Principles — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T01:04:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope:
+1. Verify and sanitize transaction statuses in Sales Reports and system database:
+   - Evaluated status dropdown containing: `All Statuses`, `Completed`, `Served`, `Voided`, `Refunded`, `Preparing`, `Taken`, `Ready`.
+   - Identified valid POS transaction lifecycle statuses: `Served` (fulfilled), `Preparing` (kitchen queue), `Voided` (cancelled), and `Refunded` (refunded).
+   - Removed obsolete mock statuses (`Taken`, `Ready`) and duplicate conflicting status (`Completed`).
+   - Added database-level normalization in `DatabaseHelper` mapping legacy `Completed`, `Taken`, `Ready` to `Served`.
+   - Sanitized `mock_data.dart` and `sales_reports_page.dart` dropdown filter to only expose valid system statuses.
+2. Resolve image codec and ListTile exceptions:
+   - Removed third-party `placehold.co` fallbacks in `food_management_page.dart` and bypassed `placehold.co` in `FoodImage` to eliminate `Invalid image data` exceptions.
+   - Removed `ListTile` inside decorated `Container` in `transaction_history_page.dart` to eliminate `ListTile background color or ink splashes may be invisible` warnings.
+3. Apply `UI_PRINCIPLES.md` to Cashier Transaction Tab (`transaction_history_page.dart`):
+   - Header: Standardized layout with record counter pill, real-time search input (receipt/order #), and status pills (`All`, `Served`, `Voided`).
+   - Cards: Modern `Material` + `InkWell` containers with 12px radius, visual hierarchy, tabular figures, and `AppStatusChip` badges.
+   - Empty State: Integrated `AppEmptyState` with `Reset Filters` action.
+   - Standardized receipt drawer and void confirmation dialog according to UI principles.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles compliance), SEC-01, AT10.
+Files changed:
+- `lib/core/database/database_helper.dart`
+- `lib/core/utils/mock_data.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `lib/features/admin/presentation/pages/sales_reports_page.dart`
+- `lib/features/cashier/presentation/pages/transaction_history_page.dart`
+- `lib/features/shared/widgets/food_image.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze`: 0 errors / 0 warnings across all modified files.
+- `flutter test test/security/`: 47/47 tests passed cleanly (0 regressions).
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Verify remote commits, commit cleanly, and ask for user permission before pushing to origin/main.
+
 ## Cross-device cashier sale ID collision investigation — 2026-10-23 (Asia/Manila)
 
 Date/time and timezone: 2026-10-23T01:13:07+08:00 (Asia/Manila)
@@ -616,6 +651,254 @@ Unverified items / remaining risks:
 - Same-day `order_number` values may still repeat across offline devices; unique receipts are the stable reference.
 
 Next concrete step: Run the read-only ID-type diagnostic in development, deploy the updated client to two devices with retained local test data, and run repeated synthetic-sale sync cycles. Confirm both distinct receipts, amounts, and line items remain on both devices before evaluating Production.
+
+## Merge Sync ID Collision Mitigation & Test Verification — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T04:57:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Pull and merge remote changes (`origin/main` commit `bcb4b88`), resolve merge conflicts, verify tests, and push to remote.
+Rubric / risk / acceptance-test IDs: R10; K02 / SEC-02; AT10.
+Files changed:
+- `SECURITY_DEFENSE_RECORD.md`
+- `test/security/audit_logging_test.dart`
+- `test/unit/transaction_repository_test.dart`
+Checks actually run and actual results:
+- Resolved merge conflict in `SECURITY_DEFENSE_RECORD.md` by retaining both session entries sequentially.
+- Updated in-memory test schemas in `test/security/audit_logging_test.dart` and `test/unit/transaction_repository_test.dart` to create the required `app_settings` table for `SyncIdGenerator`.
+- `flutter test test/security/`: 47/47 tests passed cleanly (0 regressions).
+- `flutter test test/unit/transaction_repository_test.dart`: 4/4 tests passed cleanly.
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Unverified items / remaining risks:
+- Live multi-device sales replication on physical devices remains unverified until deployed with synthetic data.
+Next concrete step: Conclude merge commit and push to origin/main.
+
+## ListTile & RadioListTile DecoratedBox Material Surface Remediation — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T05:07:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Fix Flutter framework assertion `ListTile background color or ink splashes may be invisible. The ListTile is wrapped in a DecoratedBox that has a background color.`
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles and Material design standards), AT10.
+Files changed:
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root cause:
+- `RadioListTile` (and `ListTile`) in Settings sections was wrapped inside a `Container` with `BoxDecoration(color: AppColors.surfaceWhite, ...)` (DecoratedBox). Because `ListTile` paints its background and ink splashes on the nearest `Material` ancestor, intermediate decorated boxes with background colors trigger a Flutter debug assertion.
+Remediation:
+- Replaced decorated `Container` wrappers with `Material(color: AppColors.surfaceWhite, borderRadius: BorderRadius.circular(AppDesignTokens.radius12), shape: RoundedRectangleBorder(...), clipBehavior: Clip.antiAlias)` in `account_settings_page.dart`, `admin_account_settings_page.dart`, and `food_management_page.dart`.
+- Removed redundant intermediate `Material(color: Colors.transparent)` wrappers, allowing ink splashes and highlights to paint cleanly directly onto the Material surface.
+Checks actually run and actual results:
+- `flutter analyze`: 0 errors across all modified files.
+- `flutter test test/security/`: 47/47 tests passed cleanly (0 regressions).
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Stage changes, commit cleanly, and push to origin/main if approved.
+
+## Session Policy Formalization: Mandatory Remote Pull, Merge, and Push — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T05:10:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Formalize standard session entry and exit protocol across all AI entry points: check for remote commits (`git fetch origin main`), pull and merge (resolving any merge conflicts cleanly), verify tests, and commit then push.
+Rubric / risk / acceptance-test IDs: Governance & Team Collaboration / AT10.
+Files changed:
+- `AGENTS.md`
+- `AI_SESSION_HANDOFF.md`
+- `AI_DEVELOPMENT_RULES.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Policy added:
+- Explicit step 6 added to `AGENTS.md`: every AI session must immediately check for remote updates upon collaborator identification. If incoming changes exist, pull and merge them, preserving all collaborators' historical records.
+- Completed tasks must be tested, committed cleanly, and pushed to `origin/main`.
+Checks actually run and actual results:
+- `git fetch origin main`: Verified local is currently up to date with `origin/main`.
+Evidence paths:
+- `AGENTS.md`
+- `AI_SESSION_HANDOFF.md`
+- `AI_DEVELOPMENT_RULES.md`
+- `SECURITY_DEFENSE_RECORD.md`
+## Material Assertion & RenderFlex Overflow Remediation Session — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T05:22:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Fix runtime framework crashes:
+1. `_AssertionError: Cannot provide both a borderRadius and a shape` on `Material` widgets.
+2. `RenderFlex overflowed by 25, 117, 107, 120, 185, 63 pixels on the right` in `transaction_history_page.dart`.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles and Material design standards), AT10 (Integration & Resilience).
+Files changed:
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `lib/features/cashier/presentation/pages/transaction_history_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root cause & Remediation:
+- Material AssertionError: Flutter's `Material` constructor requires `borderRadius == null || shape == null`. When `shape: RoundedRectangleBorder(borderRadius: ...)` was specified alongside `borderRadius: ...`, debug mode asserted. Removed redundant `borderRadius` parameters in `account_settings_page.dart`, `admin_account_settings_page.dart`, and `food_management_page.dart`.
+- RenderFlex Overflow in Cashier Transactions Header: In constrained viewport widths, the header `Row` with title, search input, filter pills, and refresh button overflowed by 25px. Refactored into a `LayoutBuilder` + horizontal `SingleChildScrollView` wrapped `ConstrainedBox(minWidth: constraints.maxWidth)` with `MainAxisAlignment.spaceBetween` (without `Spacer`), providing responsive spacing on wide screens and horizontal scrolling on narrow screens without unbounded layout assertions.
+- RenderFlex Overflow in Transaction Cards: Inner metadata rows displaying timestamp, item count, payment method, and cashier name overflowed by up to 185px on smaller screen widths. Converted to `Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 2, runSpacing: 2)`, wrapping metadata elements onto secondary lines cleanly.
+Checks actually run and actual results:
+- `flutter analyze lib/features/cashier/presentation/pages/transaction_history_page.dart lib/features/cashier/presentation/pages/account_settings_page.dart lib/features/admin/presentation/pages/admin_account_settings_page.dart lib/features/admin/presentation/pages/food_management_page.dart`: 0 errors, 0 warnings.
+- `flutter test test/security/`: 47/47 tests passed cleanly (0 regressions).
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Stage changes, commit cleanly, ask user permission, and push to origin/main.
+
+## Repository-Level Authorization Enforcement & Own-Record Restriction Session (Gap 1 / SEC-01 / AT02) — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T05:59:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Implement Gap 1 (SEC-01 / K01 / R08 / R10 / AT02):
+1. Create strongly-typed `SecurityException` with granular error codes (`UNAUTHENTICATED`, `SESSION_EXPIRED`, `ACCOUNT_INACTIVE`, `FORBIDDEN_ROLE`, `FORBIDDEN_OWN_RECORD`, `WEAK_PASSWORD`, `SELF_DISABLE_PROHIBITED`, `ADMIN_REQUIRED_REFUND`).
+2. Build centralized `RepositorySecurityGuard` with `requireAuthenticated()`, `requireAdmin()`, and `requireSelfOrAdmin()`. Every denied access automatically writes an immutable `Blocked` audit log record to `activity_logs` before raising an exception.
+3. Secure all database repositories:
+   - `user_repository.dart`: `getAllUsers`, `createUser`, `updateUser`, `disableUser` (with self-disable protection), `unlockUser`, and `changePassword` (with own-record enforcement and logic-layer password policy validation).
+   - `food_repository.dart`: `getAllFoodItems`, `insertFoodItem`, `updateFoodItem`, `archiveFoodItem`, `insertCategory`, `updateCategory`, `archiveCategory`.
+   - `transaction_repository.dart`: `createTransaction` (ignores spoofed `userId` and binds directly to authentic session identity), `getAllTransactions`, `getTransactions`, `getTransactionItems`, `updateTransactionStatus` (strictly blocks non-admin refunds), `cancelOrder`.
+   - `backup_repository.dart`: `exportDatabase` strictly requires admin role and logs authentic admin actor identity.
+   - `audit_repository.dart`: `getLogs` enforces own-record restrictions: non-admin callers are strictly limited to their own audit records.
+4. Add comprehensive AT02 security test suite (`test/security/repository_authorization_test.dart`) covering:
+   - Unauthenticated rejection across all mutations with audit recording.
+   - Expired session denial.
+   - Cashier role elevation and privileged action blocking with zero state mutation.
+   - Transaction userId spoofing prevention and authentic session binding.
+   - Own-record restrictions (user can update own profile, but blocked from other users and role elevation).
+   - Non-admin audit log query isolation.
+   - Logic-layer password policy enforcement (SEC-05).
+   - Authorized administrator operations.
+Rubric / risk / acceptance-test IDs: R08, R10, K01, AT02, SEC-01, SEC-05.
+Files changed / created:
+- `lib/core/utils/security_exception.dart` (New)
+- `lib/core/utils/repository_security_guard.dart` (New)
+- `lib/core/utils/security_utils.dart`
+- `lib/core/database/repositories/user_repository.dart`
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/core/database/repositories/transaction_repository.dart`
+- `lib/core/database/repositories/backup_repository.dart`
+- `lib/core/database/repositories/audit_repository.dart`
+- `test/security/repository_authorization_test.dart` (New)
+- `test/security/account_lockout_test.dart`
+- `test/security/audit_logging_test.dart`
+- `test/security/force_password_change_test.dart`
+- `test/unit/security_utils_test.dart`
+- `test/unit/transaction_repository_test.dart`
+- `test/unit/user_repository_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/core/ test/`: 0 errors.
+- `flutter test test/security/`: 55/55 passed (100% pass rate, including all 8 AT02 tests).
+- `flutter test test/unit/`: 42/42 passed (100% pass rate).
+Evidence paths:
+- `lib/core/utils/repository_security_guard.dart`
+- `test/security/repository_authorization_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+
+## Cashier Operational Menu & Own-Record Transaction Permissions Remediation — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T06:14:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Resolve runtime cashier `SecurityException: FORBIDDEN_ROLE` on login and food catalog loading:
+1. Root cause:
+   - `home_page.dart` (cashier POS screen) calls `FoodRepository.getAllFoodItems()` on initialization to display menu items. It was strictly guarded with `requireAdmin`, blocking cashiers from viewing the active food catalog.
+   - `transaction_history_page.dart` (cashier transaction history tab) calls `TransactionRepository.getAllTransactions()`. It was guarded with `requireAdmin`, blocking cashiers from loading past transactions.
+2. Remediation:
+   - `FoodRepository.getAllFoodItems()`: Changed to `RepositorySecurityGuard.requireAuthenticated()`. Reading the active food catalog is an essential operational requirement for cashiers to take orders. All menu modifications (`insertFoodItem`, `updateFoodItem`, `archiveFoodItem`, categories) remain strictly enforced as `requireAdmin()`.
+   - `TransactionRepository.getAllTransactions()`: Changed to `RepositorySecurityGuard.requireAuthenticated()` with **automatic own-record filtering**: if the caller is not an administrator, the query automatically appends `WHERE t.user_id = ?` binding to `actor['id']`. Cashiers can view their own transaction history tab without viewing other cashiers' records or receiving authorization exceptions.
+   - `test/security/repository_authorization_test.dart`: Added test assertions verifying that cashiers can successfully load menu catalog items and that non-admin transaction queries are strictly isolated to the caller's own records.
+Rubric / risk / acceptance-test IDs: R08, R10, K01, AT02, SEC-01.
+Files changed:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/core/database/repositories/transaction_repository.dart`
+- `test/security/repository_authorization_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/core/database/repositories/ test/security/`: 0 errors.
+- `flutter test test/security/repository_authorization_test.dart`: 8/8 passed (1.0s).
+- `flutter test test/security/`: 55/55 passed (100% pass rate).
+Evidence paths:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/core/database/repositories/transaction_repository.dart`
+- `test/security/repository_authorization_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+
+## Cashier Order Summary Indicator Simplification — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T06:17:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Remove redundant automatic indicators from the cashier cart sidebar panel:
+1. Removed `Dine In Only` pill badge from cart header; simplified to `Live Terminal Cart` title.
+2. Removed static `Cash Payment Only` box situated above the checkout action buttons, creating a cleaner, more direct hierarchy to `Place Order`.
+Rubric / risk / acceptance-test IDs: UI-01 (UI Principles, visual hierarchy, ergonomics).
+Files changed:
+- `lib/features/cashier/presentation/widgets/order_summary_panel.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze lib/features/cashier/presentation/widgets/order_summary_panel.dart`: 0 errors.
+- `flutter test test/security/`: 55/55 passed (100% pass rate).
+Evidence paths:
+- `lib/features/cashier/presentation/widgets/order_summary_panel.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+
+
+
+
+## Input Spam, Numerical Overflow & UI Hardening Session — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T06:48:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Audit and mitigate spam, numerical overflow, and UI overlap vulnerabilities across cashier and administrative features:
+1. **Cashier Cash Received & Change Due UI Overlap (`home_page.dart`):**
+   - Added `LengthLimitingTextInputFormatter(9)` (max ₱999,999.99) and decimal regex `^\d+\.?\d{0,2}` to `_cashController`.
+   - Wrapped `Change due` and `TOTAL DUE` in `Flexible` / `FittedBox` with `TextOverflow.ellipsis` to eliminate `RenderFlex overflow`.
+2. **Order Number Limiter (`home_page.dart`):**
+   - Added `LengthLimitingTextInputFormatter(6)` to `_orderNumberController` preventing 64-bit integer overflow and receipt label truncation.
+3. **Cart Item Duplication & Quantity Spam (`home_page.dart`):**
+   - Defined `_maxItemQuantity = 99`.
+   - Eliminated logic flaw in `_addToOrder` and `_increaseQuantity` where tapping `+` past 50 spawned duplicate cart items.
+4. **Order Item & Summary Overlap Hardening (`order_item_widget.dart`, `order_summary_panel.dart`, `food_card.dart`):**
+   - Wrapped line totals, unit price calculation rows, and place-order button amounts in `Flexible` with `TextOverflow.ellipsis`.
+5. **Checkout Double-Submission / Replay Guard (`home_page.dart`):**
+   - Added `_isSubmitting` flag in `_CheckoutDialogState` and `_isCheckingOut` state lock in `_HomePageState`.
+6. **Food & Category Management Input Bounds (`food_management_page.dart`):**
+   - Added `LengthLimitingTextInputFormatter(50)` on food names.
+   - Added `LengthLimitingTextInputFormatter(8)` and decimal filter on food prices, with backend check `price > 0 && price <= 99999.99`.
+   - Added `LengthLimitingTextInputFormatter(30)` on category names.
+7. **User & Account Management Form Bounds (`account_management_page.dart`):**
+   - Full Name: `LengthLimitingTextInputFormatter(50)`.
+   - Username: Alphanumeric/underscore filter with `LengthLimitingTextInputFormatter(25)`.
+   - Passwords: `LengthLimitingTextInputFormatter(64)` preventing PBKDF2 (600,000 iterations) CPU thread exhaustion.
+8. **Authentication & Settings Inputs (`login_page.dart`, `force_change_password_dialog.dart`, `account_settings_page.dart`, `admin_account_settings_page.dart`):**
+   - Added length limits on credentials and password update dialogues.
+9. **Global Search Input Limiters:**
+   - Capped all search text fields (POS catalog, transaction history, activity logs, sales reports) between 50 and 100 characters.
+10. **Shared Component Hardening (`app_text_field.dart`):**
+    - Supported `inputFormatters` and `maxLength` properties.
+Rubric / risk / acceptance-test IDs: R08, R10, AT01, AT02, UI-01, SEC-01.
+Files changed:
+- `lib/features/cashier/presentation/pages/home_page.dart`
+- `lib/features/cashier/presentation/widgets/order_item_widget.dart`
+- `lib/features/cashier/presentation/widgets/order_summary_panel.dart`
+- `lib/features/cashier/presentation/widgets/food_card.dart`
+- `lib/features/cashier/presentation/pages/transaction_history_page.dart`
+- `lib/features/cashier/presentation/pages/account_settings_page.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `lib/features/admin/presentation/pages/account_management_page.dart`
+- `lib/features/admin/presentation/pages/admin_account_settings_page.dart`
+- `lib/features/admin/presentation/pages/activity_logs_page.dart`
+- `lib/features/admin/presentation/pages/sales_reports_page.dart`
+- `lib/features/admin/presentation/widgets/food_icon_picker_dialog.dart`
+- `lib/features/admin/presentation/widgets/food_emoji_picker_dialog.dart`
+- `lib/features/auth/presentation/pages/login_page.dart`
+- `lib/features/auth/presentation/widgets/force_change_password_dialog.dart`
+- `lib/features/shared/widgets/app_text_field.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- `flutter analyze`: 0 errors.
+- `flutter test test/security/`: 55/55 passed (100% pass rate).
+- `flutter test test/unit/`: 42/42 passed (100% pass rate).
+Evidence paths:
+- `SECURITY_DEFENSE_RECORD.md`
+- `lib/features/cashier/presentation/pages/home_page.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `lib/features/admin/presentation/pages/account_management_page.dart`
 
 ## Sales Reports QA Polish & Export Revenue Sum Bug Fix Session — 2026-10-23 (Asia/Manila)
 

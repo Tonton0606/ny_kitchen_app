@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import '../database_helper.dart';
 import '../../services/sync_service.dart';
+import '../../utils/repository_security_guard.dart';
 import 'audit_repository.dart';
 
 class FoodRepository {
@@ -19,8 +20,12 @@ class FoodRepository {
     );
   }
 
-  // Retrieve ALL food items (used for Admin food management table)
+  // Retrieve ALL food items (used for Admin food management table and Cashier menu catalog)
   Future<List<Map<String, dynamic>>> getAllFoodItems() async {
+    await RepositorySecurityGuard.requireAuthenticated(
+      module: 'Food Management',
+      action: 'View All Food Items',
+    );
     final db = await _dbHelper.database;
     // Left join with categories to get the category name if we want to display it
     final sql = '''
@@ -35,6 +40,10 @@ class FoodRepository {
 
   // Create a new food item
   Future<int> insertFoodItem(Map<String, dynamic> foodItem, {int? adminId, String? adminUsername}) async {
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'Food Management',
+      action: 'Create Food Item',
+    );
     final db = await _dbHelper.database;
     foodItem['created_at'] = DateTime.now().toIso8601String();
     if (foodItem['image_path'] != null) {
@@ -49,10 +58,10 @@ class FoodRepository {
     );
     await _syncService.syncToCloud();
 
-    // Audit food creation (Gap 9)
+    // Audit food creation (Gap 9 / SEC-01) - use authoritative admin session identity
     await _auditRepo.logAction(
-      userId: adminId,
-      username: adminUsername ?? 'Admin',
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? adminUsername ?? 'Admin',
       role: 'admin',
       module: 'Food Management',
       action: 'Food Created',
@@ -65,6 +74,10 @@ class FoodRepository {
 
   // Update an existing food item
   Future<int> updateFoodItem(int id, Map<String, dynamic> foodItem, {int? adminId, String? adminUsername}) async {
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'Food Management',
+      action: 'Update Food Item',
+    );
     final db = await _dbHelper.database;
     foodItem['updated_at'] = DateTime.now().toIso8601String();
     if (foodItem['image_path'] != null) {
@@ -80,10 +93,10 @@ class FoodRepository {
     );
     await _syncService.syncToCloud();
 
-    // Audit food update (Gap 9)
+    // Audit food update (Gap 9 / SEC-01) - use authoritative admin session identity
     await _auditRepo.logAction(
-      userId: adminId,
-      username: adminUsername ?? 'Admin',
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? adminUsername ?? 'Admin',
       role: 'admin',
       module: 'Food Management',
       action: 'Food Updated',
@@ -96,6 +109,10 @@ class FoodRepository {
 
   // Delete/Archive a food item (We prefer archiving to maintain receipt history integrity)
   Future<int> archiveFoodItem(int id, {int? adminId, String? adminUsername}) async {
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'Food Management',
+      action: 'Archive Food Item',
+    );
     final db = await _dbHelper.database;
     int count = await db.update(
       'food_items',
@@ -105,10 +122,10 @@ class FoodRepository {
     );
     await _syncService.syncToCloud();
 
-    // Audit food archive (Gap 9)
+    // Audit food archive (Gap 9 / SEC-01) - use authoritative admin session identity
     await _auditRepo.logAction(
-      userId: adminId,
-      username: adminUsername ?? 'Admin',
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? adminUsername ?? 'Admin',
       role: 'admin',
       module: 'Food Management',
       action: 'Food Archived',
@@ -172,6 +189,10 @@ class FoodRepository {
   }
 
   Future<int> insertCategory(String name, {String? iconUrl}) async {
+    await RepositorySecurityGuard.requireAdmin(
+      module: 'Food Management',
+      action: 'Create Food Category',
+    );
     final db = await _dbHelper.database;
 
     String finalIcon = iconUrl ?? '🍽️';
@@ -199,6 +220,10 @@ class FoodRepository {
   }
 
   Future<int> updateCategory(int id, String name, {String? iconUrl}) async {
+    await RepositorySecurityGuard.requireAdmin(
+      module: 'Food Management',
+      action: 'Update Food Category',
+    );
     final db = await _dbHelper.database;
     final data = <String, dynamic>{'name': name};
     if (iconUrl != null) {
@@ -228,6 +253,10 @@ class FoodRepository {
   }
 
   Future<int> archiveCategory(int id) async {
+    await RepositorySecurityGuard.requireAdmin(
+      module: 'Food Management',
+      action: 'Archive Food Category',
+    );
     final db = await _dbHelper.database;
     // Before archiving category, reassign items to another category
     final activeCats = await db.query(

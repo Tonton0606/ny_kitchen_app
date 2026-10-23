@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ny_kitchen_app/core/database/database_helper.dart';
 import 'package:ny_kitchen_app/core/database/repositories/user_repository.dart';
 import 'package:ny_kitchen_app/core/utils/security_utils.dart';
+import 'package:ny_kitchen_app/core/session/session_manager.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -12,7 +13,12 @@ void main() {
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    SecurityUtils.defaultIterations = 1000;
     FlutterSecureStorage.setMockInitialValues({});
+  });
+
+  tearDownAll(() {
+    SecurityUtils.defaultIterations = SecurityUtils.targetIterations;
   });
 
   setUp(() async {
@@ -63,9 +69,11 @@ void main() {
             
     DatabaseHelper.setMockDatabase(db);
     userRepository = UserRepository();
+    SessionManager().setSession({'id': 1, 'username': 'testuser', 'role': 'admin', 'status': 'active'});
   });
 
   tearDown(() async {
+    SessionManager().clearSession();
     await db.close();
   });
 

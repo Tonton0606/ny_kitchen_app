@@ -78,6 +78,9 @@ class _FoodImageState extends State<FoodImage> {
     }
 
     if (path.startsWith('http')) {
+      if (path.contains('placehold.co')) {
+        return _buildPlaceholder(name);
+      }
       return Image.network(
         path,
         fit: BoxFit.cover,

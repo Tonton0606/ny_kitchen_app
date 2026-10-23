@@ -564,13 +564,17 @@ class SyncService {
                   limit: 1,
                 );
                 if (current.isNotEmpty) {
-                  // If local transaction is "Served" but cloud is "Preparing", don't overwrite with older cloud status!
-                  final localStatus = current.first['status'] as String;
-                  final cloudStatus = record['status'] as String;
+                  final localStatus = (current.first['status'] as String? ?? '').trim();
+                  final cloudStatus = (record['status'] as String? ?? '').trim();
                   
-                  // Only allow cloud to overwrite if cloud is moving forward or local is same.
-                  if (localStatus == 'Served' && cloudStatus == 'Preparing') {
-                     record['status'] = 'Served'; // Preserve local served status
+                  // Sticky terminal states: Local 'Voided', 'Refunded', and 'Served' must never
+                  // be reverted to 'Preparing' by a lagged or stale cloud sync pull.
+                  final isLocalTerminal = localStatus == 'Voided' || localStatus == 'Refunded' || localStatus == 'Served';
+                  if (isLocalTerminal && cloudStatus == 'Preparing') {
+                    record['status'] = localStatus;
+                  } else if ((localStatus == 'Voided' || localStatus == 'Refunded') && cloudStatus == 'Served') {
+                    // Locally voided or refunded orders must remain cancelled
+                    record['status'] = localStatus;
                   }
                   
                   record['order_number'] = record['order_number'] ?? current.first['order_number'];

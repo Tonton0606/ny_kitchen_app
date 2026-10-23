@@ -435,18 +435,8 @@ class _OrdersPageState extends State<OrdersPage> {
         ..clearSnackBars()
         ..showSnackBar(
           SnackBar(
-            content: Text('${order['orderNo']} has been cancelled.'),
+            content: Text('${order['orderNo']} has been cancelled and voided.'),
             behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: 'Undo',
-              onPressed: () async {
-                await _transactionRepo.updateTransactionStatus(
-                  order['id'],
-                  order['status'],
-                );
-                await _loadOrders();
-              },
-            ),
           ),
         );
     } catch (e) {
