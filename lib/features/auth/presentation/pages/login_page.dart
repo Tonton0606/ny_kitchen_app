@@ -202,6 +202,9 @@ class _LoginPageState extends State<LoginPage>
 
   void _showForceChangePassword(Map<String, dynamic> user) {
     final mutableUser = Map<String, dynamic>.from(user);
+    // Establish authenticated session so repository security guards permit self-service password update
+    SessionManager().setSession(mutableUser);
+
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -209,6 +212,7 @@ class _LoginPageState extends State<LoginPage>
         user: mutableUser,
         onSuccess: () {
           mutableUser['must_change_password'] = 0;
+          SessionManager().setSession(mutableUser);
           Navigator.of(dialogCtx).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

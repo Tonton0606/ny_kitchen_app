@@ -9,6 +9,7 @@ import 'package:ny_kitchen_app/features/auth/presentation/widgets/force_change_p
 import 'package:ny_kitchen_app/features/auth/presentation/widgets/guarded_route.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ny_kitchen_app/core/utils/security_exception.dart';
 
 void main() {
   late Database db;
@@ -237,5 +238,30 @@ void main() {
       expect(successCalled, isTrue);
       expect(testUser['must_change_password'], equals(0));
     });
+
+    test('UserRepository.changePassword throws UNAUTHENTICATED when session is null', () async {
+      final user = await userRepo.login('cashier', 'cashier123');
+      expect(user!['must_change_password'], equals(1));
+      sessionManager.clearSession();
+
+      expect(
+        () => userRepo.changePassword(user['id'] as int, 'Hancejabezpogi123'),
+        throwsA(isA<SecurityException>().having((e) => e.code, 'code', 'UNAUTHENTICATED')),
+      );
+    });
+
+    test('UserRepository.changePassword succeeds and clears must_change_password when session is set', () async {
+      final user = await userRepo.login('cashier', 'cashier123');
+      expect(user!['must_change_password'], equals(1));
+      sessionManager.setSession(user);
+
+      final success = await userRepo.changePassword(user['id'] as int, 'Hancejabezpogi123');
+      expect(success, isTrue);
+
+      final updated = await userRepo.login('cashier', 'Hancejabezpogi123');
+      expect(updated, isNotNull);
+      expect(updated!['must_change_password'], equals(0));
+    });
   });
 }
+

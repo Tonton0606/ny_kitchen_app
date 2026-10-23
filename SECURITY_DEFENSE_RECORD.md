@@ -928,3 +928,32 @@ Evidence paths:
 - `SECURITY_DEFENSE_RECORD.md`
 Next concrete step: Test the Sales Reports page and export PDF/Excel in the running desktop app.
 
+## Forced Password Change Session Authorization Fix (Gap 3 / SEC-09 / AT03) — 2026-10-23 (Asia/Manila)
+
+Date/time and timezone: 2026-10-23T17:45:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Fix `SecurityException: Authentication required: No active session found. (Code: UNAUTHENTICATED)` error appearing in `ForceChangePasswordDialog` when users with `must_change_password = 1` attempt to set their new password on initial login.
+Rubric / risk / acceptance-test IDs: R08, R10, K01, AT02, AT03, SEC-01, SEC-09.
+Files changed:
+- `lib/features/auth/presentation/pages/login_page.dart`
+- `test/security/force_password_change_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root cause:
+- When a user with `must_change_password = 1` authenticated against SQLite in `login_page.dart`, `_showForceChangePassword(user)` was presented prior to invoking `SessionManager().setSession(user)` (which had been deferred until `_proceedToShell()`).
+- When the user submitted their new password, `ForceChangePasswordDialog` invoked `UserRepository.changePassword(userId, newPassword)`, which calls `RepositorySecurityGuard.requireSelfOrAdmin()`.
+- Because `SessionManager().currentUser` was null, `requireAuthenticated()` blocked the operation and threw `SecurityException: Authentication required: No active session found. (Code: UNAUTHENTICATED)`.
+Remediation:
+- Updated `LoginPage._showForceChangePassword`: immediately sets `SessionManager().setSession(mutableUser)` upon successful credential verification so that the acting session identity is established for self-service password updates.
+- Added session refresh on success (`SessionManager().setSession(mutableUser)`) before shell navigation.
+- If the user cancels the dialog (`onCancel`), `SessionManager().clearSession()` clears the session and leaves them safely logged out at the login screen.
+- Added regression tests in `test/security/force_password_change_test.dart` verifying that `UserRepository.changePassword` rejects unauthenticated callers with `UNAUTHENTICATED`, and succeeds when the session is established, resetting `must_change_password` to `0`.
+Checks actually run and actual results:
+- `flutter test test/security/force_password_change_test.dart`: 8/8 passed cleanly.
+- `flutter test test/security/`: 58/58 passed cleanly across all security test suites (100% pass rate).
+Evidence paths:
+- `lib/features/auth/presentation/pages/login_page.dart`
+- `test/security/force_password_change_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Next concrete step: Stage changes, commit cleanly, and push to origin/main.
+
+
