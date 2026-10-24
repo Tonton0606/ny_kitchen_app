@@ -1320,4 +1320,31 @@ Evidence paths: `lib/core/services/sync_service.dart`.
 Unverified items / remaining risks: Live running Flutter client window will pick up clean sync status on its next 15-second automatic sync cycle or hot reload.
 Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
 
+## Fix Sales Reports In-Progress / Pending Transaction Modal UI — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T08:40:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Fix Sales Reports transaction details modal dialog not changing for Pending / Preparing rows (appearing identical to Served status).
+Rubric / risk / acceptance-test IDs: R08, R10, SEC-01.
+Files changed:
+- `lib/features/admin/presentation/pages/sales_reports_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root Cause Identified:
+- In `SalesReportsPage._showTransactionDetails`, status checks only explicitly tested for `voided` and `refunded`.
+- When an in-progress or pending order (`Preparing` / `Pending`) was clicked, it defaulted to the `Served` style: a green receipt icon (`LucideIcons.receipt`, `AppColors.forest`), omitted any status banner, and contained no `Status` metadata row or chip in the modal dialog. Consequently, `Preparing` and `Served` modals appeared visually indistinguishable.
+Fixed:
+1. Updated `_showTransactionDetails` in `sales_reports_page.dart` to recognize `isPreparing` (`statusLower == 'preparing' || statusLower == 'pending'`).
+2. Replaced the generic green receipt icon with an amber `Icons.hourglass_top_rounded` inside an amber rounded container (`Color(0xFFFEF3C7)`) and added a prominent `AppStatusChip` in the modal header for instant visual status recognition.
+3. Added an amber in-progress banner in the dialog content: `'ORDER IN PROGRESS (PREPARING)'`.
+4. Added an explicit `Status:` row in the transaction metadata table displaying `AppStatusChip(label: displayStatus, type: chipType, isCompact: true)`.
+5. Added a direct `Mark as Served` action button in the dialog footer for `Preparing` orders with admin confirmation, allowing administrators to advance the order directly from the modal.
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test test/offline/sync_failure_test.dart`: 3/3 passed.
+  - `flutter test test/security/`: 84/84 passed.
+Evidence paths: `lib/features/admin/presentation/pages/sales_reports_page.dart`.
+Unverified items / remaining risks: None. The running Flutter client will display the new modal on hot reload or next interaction.
+Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
+
+
 

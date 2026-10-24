@@ -900,8 +900,28 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
     if (!context.mounted) return;
 
     final rawStatus = (tx['status'] as String? ?? 'Served').trim();
-    final isVoided = rawStatus.toLowerCase() == 'voided';
-    final isRefunded = rawStatus.toLowerCase() == 'refunded';
+    final displayStatus = (rawStatus.toLowerCase() == 'completed' ||
+            rawStatus.toLowerCase() == 'taken' ||
+            rawStatus.toLowerCase() == 'ready')
+        ? 'Served'
+        : rawStatus;
+    final statusLower = displayStatus.toLowerCase();
+    final isVoided = statusLower == 'voided';
+    final isRefunded = statusLower == 'refunded';
+    final isPreparing = statusLower == 'preparing' || statusLower == 'pending';
+    final isServed = statusLower == 'served';
+
+    AppStatusType chipType;
+    if (isServed) {
+      chipType = AppStatusType.success;
+    } else if (isVoided || isRefunded) {
+      chipType = AppStatusType.error;
+    } else if (isPreparing) {
+      chipType = AppStatusType.warning;
+    } else {
+      chipType = AppStatusType.info;
+    }
+
     final parsedDate = DateTime.tryParse(tx['created_at'] ?? '') ?? DateTime.now();
     final formattedDate = DateFormat('MMM d, yyyy • h:mm a').format(parsedDate);
     final totalAmount = _parseAmount(tx['total_amount']);
@@ -927,7 +947,9 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                     ? AppColors.brandRed.withValues(alpha: 0.1)
                     : isRefunded
                         ? const Color(0xFFFEF3C7)
-                        : AppColors.forest.withValues(alpha: 0.1),
+                        : isPreparing
+                            ? const Color(0xFFFEF3C7)
+                            : AppColors.forest.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -935,12 +957,16 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                     ? Icons.block
                     : isRefunded
                         ? Icons.assignment_return_outlined
-                        : LucideIcons.receipt,
+                        : isPreparing
+                            ? Icons.hourglass_top_rounded
+                            : LucideIcons.receipt,
                 color: isVoided
                     ? AppColors.brandRed
                     : isRefunded
                         ? const Color(0xFFD97706)
-                        : AppColors.forest,
+                        : isPreparing
+                            ? const Color(0xFFD97706)
+                            : AppColors.forest,
                 size: 20,
               ),
             ),
@@ -959,6 +985,11 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                   ),
                 ],
               ),
+            ),
+            AppStatusChip(
+              label: displayStatus,
+              type: chipType,
+              isCompact: true,
             ),
           ],
         ),
@@ -1042,7 +1073,46 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
+              ] else if (isPreparing) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.hourglass_top_rounded, size: 16, color: Color(0xFFD97706)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'ORDER IN PROGRESS (${displayStatus.toUpperCase()})',
+                          style: AppTypography.caption.copyWith(
+                            color: const Color(0xFF92400E),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
               ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Status:', style: AppTypography.bodyMuted),
+                  AppStatusChip(
+                    label: displayStatus,
+                    type: chipType,
+                    isCompact: true,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1147,6 +1217,51 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
           ),
         ),
         actions: [
+          if (isPreparing)
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.forest,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              ),
+              icon: const Icon(Icons.check_circle_outline, size: 16),
+              label: const Text('Mark as Served', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (confirmCtx) => AlertDialog(
+                    title: const Text('Mark Order as Served?'),
+                    content: Text(
+                      'Are you sure you want to mark Receipt #${tx['receipt_number'] ?? tx['id']} as Served?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(confirmCtx, false),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.forest,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () => Navigator.pop(confirmCtx, true),
+                        child: const Text('Confirm'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true && context.mounted) {
+                  await _txRepo.updateTransactionStatus(tx['id'], 'Served');
+                  if (context.mounted) {
+                    Navigator.pop(ctx);
+                    _loadData();
+                  }
+                }
+              },
+            ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Close', style: AppTypography.buttonSmall),
