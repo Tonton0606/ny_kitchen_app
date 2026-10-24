@@ -82,17 +82,22 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   }
 
   Future<void> _loadDataSilent() async {
-    if (!mounted || _isEditingSelected || _showAddFood) return;
+    if (!mounted) return;
     final repo = FoodRepository();
-    final foods = await repo.getAllFoodItems(includeArchived: true);
     final categories = await repo.getCategories();
-    if (!mounted || _isEditingSelected || _showAddFood) return;
+    if (!mounted) return;
     setState(() {
-      _foods = foods;
       _categories = categories;
       if (_selectedCategory != 'All' && !categories.any((c) => c['name'] == _selectedCategory)) {
         _selectedCategory = 'All';
       }
+    });
+
+    if (_isEditingSelected || _showAddFood) return;
+    final foods = await repo.getAllFoodItems(includeArchived: true);
+    if (!mounted || _isEditingSelected || _showAddFood) return;
+    setState(() {
+      _foods = foods;
       final maxPages = (foods.length + _pageSize - 1) ~/ _pageSize;
       if (_currentPage > maxPages && maxPages > 0) {
         _currentPage = maxPages;
@@ -176,11 +181,44 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     if (_selectedFood == null) return;
     final name = _editNameController.text.trim();
     final price = double.tryParse(_editPriceController.text.trim()) ?? 0.0;
-    if (name.isEmpty ||
-        name.length > 50 ||
-        price <= 0 ||
-        price > 99999.99 ||
-        _editCategoryId == null) {
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Food name cannot be empty.'),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (name.length > 50) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Food name cannot exceed 50 characters.'),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (price <= 0 || price > 99999.99) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid price between 0.01 and 99,999.99.'),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (_editCategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a category for this food item.'),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return;
     }
     final foodId = _selectedFood!['id'] as int;
@@ -260,11 +298,44 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   Future<void> _saveNewFood() async {
     final name = _addNameController.text.trim();
     final price = double.tryParse(_addPriceController.text.trim()) ?? 0.0;
-    if (name.isEmpty ||
-        name.length > 50 ||
-        price <= 0 ||
-        price > 99999.99 ||
-        _addCategoryId == null) {
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Food name cannot be empty.'),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (name.length > 50) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Food name cannot exceed 50 characters.'),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (price <= 0 || price > 99999.99) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid price between 0.01 and 99,999.99.'),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (_addCategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a category for this dish.'),
+          backgroundColor: AppColors.brandRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return;
     }
 
@@ -380,7 +451,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
             onPressed: () async {
               final repo = FoodRepository();
               await repo.archiveFoodItem(food['id'] as int);
-              if (!context.mounted) return;
+              if (!ctx.mounted) return;
               Navigator.pop(ctx);
               if (_selectedFood != null && _selectedFood!['id'] == food['id']) {
                 setState(() {
@@ -490,7 +561,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
             onPressed: () async {
               final repo = FoodRepository();
               await repo.unarchiveFoodItem(food['id'] as int);
-              if (!context.mounted) return;
+              if (!ctx.mounted) return;
               Navigator.pop(ctx);
               if (_selectedFood != null && _selectedFood!['id'] == food['id']) {
                 setState(() {
@@ -2329,8 +2400,13 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     await showDialog(
       context: context,
       builder: (dialogCtx) => _ManageCategoriesDialog(
-        onCategoriesChanged: () {
-          if (mounted) _loadDataSilent();
+        onCategoriesChanged: ({String? oldName, String? newName}) {
+          if (mounted) {
+            if (oldName != null && newName != null && _selectedCategory == oldName) {
+              setState(() => _selectedCategory = newName);
+            }
+            _loadDataSilent();
+          }
         },
       ),
     );
@@ -2341,7 +2417,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
 }
 
 class _ManageCategoriesDialog extends StatefulWidget {
-  final VoidCallback onCategoriesChanged;
+  final void Function({String? oldName, String? newName}) onCategoriesChanged;
 
   const _ManageCategoriesDialog({required this.onCategoriesChanged});
 
@@ -2391,8 +2467,11 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
+            content: Text(
+              e.toString().replaceAll('Exception: ', '').replaceAll('SecurityException: ', ''),
+            ),
             backgroundColor: AppColors.brandRed,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -2402,117 +2481,190 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
   Future<void> _editCategory(Map<String, dynamic> cat) async {
     final editController = TextEditingController(text: cat['name'] as String);
     String editIcon = (cat['icon_url'] as String?) ?? 'utensils';
+    String? dialogError;
+    bool isSaving = false;
+    String? updatedName;
 
     final saved = await showDialog<bool>(
       context: context,
       builder: (editCtx) => StatefulBuilder(
-        builder: (ctx2, setEditState) => AlertDialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          title: const Text('Edit Category'),
-          content: Row(
-            children: [
-              InkWell(
-                onTap: () async {
-                  final selected = await showDialog<String>(
-                    context: ctx2,
-                    builder: (_) => FoodIconPickerDialog(
-                      currentIcon: editIcon,
-                    ),
-                  );
-                  if (selected != null) {
-                    setEditState(() => editIcon = selected);
-                  }
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFE2E8F0),
-                      width: 1.5,
-                    ),
+        builder: (ctx2, setEditState) {
+          Future<void> handleSave() async {
+            final newName = editController.text.trim();
+            if (newName.isEmpty) {
+              setEditState(() => dialogError = 'Category name cannot be empty.');
+              return;
+            }
+            if (newName.length > 30) {
+              setEditState(() => dialogError = 'Category name cannot exceed 30 characters.');
+              return;
+            }
+            if (newName.toLowerCase() == 'all') {
+              setEditState(() => dialogError = 'Category name cannot be "All".');
+              return;
+            }
+
+            setEditState(() {
+              isSaving = true;
+              dialogError = null;
+            });
+
+            try {
+              await _repo.updateCategory(
+                cat['id'] as int,
+                newName,
+                iconUrl: editIcon,
+              );
+              updatedName = newName;
+              if (editCtx.mounted) Navigator.pop(editCtx, true);
+            } catch (e) {
+              setEditState(() {
+                isSaving = false;
+                dialogError = e
+                    .toString()
+                    .replaceAll('Exception: ', '')
+                    .replaceAll('SecurityException: ', '');
+              });
+            }
+          }
+
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            title: const Text('Edit Category'),
+            content: SizedBox(
+              width: 380,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: isSaving
+                            ? null
+                            : () async {
+                                final selected = await showDialog<String>(
+                                  context: ctx2,
+                                  builder: (_) => FoodIconPickerDialog(
+                                    currentIcon: editIcon,
+                                  ),
+                                );
+                                if (selected != null) {
+                                  setEditState(() => editIcon = selected);
+                                }
+                              },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFE2E8F0),
+                              width: 1.5,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: buildCategoryIconWidget(editIcon, size: 22),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: editController,
+                          enabled: !isSaving,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(30),
+                          ],
+                          onSubmitted: (_) => handleSave(),
+                          decoration: InputDecoration(
+                            hintText: 'Category Name',
+                            filled: true,
+                            fillColor: Colors.white,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: dialogError != null
+                                    ? AppColors.brandRed
+                                    : const Color(0xFFE2E8F0),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: dialogError != null
+                                    ? AppColors.brandRed
+                                    : AppColors.goldenYellow,
+                                width: 1.5,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  alignment: Alignment.center,
-                  child: buildCategoryIconWidget(editIcon, size: 22),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: editController,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(30),
+                  if (dialogError != null) ...[
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 56),
+                      child: Text(
+                        dialogError!,
+                        style: const TextStyle(
+                          color: AppColors.brandRed,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ],
-                  decoration: InputDecoration(
-                    hintText: 'Category Name',
-                    filled: true,
-                    fillColor: Colors.white,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                    ),
-                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSaving ? null : () => Navigator.pop(editCtx, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.goldenYellow,
+                  foregroundColor: Colors.black,
                 ),
+                onPressed: isSaving ? null : handleSave,
+                child: isSaving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
+                      )
+                    : const Text('Save'),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(editCtx, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.goldenYellow,
-                foregroundColor: Colors.black,
-              ),
-              onPressed: () async {
-                final newName = editController.text.trim();
-                if (newName.isNotEmpty) {
-                  try {
-                    await _repo.updateCategory(
-                      cat['id'] as int,
-                      newName,
-                      iconUrl: editIcon,
-                    );
-                    if (editCtx.mounted) Navigator.pop(editCtx, true);
-                  } catch (e) {
-                    if (editCtx.mounted) {
-                      ScaffoldMessenger.of(editCtx).showSnackBar(
-                        SnackBar(
-                          content: Text(e.toString().replaceAll('Exception: ', '')),
-                          backgroundColor: AppColors.brandRed,
-                        ),
-                      );
-                    }
-                  }
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
 
+    editController.dispose();
+
     if (saved == true && mounted) {
       await _loadCategories();
-      widget.onCategoriesChanged();
+      widget.onCategoriesChanged(
+        oldName: cat['name'] as String?,
+        newName: updatedName,
+      );
     }
   }
 

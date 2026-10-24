@@ -267,11 +267,22 @@ class FoodRepository {
   }
 
   Future<int> insertCategory(String name, {String? iconUrl}) async {
-    await RepositorySecurityGuard.requireAdmin(
+    final admin = await RepositorySecurityGuard.requireAdmin(
       module: 'Food Management',
       action: 'Create Food Category',
     );
     final db = await _dbHelper.database;
+
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty) {
+      throw Exception('Category name cannot be empty.');
+    }
+    if (trimmedName.length > 30) {
+      throw Exception('Category name cannot exceed 30 characters.');
+    }
+    if (trimmedName.toLowerCase() == 'all') {
+      throw Exception('Category name cannot be "All".');
+    }
 
     String finalIcon = iconUrl ?? '🍽️';
     if (finalIcon.startsWith('http') ||
@@ -283,56 +294,83 @@ class FoodRepository {
       } catch (_) {}
     }
 
-    final trimmedName = name.trim();
     final existing = await db.query(
       'food_categories',
       where: 'LOWER(name) = ?',
       whereArgs: [trimmedName.toLowerCase()],
     );
 
+    int id;
     if (existing.isNotEmpty) {
-      final cat = existing.first;
-      if (cat['status'] == 'archived') {
-        final updateData = <String, dynamic>{
-          'name': trimmedName,
-          'status': 'active',
-          'icon_url': finalIcon,
-          'updated_at': DateTime.now().toIso8601String(),
-        };
-        await db.update(
-          'food_categories',
-          updateData,
-          where: 'id = ?',
-          whereArgs: [cat['id']],
-        );
-        try {
-          await _syncService.syncToCloud();
-        } catch (_) {}
-        return cat['id'] as int;
-      } else {
+      final active = existing.where((c) => c['status'] == 'active');
+      if (active.isNotEmpty) {
         throw Exception('Category "$trimmedName" already exists.');
       }
+      final cat = existing.first;
+      final updateData = <String, dynamic>{
+        'name': trimmedName,
+        'status': 'active',
+        'icon_url': finalIcon,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      await db.update(
+        'food_categories',
+        updateData,
+        where: 'id = ?',
+        whereArgs: [cat['id']],
+      );
+      id = cat['id'] as int;
+
+      // Clean up any extra archived copies that share the same lowercased name
+      await db.delete(
+        'food_categories',
+        where: 'LOWER(name) = ? AND id != ?',
+        whereArgs: [trimmedName.toLowerCase(), id],
+      );
+    } else {
+      id = await db.insert('food_categories', {
+        'name': trimmedName,
+        'icon_url': finalIcon,
+        'status': 'active',
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      });
     }
 
-    int id = await db.insert('food_categories', {
-      'name': trimmedName,
-      'icon_url': finalIcon,
-      'status': 'active',
-      'created_at': DateTime.now().toIso8601String(),
-    });
     try {
       await _syncService.syncToCloud();
     } catch (_) {}
+
+    await _auditRepo.logAction(
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? 'Admin',
+      role: 'admin',
+      module: 'Food Management',
+      action: 'Food Category Created',
+      status: 'Success',
+      description: 'Created/Reactivated food category "$trimmedName" (ID: $id)',
+    );
+
     return id;
   }
 
   Future<int> updateCategory(int id, String name, {String? iconUrl}) async {
-    await RepositorySecurityGuard.requireAdmin(
+    final admin = await RepositorySecurityGuard.requireAdmin(
       module: 'Food Management',
       action: 'Update Food Category',
     );
     final db = await _dbHelper.database;
     final trimmedName = name.trim();
+    if (trimmedName.isEmpty) {
+      throw Exception('Category name cannot be empty.');
+    }
+    if (trimmedName.length > 30) {
+      throw Exception('Category name cannot exceed 30 characters.');
+    }
+    if (trimmedName.toLowerCase() == 'all') {
+      throw Exception('Category name cannot be "All".');
+    }
+
     final duplicates = await db.query(
       'food_categories',
       where: 'LOWER(name) = ? AND id != ?',
@@ -340,16 +378,16 @@ class FoodRepository {
     );
 
     if (duplicates.isNotEmpty) {
-      final dup = duplicates.first;
-      if (dup['status'] == 'archived') {
-        await db.delete(
-          'food_categories',
-          where: 'id = ?',
-          whereArgs: [dup['id']],
-        );
-      } else {
+      final active = duplicates.where((c) => c['status'] == 'active');
+      if (active.isNotEmpty) {
         throw Exception('Category "$trimmedName" already exists.');
       }
+      // If only archived duplicates exist, clean them up before renaming
+      await db.delete(
+        'food_categories',
+        where: 'LOWER(name) = ? AND status = ? AND id != ?',
+        whereArgs: [trimmedName.toLowerCase(), 'archived', id],
+      );
     }
 
     final data = <String, dynamic>{
@@ -377,6 +415,17 @@ class FoodRepository {
     try {
       await _syncService.syncToCloud();
     } catch (_) {}
+
+    await _auditRepo.logAction(
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? 'Admin',
+      role: 'admin',
+      module: 'Food Management',
+      action: 'Food Category Updated',
+      status: 'Success',
+      description: 'Updated food category ID $id to "$trimmedName"',
+    );
+
     return count;
   }
 

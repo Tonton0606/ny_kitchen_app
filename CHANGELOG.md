@@ -11,6 +11,9 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ### Fixed — 2026-10-24
 
+- Fixed Category Update bug in Admin Food Management: added inline error feedback and loading state to Edit Category modal, enabled Enter-key submission, and resolved SQLite UNIQUE constraint collisions when renaming to previously archived category names.
+- Hardened `FoodRepository.updateCategory` and `insertCategory` with strict input validation (preventing empty strings, names > 30 characters, and reserved name "All"), comprehensive duplicate resolution, and audit logging (`Food Category Updated`, `Food Category Created`).
+- Fixed Food Item saving validation in `FoodManagementPage` to display explicit floating SnackBar warnings when name, price, or category selection is missing instead of failing silently.
 - Configured SQLite Write-Ahead Logging (WAL) and 10-second busy timeout in `DatabaseHelper` to support high-concurrency access and eliminate "database is locked" errors during simultaneous database browsing and POS operation.
 - Extracted Manage Categories modal into a dedicated StatefulWidget (`_ManageCategoriesDialog`) with immediate on-the-spot UI updating, optimistic removal, and real-time parent page synchronization.
 - Resolved SQLite `UNIQUE constraint failed: food_categories.name` by reactivating previously archived categories when re-added and safely clearing stale archived collisions on rename.

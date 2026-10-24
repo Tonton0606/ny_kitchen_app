@@ -205,4 +205,89 @@ void main() {
     final item = await db.query('food_items', where: 'id = ?', whereArgs: [77]);
     expect(item.first['category_id'], equals(19));
   });
+
+  test('FoodRepository updateCategory successfully updates category name and icon', () async {
+    SessionManager().setSession({
+      'id': 1,
+      'username': 'admin',
+      'role': 'admin',
+      'status': 'active',
+    });
+
+    final count = await foodRepo.updateCategory(19, 'Steakhouse Burger', iconUrl: 'flame');
+    expect(count, equals(1));
+
+    final updated = await db.query('food_categories', where: 'id = ?', whereArgs: [19]);
+    expect(updated.first['name'], equals('Steakhouse Burger'));
+    expect(updated.first['icon_url'], equals('flame'));
+  });
+
+  test('FoodRepository updateCategory rejects empty name, >30 chars, and reserved name "All"', () async {
+    SessionManager().setSession({
+      'id': 1,
+      'username': 'admin',
+      'role': 'admin',
+      'status': 'active',
+    });
+
+    expect(
+      () => foodRepo.updateCategory(19, '   '),
+      throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('cannot be empty'))),
+    );
+
+    expect(
+      () => foodRepo.updateCategory(19, 'This is a super long category name that exceeds thirty characters'),
+      throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('cannot exceed 30 characters'))),
+    );
+
+    expect(
+      () => foodRepo.updateCategory(19, 'All'),
+      throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('cannot be "All"'))),
+    );
+  });
+
+  test('FoodRepository updateCategory throws duplicate error when renaming to existing active category', () async {
+    SessionManager().setSession({
+      'id': 1,
+      'username': 'admin',
+      'role': 'admin',
+      'status': 'active',
+    });
+
+    // Category 10 is 'Chicken Pastil Meals'
+    expect(
+      () => foodRepo.updateCategory(19, 'chicken pastil meals'),
+      throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('already exists'))),
+    );
+  });
+
+  test('FoodRepository updateCategory purges archived collision without unique constraint failure', () async {
+    SessionManager().setSession({
+      'id': 1,
+      'username': 'admin',
+      'role': 'admin',
+      'status': 'active',
+    });
+
+    // Seed an archived category named 'Beverages'
+    await db.insert('food_categories', {
+      'id': 4,
+      'name': 'Beverages',
+      'icon_url': 'cup',
+      'status': 'archived',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    // Renaming Category 19 to 'Beverages' should purge the archived duplicate and update cleanly
+    final count = await foodRepo.updateCategory(19, 'Beverages', iconUrl: 'cup');
+    expect(count, equals(1));
+
+    final categories = await foodRepo.getCategories();
+    final updatedCat = categories.firstWhere((c) => c['id'] == 19);
+    expect(updatedCat['name'], equals('Beverages'));
+
+    // The archived collision ID 4 should be deleted
+    final oldArchived = await db.query('food_categories', where: 'id = ?', whereArgs: [4]);
+    expect(oldArchived.isEmpty, isTrue);
+  });
 }
