@@ -36,7 +36,8 @@ class FoodRepository {
       $whereClause
       ORDER BY f.name ASC
     ''';
-    return await db.rawQuery(sql);
+    final results = await db.rawQuery(sql);
+    return results.map((r) => Map<String, dynamic>.from(r)).toList();
   }
 
   // Create a new food item
@@ -220,12 +221,13 @@ class FoodRepository {
   Future<List<Map<String, dynamic>>> getCategories() async {
     await repairOrphanFoodCategories();
     final db = await _dbHelper.database;
-    return await db.query(
+    final results = await db.query(
       'food_categories',
       where: 'status = ?',
       whereArgs: ['active'],
       orderBy: 'id ASC',
     );
+    return results.map((r) => Map<String, dynamic>.from(r)).toList();
   }
 
   Future<void> repairOrphanFoodCategories() async {
@@ -497,12 +499,13 @@ class FoodRepository {
 
   Future<List<Map<String, dynamic>>> getArchivedCategories() async {
     final db = await _dbHelper.database;
-    return await db.query(
+    final results = await db.query(
       'food_categories',
       where: 'status = ?',
       whereArgs: ['archived'],
       orderBy: 'name ASC',
     );
+    return results.map((r) => Map<String, dynamic>.from(r)).toList();
   }
 
   Future<int> unarchiveCategory(int id) async {

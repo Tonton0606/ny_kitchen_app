@@ -2451,8 +2451,8 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
     final archived = await _repo.getArchivedCategories();
     if (!mounted) return;
     setState(() {
-      _activeCategories = active;
-      _archivedCategories = archived;
+      _activeCategories = active.map((c) => Map<String, dynamic>.from(c)).toList();
+      _archivedCategories = archived.map((c) => Map<String, dynamic>.from(c)).toList();
       _isLoading = false;
     });
   }
@@ -2709,8 +2709,8 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
     if (confirm == true && mounted) {
       // Optimistically move to archived on the spot!
       setState(() {
-        _activeCategories.removeWhere((c) => c['id'] == cat['id']);
-        _archivedCategories.insert(0, {...cat, 'status': 'archived'});
+        _activeCategories = _activeCategories.where((c) => c['id'] != cat['id']).toList();
+        _archivedCategories = [{...cat, 'status': 'archived'}, ..._archivedCategories];
       });
 
       try {
@@ -2771,8 +2771,8 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
     if (confirm == true && mounted) {
       // Optimistically move to active on the spot!
       setState(() {
-        _archivedCategories.removeWhere((c) => c['id'] == cat['id']);
-        _activeCategories.add({...cat, 'status': 'active'});
+        _archivedCategories = _archivedCategories.where((c) => c['id'] != cat['id']).toList();
+        _activeCategories = [..._activeCategories, {...cat, 'status': 'active'}];
       });
 
       try {
