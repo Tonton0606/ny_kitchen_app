@@ -301,49 +301,49 @@ class _ActivityLogsPageState extends State<ActivityLogsPage> {
                                                 columns: const [
                                                   DataColumn(
                                                     label: Text(
-                                                      'Timestamp',
+                                                      'TIMESTAMP',
                                                       style: AppTypography.tableHeader,
                                                     ),
                                                   ),
                                                   DataColumn(
                                                     label: Text(
-                                                      'User',
+                                                      'USER',
                                                       style: AppTypography.tableHeader,
                                                     ),
                                                   ),
                                                   DataColumn(
                                                     label: Text(
-                                                      'Role',
+                                                      'ROLE',
                                                       style: AppTypography.tableHeader,
                                                     ),
                                                   ),
                                                   DataColumn(
                                                     label: Text(
-                                                      'Module',
+                                                      'MODULE',
                                                       style: AppTypography.tableHeader,
                                                     ),
                                                   ),
                                                   DataColumn(
                                                     label: Text(
-                                                      'Action',
+                                                      'ACTION',
                                                       style: AppTypography.tableHeader,
                                                     ),
                                                   ),
                                                   DataColumn(
                                                     label: Text(
-                                                      'Status',
+                                                      'STATUS',
                                                       style: AppTypography.tableHeader,
                                                     ),
                                                   ),
                                                   DataColumn(
                                                     label: Text(
-                                                      'Device',
+                                                      'DEVICE',
                                                       style: AppTypography.tableHeader,
                                                     ),
                                                   ),
                                                   DataColumn(
                                                     label: Text(
-                                                      'Station',
+                                                      'STATION',
                                                       style: AppTypography.tableHeader,
                                                     ),
                                                   ),
