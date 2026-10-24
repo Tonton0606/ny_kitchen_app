@@ -2256,13 +2256,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     required String tooltip,
     required VoidCallback onPressed,
   }) {
-    return Container(
+    return SizedBox(
       width: 32,
       height: 32,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
       child: IconButton(
         icon: Icon(icon, size: 18),
         color: color,

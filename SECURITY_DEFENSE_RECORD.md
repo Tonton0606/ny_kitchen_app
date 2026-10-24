@@ -1389,3 +1389,23 @@ Checks actually run and actual results:
 Evidence paths: `lib/features/admin/presentation/pages/account_management_page.dart`.
 Unverified items / remaining risks: None.
 Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
+
+## Remove Action Button Background Pills in Food Management — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T08:54:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Remove the background color of the icon pill of archive and edit in Food Management.
+Rubric / risk / acceptance-test IDs: UI-POLISH, SEC-01.
+Files changed:
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root Cause / UX Alignment:
+- In `FoodManagementPage._buildActionButton()`, the button was wrapped in a `Container` with `decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8))` creating light yellow and light orange background pill containers behind the edit and archive icons.
+Fixed:
+- Removed the tinted background `BoxDecoration` and replaced the container with a clean `SizedBox(width: 32, height: 32, child: IconButton(...))` so that edit and archive action icons sit cleanly with transparent backgrounds at rest while preserving their native hover/splash feedback.
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test test/security/`: 84/84 passed.
+Evidence paths: `lib/features/admin/presentation/pages/food_management_page.dart`.
+Unverified items / remaining risks: None.
+Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
