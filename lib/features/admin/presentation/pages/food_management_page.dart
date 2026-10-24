@@ -929,7 +929,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     const SizedBox(
                       width: 56,
                       child: Text(
-                        'Image',
+                        'IMAGE',
                         style: AppTypography.tableHeader,
                       ),
                     ),
@@ -945,7 +945,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                           child: Row(
                             children: [
                               const Text(
-                                'Name',
+                                'NAME',
                                 style: AppTypography.tableHeader,
                               ),
                               const SizedBox(width: 4),
@@ -968,7 +968,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       child: Padding(
                         padding: const EdgeInsets.only(right: 16),
                         child: Text(
-                          'Category',
+                          'CATEGORY',
                           style: AppTypography.tableHeader,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -985,7 +985,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                           child: Row(
                             children: [
                               const Text(
-                                'Price',
+                                'PRICE',
                                 style: AppTypography.tableHeader,
                               ),
                               const SizedBox(width: 4),
@@ -1008,7 +1008,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                       child: Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Text(
-                          'Status',
+                          'STATUS',
                           style: AppTypography.tableHeader,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1017,7 +1017,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     const SizedBox(
                       width: 80,
                       child: Text(
-                        'Actions',
+                        'ACTIONS',
                         style: AppTypography.tableHeader,
                       ),
                     ),

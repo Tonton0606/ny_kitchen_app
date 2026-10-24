@@ -1434,13 +1434,54 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                     ),
                     child: const Row(
                       children: [
-                        SizedBox(width: 48, child: Text('AVATAR', style: AppTypography.tableHeader)),
-                        SizedBox(width: 16),
-                        Expanded(flex: 3, child: Text('NAME', style: AppTypography.tableHeader)),
-                        Expanded(flex: 2, child: Text('USERNAME', style: AppTypography.tableHeader)),
-                        SizedBox(width: 110, child: Text('ROLE', style: AppTypography.tableHeader)),
-                        SizedBox(width: 110, child: Text('STATUS', style: AppTypography.tableHeader)),
-                        SizedBox(width: 140, child: Text('ACTIONS', style: AppTypography.tableHeader)),
+                        SizedBox(
+                          width: 56,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'AVATAR',
+                              style: AppTypography.tableHeader,
+                              maxLines: 1,
+                              softWrap: false,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          flex: 3,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('NAME', style: AppTypography.tableHeader),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('USERNAME', style: AppTypography.tableHeader),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 110,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('ROLE', style: AppTypography.tableHeader),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 110,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('STATUS', style: AppTypography.tableHeader),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 140,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('ACTIONS', style: AppTypography.tableHeader),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -1539,24 +1580,27 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
         children: [
           // Avatar
           SizedBox(
-            width: 48,
+            width: 56,
             height: 48,
-            child: CircleAvatar(
-              radius: 24,
-              backgroundColor: role == 'admin'
-                  ? const Color(0xFFF1F5F9)
-                  : AppColors.goldenYellow.withValues(alpha: 0.2),
-              child: Text(
-                fullName.isNotEmpty ? fullName[0].toUpperCase() : '?',
-                style: TextStyle(
-                  color: role == 'admin' ? AppColors.darkCharcoal : const Color(0xFFB45309),
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: role == 'admin'
+                    ? const Color(0xFFF1F5F9)
+                    : AppColors.goldenYellow.withValues(alpha: 0.2),
+                child: Text(
+                  fullName.isNotEmpty ? fullName[0].toUpperCase() : '?',
+                  style: TextStyle(
+                    color: role == 'admin' ? AppColors.darkCharcoal : const Color(0xFFB45309),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
 
           // Name
           Expanded(
@@ -1639,7 +1683,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
 
           // Action Buttons
           SizedBox(
-            width: 180,
+            width: 140,
             child: Row(
               children: [
                 _buildActionIconButton(
