@@ -2326,157 +2326,372 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
   }
 
   Future<void> _showManageCategoriesDialog() async {
-    final repo = FoodRepository();
-    String newCategoryIcon = 'utensils';
-    final TextEditingController categoryController = TextEditingController();
-    Future<List<Map<String, dynamic>>> categoriesFuture = repo.getCategories();
-
     await showDialog(
       context: context,
-      builder: (dialogCtx) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            void refreshCategories() {
-              setDialogState(() {
-                categoriesFuture = repo.getCategories();
-              });
-            }
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              surfaceTintColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              title: const Row(
-                children: [
-                  Icon(Icons.category, color: AppColors.brandRed),
-                  SizedBox(width: 8),
-                  Text('Manage Categories'),
-                ],
-              ),
-              content: SizedBox(
-                width: 440,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        InkWell(
-                          onTap: () async {
-                            final selected = await showDialog<String>(
-                              context: dialogContext,
-                              builder: (_) => FoodIconPickerDialog(
-                                currentIcon: newCategoryIcon,
-                              ),
-                            );
-                            if (selected != null) {
-                              setDialogState(() => newCategoryIcon = selected);
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFFE2E8F0),
-                                width: 1.5,
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: buildCategoryIconWidget(newCategoryIcon, size: 22),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            controller: categoryController,
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(30),
-                            ],
-                            decoration: InputDecoration(
-                              hintText: 'New Category Name',
-                              filled: true,
-                              fillColor: Colors.white,
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.goldenYellow,
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: () async {
-                            if (categoryController.text.trim().isNotEmpty) {
-                              await repo.insertCategory(
-                                categoryController.text.trim(),
-                                iconUrl: newCategoryIcon,
-                              );
-                              categoryController.clear();
-                              newCategoryIcon = 'utensils';
-                              refreshCategories();
-                              if (mounted) _loadData();
-                            }
-                          },
-                          child: const Icon(Icons.add),
-                        ),
-                      ],
+      builder: (dialogCtx) => _ManageCategoriesDialog(
+        onCategoriesChanged: () {
+          if (mounted) _loadDataSilent();
+        },
+      ),
+    );
+    if (mounted) {
+      await _loadDataSilent();
+    }
+  }
+}
+
+class _ManageCategoriesDialog extends StatefulWidget {
+  final VoidCallback onCategoriesChanged;
+
+  const _ManageCategoriesDialog({required this.onCategoriesChanged});
+
+  @override
+  State<_ManageCategoriesDialog> createState() => _ManageCategoriesDialogState();
+}
+
+class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
+  final FoodRepository _repo = FoodRepository();
+  final TextEditingController _categoryController = TextEditingController();
+  String _newCategoryIcon = 'utensils';
+  List<Map<String, dynamic>> _categories = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  @override
+  void dispose() {
+    _categoryController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCategories() async {
+    final cats = await _repo.getCategories();
+    if (!mounted) return;
+    setState(() {
+      _categories = cats;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _addCategory() async {
+    final name = _categoryController.text.trim();
+    if (name.isEmpty) return;
+
+    try {
+      await _repo.insertCategory(name, iconUrl: _newCategoryIcon);
+      _categoryController.clear();
+      _newCategoryIcon = 'utensils';
+      await _loadCategories();
+      widget.onCategoriesChanged();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: AppColors.brandRed,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _editCategory(Map<String, dynamic> cat) async {
+    final editController = TextEditingController(text: cat['name'] as String);
+    String editIcon = (cat['icon_url'] as String?) ?? 'utensils';
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (editCtx) => StatefulBuilder(
+        builder: (ctx2, setEditState) => AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          title: const Text('Edit Category'),
+          content: Row(
+            children: [
+              InkWell(
+                onTap: () async {
+                  final selected = await showDialog<String>(
+                    context: ctx2,
+                    builder: (_) => FoodIconPickerDialog(
+                      currentIcon: editIcon,
                     ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 300,
-                      child: FutureBuilder<List<Map<String, dynamic>>>(
-                        future: categoriesFuture,
-                        builder: (futureCtx, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          }
-                          final cats = snapshot.data ?? [];
-                          if (cats.isEmpty) {
-                            return const Center(
-                              child: Text(
-                                'No categories available',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            );
-                          }
-                          return ListView.builder(
-                            itemCount: cats.length,
-                            itemBuilder: (itemCtx, index) {
-                              final cat = cats[index];
-                              final String iconStr = (cat['icon_url'] as String?) ?? 'utensils';
-                              return Padding(
-                                key: ValueKey('category_${cat['id']}'),
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: Material(
-                                  color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: const BorderSide(color: Color(0xFFE2E8F0)),
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: ListTile(
+                  );
+                  if (selected != null) {
+                    setEditState(() => editIcon = selected);
+                  }
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFFE2E8F0),
+                      width: 1.5,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: buildCategoryIconWidget(editIcon, size: 22),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: editController,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(30),
+                  ],
+                  decoration: InputDecoration(
+                    hintText: 'Category Name',
+                    filled: true,
+                    fillColor: Colors.white,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(editCtx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.goldenYellow,
+                foregroundColor: Colors.black,
+              ),
+              onPressed: () async {
+                final newName = editController.text.trim();
+                if (newName.isNotEmpty) {
+                  try {
+                    await _repo.updateCategory(
+                      cat['id'] as int,
+                      newName,
+                      iconUrl: editIcon,
+                    );
+                    if (editCtx.mounted) Navigator.pop(editCtx, true);
+                  } catch (e) {
+                    if (editCtx.mounted) {
+                      ScaffoldMessenger.of(editCtx).showSnackBar(
+                        SnackBar(
+                          content: Text(e.toString().replaceAll('Exception: ', '')),
+                          backgroundColor: AppColors.brandRed,
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved == true && mounted) {
+      await _loadCategories();
+      widget.onCategoriesChanged();
+    }
+  }
+
+  Future<void> _deleteCategory(Map<String, dynamic> cat) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (confirmCtx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppColors.brandRed),
+            SizedBox(width: 8),
+            Text('Delete Category?'),
+          ],
+        ),
+        content: Text('Are you sure you want to delete "${cat['name']}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(confirmCtx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.brandRed),
+            onPressed: () => Navigator.pop(confirmCtx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      // Optimistically remove from list on the spot!
+      setState(() {
+        _categories.removeWhere((c) => c['id'] == cat['id']);
+      });
+      try {
+        await _repo.archiveCategory(cat['id'] as int);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete category: $e'),
+              backgroundColor: AppColors.brandRed,
+            ),
+          );
+        }
+      }
+      if (mounted) {
+        await _loadCategories();
+      }
+      widget.onCategoriesChanged();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      title: const Row(
+        children: [
+          Icon(Icons.category, color: AppColors.brandRed),
+          SizedBox(width: 8),
+          Text('Manage Categories'),
+        ],
+      ),
+      content: SizedBox(
+        width: 440,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                InkWell(
+                  onTap: () async {
+                    final selected = await showDialog<String>(
+                      context: context,
+                      builder: (_) => FoodIconPickerDialog(
+                        currentIcon: _newCategoryIcon,
+                      ),
+                    );
+                    if (selected != null && mounted) {
+                      setState(() => _newCategoryIcon = selected);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFE2E8F0),
+                        width: 1.5,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: buildCategoryIconWidget(_newCategoryIcon, size: 22),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _categoryController,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(30),
+                    ],
+                    onSubmitted: (_) => _addCategory(),
+                    decoration: InputDecoration(
+                      hintText: 'New Category Name',
+                      filled: true,
+                      fillColor: Colors.white,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.goldenYellow,
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _addCategory,
+                  child: const Icon(Icons.add),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 300,
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _categories.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No categories available',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: _categories.length,
+                          itemBuilder: (itemCtx, index) {
+                            final cat = _categories[index];
+                            final String iconStr = (cat['icon_url'] as String?) ?? 'utensils';
+                            return Padding(
+                              key: ValueKey('category_${cat['id']}'),
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Material(
+                                color: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: ListTile(
                                   leading: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
@@ -2487,7 +2702,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                     child: buildCategoryIconWidget(iconStr, size: 20),
                                   ),
                                   title: Text(
-                                    cat['name'],
+                                    cat['name'] as String,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -2501,164 +2716,15 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                           size: 20,
                                           color: AppColors.mutedText,
                                         ),
-                                        onPressed: () async {
-                                          final editController =
-                                              TextEditingController(
-                                                text: cat['name'],
-                                              );
-                                          String editIcon = iconStr;
-
-                                          await showDialog(
-                                            context: dialogContext,
-                                            builder: (editCtx) => StatefulBuilder(
-                                              builder: (ctx2, setEditState) => AlertDialog(
-                                                backgroundColor: Colors.white,
-                                                surfaceTintColor: Colors.transparent,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(16),
-                                                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                                                ),
-                                                title: const Text('Edit Category'),
-                                                content: Row(
-                                                  children: [
-                                                    InkWell(
-                                                      onTap: () async {
-                                                        final picked = await showDialog<String>(
-                                                          context: editCtx,
-                                                          builder: (_) => FoodIconPickerDialog(
-                                                            currentIcon: editIcon,
-                                                          ),
-                                                        );
-                                                        if (picked != null) {
-                                                          setEditState(() => editIcon = picked);
-                                                        }
-                                                      },
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      child: Container(
-                                                        width: 48,
-                                                        height: 48,
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.white,
-                                                          borderRadius: BorderRadius.circular(12),
-                                                          border: Border.all(
-                                                            color: const Color(0xFFE2E8F0),
-                                                          ),
-                                                        ),
-                                                        alignment: Alignment.center,
-                                                        child: buildCategoryIconWidget(editIcon, size: 22),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 10),
-                                                    Expanded(
-                                                      child: TextField(
-                                                        controller: editController,
-                                                        inputFormatters: [
-                                                          LengthLimitingTextInputFormatter(30),
-                                                        ],
-                                                        decoration: InputDecoration(
-                                                          hintText: 'Category Name',
-                                                          filled: true,
-                                                          fillColor: Colors.white,
-                                                          enabledBorder: OutlineInputBorder(
-                                                            borderRadius: BorderRadius.circular(12),
-                                                            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                                                          ),
-                                                          focusedBorder: OutlineInputBorder(
-                                                            borderRadius: BorderRadius.circular(12),
-                                                            borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () => Navigator.pop(editCtx),
-                                                    child: const Text('Cancel'),
-                                                  ),
-                                                  ElevatedButton(
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: AppColors.goldenYellow,
-                                                      foregroundColor: Colors.black,
-                                                      elevation: 0,
-                                                    ),
-                                                    onPressed: () async {
-                                                      if (editController.text.trim().isNotEmpty) {
-                                                        await repo.updateCategory(
-                                                          cat['id'],
-                                                          editController.text.trim(),
-                                                          iconUrl: editIcon,
-                                                        );
-                                                        if (!editCtx.mounted) return;
-                                                        Navigator.pop(editCtx);
-                                                        refreshCategories();
-                                                        if (mounted) _loadData();
-                                                      }
-                                                    },
-                                                    child: const Text('Save'),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        },
+                                        onPressed: () => _editCategory(cat),
                                       ),
                                       IconButton(
                                         icon: const Icon(
                                           Icons.delete_outline,
                                           size: 20,
-                                          color: Colors.red,
+                                          color: AppColors.brandRed,
                                         ),
-                                        onPressed: () async {
-                                          final confirm = await showDialog<bool>(
-                                            context: dialogContext,
-                                            builder: (confirmCtx) => AlertDialog(
-                                              backgroundColor: Colors.white,
-                                              surfaceTintColor: Colors.transparent,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(16),
-                                                side: const BorderSide(color: Color(0xFFE2E8F0)),
-                                              ),
-                                              title: const Row(
-                                                children: [
-                                                  Icon(Icons.warning_amber_rounded, color: AppColors.brandRed),
-                                                  SizedBox(width: 8),
-                                                  Text('Delete Category?'),
-                                                ],
-                                              ),
-                                              content: Text('Are you sure you want to delete "${cat['name']}"?'),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(confirmCtx, false),
-                                                  child: const Text('Cancel'),
-                                                ),
-                                                FilledButton(
-                                                  style: FilledButton.styleFrom(backgroundColor: AppColors.brandRed),
-                                                  onPressed: () => Navigator.pop(confirmCtx, true),
-                                                  child: const Text('Delete'),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                          
-                                          if (confirm == true) {
-                                            try {
-                                              await repo.archiveCategory(cat['id']);
-                                            } catch (e) {
-                                              if (dialogContext.mounted) {
-                                                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text('Failed to delete category: $e'),
-                                                    backgroundColor: AppColors.brandRed,
-                                                  ),
-                                                );
-                                              }
-                                            }
-                                            refreshCategories();
-                                            if (mounted) await _loadData();
-                                          }
-                                        },
+                                        onPressed: () => _deleteCategory(cat),
                                       ),
                                     ],
                                   ),
@@ -2666,26 +2732,17 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                               ),
                             );
                           },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Close'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+                        ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
     );
-    if (mounted) {
-      await _loadData();
-    }
   }
 }

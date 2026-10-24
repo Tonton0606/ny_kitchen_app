@@ -283,8 +283,39 @@ class FoodRepository {
       } catch (_) {}
     }
 
+    final trimmedName = name.trim();
+    final existing = await db.query(
+      'food_categories',
+      where: 'LOWER(name) = ?',
+      whereArgs: [trimmedName.toLowerCase()],
+    );
+
+    if (existing.isNotEmpty) {
+      final cat = existing.first;
+      if (cat['status'] == 'archived') {
+        final updateData = <String, dynamic>{
+          'name': trimmedName,
+          'status': 'active',
+          'icon_url': finalIcon,
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+        await db.update(
+          'food_categories',
+          updateData,
+          where: 'id = ?',
+          whereArgs: [cat['id']],
+        );
+        try {
+          await _syncService.syncToCloud();
+        } catch (_) {}
+        return cat['id'] as int;
+      } else {
+        throw Exception('Category "$trimmedName" already exists.');
+      }
+    }
+
     int id = await db.insert('food_categories', {
-      'name': name,
+      'name': trimmedName,
       'icon_url': finalIcon,
       'status': 'active',
       'created_at': DateTime.now().toIso8601String(),
@@ -301,8 +332,28 @@ class FoodRepository {
       action: 'Update Food Category',
     );
     final db = await _dbHelper.database;
+    final trimmedName = name.trim();
+    final duplicates = await db.query(
+      'food_categories',
+      where: 'LOWER(name) = ? AND id != ?',
+      whereArgs: [trimmedName.toLowerCase(), id],
+    );
+
+    if (duplicates.isNotEmpty) {
+      final dup = duplicates.first;
+      if (dup['status'] == 'archived') {
+        await db.delete(
+          'food_categories',
+          where: 'id = ?',
+          whereArgs: [dup['id']],
+        );
+      } else {
+        throw Exception('Category "$trimmedName" already exists.');
+      }
+    }
+
     final data = <String, dynamic>{
-      'name': name,
+      'name': trimmedName,
       'updated_at': DateTime.now().toIso8601String(),
     };
     if (iconUrl != null) {

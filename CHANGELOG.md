@@ -11,6 +11,8 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ### Fixed — 2026-10-24
 
+- Extracted Manage Categories modal into a dedicated StatefulWidget (`_ManageCategoriesDialog`) with immediate on-the-spot UI updating, optimistic removal, and real-time parent page synchronization.
+- Resolved SQLite `UNIQUE constraint failed: food_categories.name` by reactivating previously archived categories when re-added and safely clearing stale archived collisions on rename.
 - Fixed category deletion state management in Manage Categories dialog to immediately refresh the category list upon deletion, edit, or addition.
 - Added automatic filter reset to 'All' in Food Management when the active category is deleted.
 - Hardened `FoodRepository.archiveCategory` with error-handled cloud sync, audit logging, and timestamp updates.

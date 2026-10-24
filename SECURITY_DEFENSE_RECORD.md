@@ -1479,3 +1479,48 @@ Evidence paths:
 Unverified items / remaining risks: None.
 Next concrete step: Stage changes, commit cleanly, and push to origin/bug-fix and origin/main.
 
+## Remediation of Category Modal On-The-Spot Updates & SQLite Unique Constraint Violations — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T12:38:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Fix `SqfliteFfiException(2067): UNIQUE constraint failed: food_categories.name`, eliminate `setState() called after dispose()` error, and ensure categories update on the spot without needing to close the modal.
+Rubric / risk / acceptance-test IDs: UI-02 (Data management & responsive UI), AT04 (Food & Category Management).
+Files changed:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `CHANGELOG.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Root Cause Analysis:
+1. `UNIQUE constraint failed: food_categories.name`:
+   - Deleting categories in SQLite performs a soft-delete (`status = 'archived'`).
+   - The table schema enforces `name TEXT UNIQUE NOT NULL`.
+   - When a user tried to re-create a previously deleted/archived category (e.g. 'T', 'Testing lang'), `db.insert` attempted to insert a duplicate name, causing an unhandled `SqfliteFfiException(2067)`.
+   - The unhandled exception halted execution before `categoryController.clear()`, modal refresh, or page data reload could run.
+2. `setState() called after dispose()` and delayed UI refresh:
+   - The category modal previously used a nested `StatefulBuilder` and `FutureBuilder`. Asynchronous dialog callbacks invoked `setDialogState` across sub-dialog dismissals and after the builder's lifecycle became defunct.
+   - `FutureBuilder` preserved stale snapshot data, so the list did not update on the spot while the modal remained open.
+Remediation:
+- In `FoodRepository.insertCategory`:
+  - Before inserting, queries existing categories by name (case-insensitive). If an existing category is archived, it reactivates it (`status = 'active'`, updates icon and timestamp) instead of attempting an illegal duplicate insert.
+  - If an active category already exists with that name, throws a clean, user-friendly exception.
+- In `FoodRepository.updateCategory`:
+  - Purges any conflicting archived duplicate name before renaming, or throws a friendly duplicate error if an active category has that name.
+- In `FoodManagementPage`:
+  - Replaced the nested `StatefulBuilder` with a dedicated, self-contained `StatefulWidget` (`_ManageCategoriesDialog`).
+  - Added direct local state management: categories load into `_categories`, optimistic removal is applied on delete, and `_loadCategories()` refreshes the list on the spot upon add, edit, or delete.
+  - Added `widget.onCategoriesChanged()` callbacks so the parent `FoodManagementPage` (category tabs and dropdowns behind the dialog) simultaneously updates in real time via `_loadDataSilent()` without waiting for modal closure.
+  - Added `try/catch` with SnackBar notifications inside the dialog for any user validation errors.
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test test/unit/category_sync_test.dart`: 3/3 passed.
+  - `flutter test test/security/`: 84/84 passed.
+- Static analysis:
+  - `flutter analyze lib/features/admin/presentation/pages/food_management_page.dart`: No issues found!
+  - `flutter analyze lib/core/database/repositories/food_repository.dart`: No issues found!
+Evidence paths:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `test/unit/category_sync_test.dart`
+Unverified items / remaining risks: None.
+Next concrete step: Stage changes, commit cleanly, and push to origin/bug-fix and origin/main.
+
