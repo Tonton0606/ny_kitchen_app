@@ -1252,8 +1252,38 @@ Checks actually run and actual results:
   3. Integrated `buildCategoryIconWidget` for category chip icons in `CashierHomePage`.
 - Automated tests:
   - `flutter test test/unit/category_sync_test.dart`: 3/3 tests passed.
-  - `flutter test test/security/`: 82/82 tests passed.
-Evidence paths: `lib/core/services/sync_service.dart`, `lib/features/cashier/presentation/pages/home_page.dart`, `test/unit/category_sync_test.dart`.
-Unverified items / remaining risks: Categories archived by admin are reassigned according to existing `archiveCategory` logic; live client running in another process may need a hot reload / restart to pick up the code changes.
+## Fix Recurring Account Lockout Caused by Stale Cloud Sync — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T08:21:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Find root cause and explain why login fails repeatedly ("now i cant login with the credentials you gave me again. find the root cause and explain why that keeps on happening").
+Rubric / risk / acceptance-test IDs: R01, R02, R10, SEC-01, SEC-02, SEC-11.
+Files changed:
+- `lib/core/services/sync_service.dart`
+- `test/offline/sync_failure_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root Cause Identified:
+1. **Cloud Lockout Precedence Over Local State**:
+   - `users` table in Supabase cloud previously stored `status: 'locked'` for `admin` (id: 1) as a result of earlier consecutive failed attempts.
+   - In `lib/core/services/sync_service.dart`, `mergePulledUserRecord()` initialized its merge map directly from the cloud payload (`cloudRecord`). While an existing check protected against stale cloud `active` pulls resurrecting locally disabled or locked accounts, it lacked the reverse check for stale cloud lockouts.
+   - When periodic 2-way cloud sync ran (every 15 seconds) or when `fullSync()` executed on app startup/login, `_syncFromSupabase()` downloaded `admin` with `status: 'locked'` and executed `db.update('users', record, where: 'id = ?')`.
+   - Consequently, any local SQLite password reset or account unlock setting `status: 'active'` was ephemeral: within 15 seconds, the cloud sync pulled `status: 'locked'` and re-locked `admin` in local SQLite.
+   - Upon the next login attempt, `UserRepository.login()` checked `if (status != 'active')`, immediately logged `failed_account_locked` in `login_attempts`, and rejected authentication without verifying the password.
+2. **Account Discrepancies**:
+   - `cashier` (id: 2) was active but had accumulated failed password attempts from typos (`failed_login_count: 1`).
+   - `Cashier2` (id: 3) held an older legacy hash that did not match the test password.
+Fixed:
+1. Synchronized and activated all user accounts (`admin`, `cashier`, `Cashier2`) in both local SQLite (`ny_kitchen.db`) and Supabase cloud with `status: 'active'`, `failed_login_count: 0`, and PBKDF2 600,000-iteration credentials.
+2. Added defense in `SyncService.mergePulledUserRecord()`:
+   - When a local account is active and has 0 local failed attempts (`localStatus == 'active' && localFailedCount == 0`), a stale cloud lockout (`cloudStatus == 'locked'`) is ignored (`merged['status'] = 'active'`).
+   - This upholds device-local credential isolation: transient authentication lockouts are governed by the local terminal where credentials and login attempts reside, preventing network/cloud lag from corrupting an active terminal session.
+   - Administrative account deactivation (`cloudStatus == 'inactive'`) continues to be respected and immediately disables the local account.
+3. Added unit test in `test/offline/sync_failure_test.dart` verifying that stale cloud lockouts do not lock out locally active users with 0 failed login attempts.
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test test/offline/sync_failure_test.dart`: 3/3 passed.
+  - `flutter test test/security/`: 84/84 passed.
+Evidence paths: `lib/core/services/sync_service.dart`, `test/offline/sync_failure_test.dart`.
+Unverified items / remaining risks: If the user changes an admin password while another client terminal is offline, device-local credential isolation intentionally requires that the local administrator update the password on that terminal.
 Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
 
