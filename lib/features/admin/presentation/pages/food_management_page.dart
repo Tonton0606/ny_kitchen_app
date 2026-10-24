@@ -2429,7 +2429,9 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
   final FoodRepository _repo = FoodRepository();
   final TextEditingController _categoryController = TextEditingController();
   String _newCategoryIcon = 'utensils';
-  List<Map<String, dynamic>> _categories = [];
+  List<Map<String, dynamic>> _activeCategories = [];
+  List<Map<String, dynamic>> _archivedCategories = [];
+  bool _showArchived = false;
   bool _isLoading = true;
 
   @override
@@ -2445,10 +2447,12 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
   }
 
   Future<void> _loadCategories() async {
-    final cats = await _repo.getCategories();
+    final active = await _repo.getCategories();
+    final archived = await _repo.getArchivedCategories();
     if (!mounted) return;
     setState(() {
-      _categories = cats;
+      _activeCategories = active;
+      _archivedCategories = archived;
       _isLoading = false;
     });
   }
@@ -2668,7 +2672,7 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
     }
   }
 
-  Future<void> _deleteCategory(Map<String, dynamic> cat) async {
+  Future<void> _archiveCategory(Map<String, dynamic> cat) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (confirmCtx) => AlertDialog(
@@ -2680,43 +2684,113 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
         ),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.brandRed),
+            Icon(Icons.archive_outlined, color: Color(0xFFD97706)),
             SizedBox(width: 8),
-            Text('Delete Category?'),
+            Text('Archive Category?'),
           ],
         ),
-        content: Text('Are you sure you want to delete "${cat['name']}"?'),
+        content: Text(
+          'Archive category "${cat['name']}"?\n\nDishes in this category will be reassigned or hidden from active orders. You can restore this category anytime from the Archived tab.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(confirmCtx, false),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.brandRed),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD97706)),
             onPressed: () => Navigator.pop(confirmCtx, true),
-            child: const Text('Delete'),
+            child: const Text('Archive'),
           ),
         ],
       ),
     );
 
     if (confirm == true && mounted) {
-      // Optimistically remove from list on the spot!
+      // Optimistically move to archived on the spot!
       setState(() {
-        _categories.removeWhere((c) => c['id'] == cat['id']);
+        _activeCategories.removeWhere((c) => c['id'] == cat['id']);
+        _archivedCategories.insert(0, {...cat, 'status': 'archived'});
       });
+
       try {
         await _repo.archiveCategory(cat['id'] as int);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to delete category: $e'),
+              content: Text('Failed to archive category: $e'),
               backgroundColor: AppColors.brandRed,
+              behavior: SnackBarBehavior.floating,
             ),
           );
         }
       }
+
+      if (mounted) {
+        await _loadCategories();
+      }
+      widget.onCategoriesChanged();
+    }
+  }
+
+  Future<void> _restoreCategory(Map<String, dynamic> cat) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (confirmCtx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.unarchive_outlined, color: AppColors.success),
+            SizedBox(width: 8),
+            Text('Restore Category?'),
+          ],
+        ),
+        content: Text(
+          'Restore category "${cat['name']}" back to the active menu?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(confirmCtx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.success),
+            onPressed: () => Navigator.pop(confirmCtx, true),
+            child: const Text('Restore'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      // Optimistically move to active on the spot!
+      setState(() {
+        _archivedCategories.removeWhere((c) => c['id'] == cat['id']);
+        _activeCategories.add({...cat, 'status': 'active'});
+      });
+
+      try {
+        await _repo.unarchiveCategory(cat['id'] as int);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                e.toString().replaceAll('Exception: ', '').replaceAll('SecurityException: ', ''),
+              ),
+              backgroundColor: AppColors.brandRed,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+
       if (mounted) {
         await _loadCategories();
       }
@@ -2726,6 +2800,8 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final currentList = _showArchived ? _archivedCategories : _activeCategories;
+
     return AlertDialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
@@ -2733,108 +2809,209 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
         borderRadius: BorderRadius.circular(16),
         side: const BorderSide(color: Color(0xFFE2E8F0)),
       ),
-      title: const Row(
+      titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+      title: Row(
         children: [
-          Icon(Icons.category, color: AppColors.brandRed),
-          SizedBox(width: 8),
-          Text('Manage Categories'),
-        ],
-      ),
-      content: SizedBox(
-        width: 440,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
+          const Icon(Icons.category, color: AppColors.brandRed, size: 22),
+          const SizedBox(width: 8),
+          const Text('Manage Categories', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Spacer(),
+          // Active / Archived Toggle Pill
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 InkWell(
-                  onTap: () async {
-                    final selected = await showDialog<String>(
-                      context: context,
-                      builder: (_) => FoodIconPickerDialog(
-                        currentIcon: _newCategoryIcon,
-                      ),
-                    );
-                    if (selected != null && mounted) {
-                      setState(() => _newCategoryIcon = selected);
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => setState(() => _showArchived = false),
+                  borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    width: 48,
-                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFFE2E8F0),
-                        width: 1.5,
-                      ),
+                      color: !_showArchived ? Colors.white : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: !_showArchived
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ]
+                          : null,
                     ),
-                    alignment: Alignment.center,
-                    child: buildCategoryIconWidget(_newCategoryIcon, size: 22),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: _categoryController,
-                    inputFormatters: [
-                      LengthLimitingTextInputFormatter(30),
-                    ],
-                    onSubmitted: (_) => _addCategory(),
-                    decoration: InputDecoration(
-                      hintText: 'New Category Name',
-                      filled: true,
-                      fillColor: Colors.white,
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
+                    child: Text(
+                      'Active (${_activeCategories.length})',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: !_showArchived ? FontWeight.w700 : FontWeight.w500,
+                        color: !_showArchived ? Colors.black : AppColors.mutedText,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.goldenYellow,
-                    foregroundColor: Colors.black,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                InkWell(
+                  onTap: () => setState(() => _showArchived = true),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _showArchived ? Colors.white : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: _showArchived
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Text(
+                      'Archived (${_archivedCategories.length})',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: _showArchived ? FontWeight.w700 : FontWeight.w500,
+                        color: _showArchived ? const Color(0xFFD97706) : AppColors.mutedText,
+                      ),
                     ),
                   ),
-                  onPressed: _addCategory,
-                  child: const Icon(Icons.add),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 480,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!_showArchived) ...[
+              Row(
+                children: [
+                  InkWell(
+                    onTap: () async {
+                      final selected = await showDialog<String>(
+                        context: context,
+                        builder: (_) => FoodIconPickerDialog(
+                          currentIcon: _newCategoryIcon,
+                        ),
+                      );
+                      if (selected != null && mounted) {
+                        setState(() => _newCategoryIcon = selected);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFE2E8F0),
+                          width: 1.5,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: buildCategoryIconWidget(_newCategoryIcon, size: 22),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _categoryController,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(30),
+                      ],
+                      onSubmitted: (_) => _addCategory(),
+                      decoration: InputDecoration(
+                        hintText: 'New Category Name',
+                        filled: true,
+                        fillColor: Colors.white,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.goldenYellow, width: 1.5),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.goldenYellow,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.all(14),
+                    ),
+                    onPressed: _addCategory,
+                    child: const Icon(Icons.add),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFFDE68A)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: Color(0xFF92400E)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Archived categories are hidden from the menu. You can restore them anytime.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF92400E), fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             SizedBox(
               height: 300,
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : _categories.isEmpty
-                      ? const Center(
+                  : currentList.isEmpty
+                      ? Center(
                           child: Text(
-                            'No categories available',
-                            style: TextStyle(color: Colors.grey),
+                            _showArchived ? 'No archived categories' : 'No active categories',
+                            style: const TextStyle(color: Colors.grey),
                           ),
                         )
                       : ListView.builder(
-                          itemCount: _categories.length,
+                          itemCount: currentList.length,
                           itemBuilder: (itemCtx, index) {
-                            final cat = _categories[index];
+                            final cat = currentList[index];
                             final String iconStr = (cat['icon_url'] as String?) ?? 'utensils';
+                            final isArchivedItem = _showArchived;
+
                             return Padding(
-                              key: ValueKey('category_${cat['id']}'),
+                              key: ValueKey('cat_${cat['id']}_$isArchivedItem'),
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Material(
                                 color: Colors.white,
@@ -2847,7 +3024,7 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
                                   leading: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF8FAFC),
+                                      color: isArchivedItem ? const Color(0xFFF1F5F9) : const Color(0xFFF8FAFC),
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(color: const Color(0xFFE2E8F0)),
                                     ),
@@ -2855,31 +3032,51 @@ class _ManageCategoriesDialogState extends State<_ManageCategoriesDialog> {
                                   ),
                                   title: Text(
                                     cat['name'] as String,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w600,
+                                      color: isArchivedItem ? AppColors.mutedText : Colors.black,
+                                      decoration: isArchivedItem ? TextDecoration.lineThrough : null,
                                     ),
                                   ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit,
-                                          size: 20,
-                                          color: AppColors.mutedText,
+                                  trailing: isArchivedItem
+                                      ? OutlinedButton.icon(
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: AppColors.success,
+                                            side: const BorderSide(color: AppColors.success),
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            minimumSize: Size.zero,
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          icon: const Icon(Icons.unarchive_outlined, size: 16),
+                                          label: const Text('Restore', style: TextStyle(fontSize: 12)),
+                                          onPressed: () => _restoreCategory(cat),
+                                        )
+                                      : Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.edit,
+                                                size: 20,
+                                                color: AppColors.mutedText,
+                                              ),
+                                              tooltip: 'Edit Category',
+                                              onPressed: () => _editCategory(cat),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.archive_outlined,
+                                                size: 20,
+                                                color: Color(0xFFD97706),
+                                              ),
+                                              tooltip: 'Archive Category',
+                                              onPressed: () => _archiveCategory(cat),
+                                            ),
+                                          ],
                                         ),
-                                        onPressed: () => _editCategory(cat),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete_outline,
-                                          size: 20,
-                                          color: AppColors.brandRed,
-                                        ),
-                                        onPressed: () => _deleteCategory(cat),
-                                      ),
-                                    ],
-                                  ),
                                 ),
                               ),
                             );

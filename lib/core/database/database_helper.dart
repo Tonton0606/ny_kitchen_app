@@ -58,6 +58,11 @@ class DatabaseHelper {
       );
     } catch (_) {}
 
+    // Ensure food_categories has updated_at column
+    try {
+      await db.execute('ALTER TABLE food_categories ADD COLUMN updated_at TEXT');
+    } catch (_) {}
+
     return db;
   }
 

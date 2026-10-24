@@ -290,4 +290,79 @@ void main() {
     final oldArchived = await db.query('food_categories', where: 'id = ?', whereArgs: [4]);
     expect(oldArchived.isEmpty, isTrue);
   });
+
+  test('FoodRepository archiveCategory sets status to archived and records updated_at', () async {
+    SessionManager().setSession({
+      'id': 1,
+      'username': 'admin',
+      'role': 'admin',
+      'status': 'active',
+    });
+
+    final count = await foodRepo.archiveCategory(19);
+    expect(count, equals(1));
+
+    final row = await db.query('food_categories', where: 'id = ?', whereArgs: [19]);
+    expect(row.first['status'], equals('archived'));
+    expect(row.first['updated_at'], isNotNull);
+
+    // Active categories query should not contain category 19
+    final activeCategories = await foodRepo.getCategories();
+    expect(activeCategories.any((c) => c['id'] == 19), isFalse);
+
+    // Archived categories query should contain category 19
+    final archivedCategories = await foodRepo.getArchivedCategories();
+    expect(archivedCategories.any((c) => c['id'] == 19), isTrue);
+  });
+
+  test('FoodRepository unarchiveCategory restores an archived category', () async {
+    SessionManager().setSession({
+      'id': 1,
+      'username': 'admin',
+      'role': 'admin',
+      'status': 'active',
+    });
+
+    // Archive category 19 first
+    await foodRepo.archiveCategory(19);
+
+    // Unarchive category 19
+    final count = await foodRepo.unarchiveCategory(19);
+    expect(count, equals(1));
+
+    final row = await db.query('food_categories', where: 'id = ?', whereArgs: [19]);
+    expect(row.first['status'], equals('active'));
+
+    final activeCategories = await foodRepo.getCategories();
+    expect(activeCategories.any((c) => c['id'] == 19), isTrue);
+
+    final archivedCategories = await foodRepo.getArchivedCategories();
+    expect(archivedCategories.any((c) => c['id'] == 19), isFalse);
+  });
+
+  test('FoodRepository unarchiveCategory rejects restore if an active category has duplicate name', () async {
+    SessionManager().setSession({
+      'id': 1,
+      'username': 'admin',
+      'role': 'admin',
+      'status': 'active',
+    });
+
+    // Category 10 is 'Chicken Pastil Meals' and active.
+    // Seed an archived category 88 with the same name.
+    await db.insert('food_categories', {
+      'id': 88,
+      'name': 'chicken pastil meals',
+      'icon_url': 'utensils',
+      'status': 'archived',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+
+    // Attempting to unarchive category 88 should throw duplicate error because active category 10 exists
+    expect(
+      () => foodRepo.unarchiveCategory(88),
+      throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('already exists'))),
+    );
+  });
 }
+

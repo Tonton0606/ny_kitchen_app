@@ -494,4 +494,68 @@ class FoodRepository {
 
     return count;
   }
+
+  Future<List<Map<String, dynamic>>> getArchivedCategories() async {
+    final db = await _dbHelper.database;
+    return await db.query(
+      'food_categories',
+      where: 'status = ?',
+      whereArgs: ['archived'],
+      orderBy: 'name ASC',
+    );
+  }
+
+  Future<int> unarchiveCategory(int id) async {
+    final admin = await RepositorySecurityGuard.requireAdmin(
+      module: 'Food Management',
+      action: 'Restore Food Category',
+    );
+    final db = await _dbHelper.database;
+    final now = DateTime.now().toIso8601String();
+
+    final target = await db.query(
+      'food_categories',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (target.isEmpty) throw Exception('Category not found.');
+    final catName = target.first['name'] as String;
+
+    // Check if an active category with the same name already exists
+    final activeExisting = await db.query(
+      'food_categories',
+      where: 'LOWER(name) = ? AND status = ? AND id != ?',
+      whereArgs: [catName.toLowerCase(), 'active', id],
+    );
+    if (activeExisting.isNotEmpty) {
+      throw Exception('An active category named "$catName" already exists.');
+    }
+
+    int count = await db.update(
+      'food_categories',
+      {
+        'status': 'active',
+        'updated_at': now,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    try {
+      await _syncService.syncToCloud();
+    } catch (_) {}
+
+    await _auditRepo.logAction(
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? 'Admin',
+      role: 'admin',
+      module: 'Food Management',
+      action: 'Food Category Restored',
+      status: 'Success',
+      description: 'Restored archived food category "$catName" (ID: $id)',
+    );
+
+    return count;
+  }
 }

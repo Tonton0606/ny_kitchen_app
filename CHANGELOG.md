@@ -11,6 +11,10 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ### Fixed — 2026-10-24
 
+- Fixed Category Delete/Archive bug in Admin Food Management caused by missing `updated_at` column in `food_categories` SQLite table (which threw `SqliteException: no such column: updated_at` during status update). Added automatic `ALTER TABLE food_categories ADD COLUMN updated_at TEXT` schema migration in `DatabaseHelper` and updated the active database.
+- Added Category Archive & Restore system in Manage Categories modal: introduced Active vs. Archived segmented view, permitting admins to inspect archived categories and restore them with one click.
+- Implemented `FoodRepository.getArchivedCategories` and `FoodRepository.unarchiveCategory` with duplicate active name protection, cloud sync, and audit logging (`Restore Food Category`, `Food Category Restored`).
+- Fixed real-time category deletion and archive refresh: operations now optimistically update the modal UI and trigger parent view refreshes immediately without requiring the user to close and reopen the dialog.
 - Fixed Category Update bug in Admin Food Management: added inline error feedback and loading state to Edit Category modal, enabled Enter-key submission, and resolved SQLite UNIQUE constraint collisions when renaming to previously archived category names.
 - Hardened `FoodRepository.updateCategory` and `insertCategory` with strict input validation (preventing empty strings, names > 30 characters, and reserved name "All"), comprehensive duplicate resolution, and audit logging (`Food Category Updated`, `Food Category Created`).
 - Fixed Food Item saving validation in `FoodManagementPage` to display explicit floating SnackBar warnings when name, price, or category selection is missing instead of failing silently.
