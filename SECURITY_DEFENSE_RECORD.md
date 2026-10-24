@@ -1479,6 +1479,26 @@ Evidence paths:
 Unverified items / remaining risks: None.
 Next concrete step: Stage changes, commit cleanly, and push to origin/bug-fix and origin/main.
 
+## Prepare Security Defense PowerPoint — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T12:31:42+08:00 (Asia/Manila)
+Session owner (self-reported): Ralston Villamin
+Requested task and scope: Create a defense PowerPoint with an opening system-flow diagram and a practical guide for what to open, show, and say. Per the owner's instruction, the deck focuses on Flutter POS, local SQLite, and Supabase and omits Ubuntu.
+Rubric / risk / acceptance-test IDs: R01–R20; K01–K05; security evidence and acceptance status only. No rubric score assigned.
+Files changed:
+- `SECURITY_DEFENSE_RECORD.md`
+- `C:/Users/tonton/Downloads/FLOW DEFENSE LATER/NY Kitchen Security Defense.pptx` (presentation artifact; final output copy)
+Checks actually run and actual results:
+- Presentation finalizer: 19 slides; package integrity passed with zero findings; layout passed with zero findings; Arial policy passed; native tables verified on slides 2–19; Artifact Tool import passed.
+- Rendered all 19 slides and visually reviewed each; corrected the opening diagram arrows and aligned sync claims with the current handoff.
+- `flutter test test/security/` was attempted earlier for mandatory Git-sync verification but returned no output and was interrupted; no current test pass is claimed.
+Evidence paths:
+- `C:/Users/tonton/Downloads/FLOW DEFENSE LATER/NY Kitchen Security Defense.pptx`
+- `docs/security/supabase_rls_diagnostics.sql` (read-only diagnostic referenced in the deck)
+- `docs/SECURITY_IMPLEMENTATION_PLAN.md`; `AI_SESSION_HANDOFF.md`
+Unverified items / remaining risks: The current Supabase sync/write result and cloud/local status reconciliation remain unverified; earlier read-only comparison recorded status differences. The SQLite database and backup are not encrypted at rest. Offline/reconnect and restore demonstrations remain open. Keep Production read-only and use synthetic data.
+Next concrete step: Review and rehearse the deck; if demonstrating Supabase, confirm the project/branch and run only the saved read-only diagnostic. Preserve unrelated working-tree changes.
+
 ## Remediation of Category Modal On-The-Spot Updates & SQLite Unique Constraint Violations — 2026-10-24 (Asia/Manila)
 
 Date/time and timezone: 2026-10-24T12:38:00+08:00 (Asia/Manila)
