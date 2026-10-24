@@ -19,7 +19,6 @@ class AdminAccountSettingsPage extends StatefulWidget {
 class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
   final UserRepository _userRepo = UserRepository();
   final TextEditingController _fullNameController = TextEditingController();
-  bool _darkTheme = false;
   bool _isSavingProfile = false;
 
   @override
@@ -304,25 +303,11 @@ class _AdminAccountSettingsPageState extends State<AdminAccountSettingsPage> {
               ),
               const SizedBox(height: 16),
               _buildSection(
-                icon: Icons.palette_outlined,
-                title: 'Application Preferences',
+                icon: Icons.info_outline,
+                title: 'Application Information',
                 child: Column(
                   children: [
                     const SizedBox(height: 12),
-                    SwitchListTile(
-                      title: const Text('Dark Theme', style: TextStyle(fontWeight: FontWeight.w500, color: AppColors.darkCharcoal)),
-                      subtitle: const Text('Enable dark mode for the application interface', style: TextStyle(color: AppColors.mutedText)),
-                      value: _darkTheme,
-                      onChanged: (val) => setState(() => _darkTheme = val),
-                      activeTrackColor: AppColors.goldenYellow.withValues(alpha: 0.5),
-                      activeThumbColor: AppColors.goldenYellow,
-                      secondary: Icon(
-                        _darkTheme ? Icons.dark_mode : Icons.light_mode,
-                        color: _darkTheme ? AppColors.goldenYellow : AppColors.mutedText,
-                      ),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    const Divider(height: 24, color: AppColors.softBorder),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Container(

@@ -67,7 +67,7 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
       },
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.goldenYellow : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
@@ -81,12 +81,16 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
               color: isSelected ? AppColors.darkCharcoal : AppColors.mutedBrown,
             ),
             const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? AppColors.darkCharcoal : AppColors.mutedBrown,
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? AppColors.darkCharcoal : AppColors.mutedBrown,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -107,7 +111,7 @@ class _OrderSummaryPanelState extends State<OrderSummaryPanel> {
     final double total = subtotal + packagingFee;
 
     return Container(
-      width: 360,
+      width: double.infinity,
       decoration: const BoxDecoration(
         color: AppColors.surfaceWhite,
         border: Border(left: BorderSide(color: AppColors.softBorder, width: 1)),

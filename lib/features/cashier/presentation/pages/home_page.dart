@@ -482,6 +482,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOutCubic,
+              clipBehavior: Clip.hardEdge,
               width: _isOrderPanelExpanded ? 380 : 44,
               decoration: _isOrderPanelExpanded
                   ? BoxDecoration(
@@ -505,17 +506,22 @@ class _CashierHomePageState extends State<CashierHomePage> {
                       ],
                     ),
               child: _isOrderPanelExpanded
-                  ? OrderSummaryPanel(
-                      orderId: _currentOrderId,
-                      orderItems: _orderItems,
-                      orderType: _orderType,
-                      onOrderTypeChanged: (t) => setState(() => _orderType = t),
-                      onIncrease: _increaseQuantity,
-                      onDecrease: _decreaseQuantity,
-                      onRemove: _removeItem,
-                      onClear: _confirmClearOrder,
-                      onCheckout: _checkout,
-                      onCollapse: () => setState(() => _isOrderPanelExpanded = false),
+                  ? OverflowBox(
+                      minWidth: 380,
+                      maxWidth: 380,
+                      alignment: Alignment.topRight,
+                      child: OrderSummaryPanel(
+                        orderId: _currentOrderId,
+                        orderItems: _orderItems,
+                        orderType: _orderType,
+                        onOrderTypeChanged: (t) => setState(() => _orderType = t),
+                        onIncrease: _increaseQuantity,
+                        onDecrease: _decreaseQuantity,
+                        onRemove: _removeItem,
+                        onClear: _confirmClearOrder,
+                        onCheckout: _checkout,
+                        onCollapse: () => setState(() => _isOrderPanelExpanded = false),
+                      ),
                     )
                   : Material(
                       color: Colors.transparent,
@@ -728,7 +734,6 @@ class _CashierHomePageState extends State<CashierHomePage> {
           final isSelected = catId == _selectedCategoryId;
           final catName = cat['name'].toString().replaceAll(' Foods', '');
           final itemCount = _getCategoryItemCount(catId);
-          final iconData = _getCategoryIcon(catName);
 
           return Material(
             color: Colors.transparent,
