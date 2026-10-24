@@ -1409,3 +1409,73 @@ Checks actually run and actual results:
 Evidence paths: `lib/features/admin/presentation/pages/food_management_page.dart`.
 Unverified items / remaining risks: None.
 Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
+
+## Remediation of MaterialApp.builder Transient Overlay & Deactivation Async Errors — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T12:00:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Diagnose and fix runtime exceptions on app startup: "Unable to parse JSON message: The document is empty" and repeated "Async Error Caught: Looking up a deactivated widget's ancestor is unsafe. At this point the state of the widget's element tree is no longer stable."
+Rubric / risk / acceptance-test IDs: UI-01 (UI architecture & stability), AT10 (Integration & runtime stability).
+Files changed:
+- `lib/main.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root Cause Analysis:
+1. `Async Error Caught: Looking up a deactivated widget's ancestor is unsafe`:
+   - In `lib/main.dart`, `MaterialApp.builder` was returning `Overlay(initialEntries: [OverlayEntry(builder: (context) => Material(child: Column(...)))])`.
+   - In Flutter, `MaterialApp.builder` is invoked whenever the window changes configuration (e.g. `windowManager.waitUntilReadyToShow` maximizes the window on startup, window resize, theme change).
+   - Returning a new `Overlay` with fresh `initialEntries` on each build causes the previous `Overlay` instance and its `OverlayEntry` to be deactivated. The deactivated elements inside that entry (`CustomTitleBar` and its three `_WindowButton` child widgets) then encountered asynchronous pointer hover and layout events during window maximization, attempting ancestor lookups (`Theme.of(context)` / `Overlay.maybeOf(context)`) on defunct elements, throwing 4 identical unhandled async errors caught by `PlatformDispatcher.instance.onError`.
+2. `Unable to parse JSON message: The document is empty`:
+   - RapidJSON message parsing warning emitted by the Flutter Windows engine C++ JSON codec when empty messages or interleaved console outputs are received from the Windows runner embedder/devtools IPC pipe during concurrent `flutter pub get` stdout streaming.
+Remediation:
+- Replaced the transient `Overlay(initialEntries: [...])` in `lib/main.dart` `MaterialApp.builder` with `Material(child: Column(...))`. `CustomTitleBar` already gracefully handles `Overlay.maybeOf(context) == null` without crashing.
+- Updated `PlatformDispatcher.instance.onError` to output `$stack` alongside `$error` in debug mode to ensure transparent diagnosis of any future unhandled asynchronous exceptions.
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test`: 191/191 tests passed cleanly (0 failures, 2 skipped).
+  - `flutter test test/widget/custom_title_bar_test.dart`: 4/4 tests passed.
+  - `flutter test test/security/`: 84/84 security tests passed.
+- Static analysis:
+  - `flutter analyze lib/main.dart`: 0 errors.
+Evidence paths:
+- `lib/main.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Unverified items / remaining risks: None.
+Next concrete step: Stage changes, commit cleanly, and push to remote.
+
+## Category Deletion State Management & Sync Defense Remediation — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T12:20:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Resolve issue where deleted category remains displayed in the "Manage Categories" modal dialog and ensure deleted categories are properly updated across UI and persistent state without being resurrected by background sync.
+Rubric / risk / acceptance-test IDs: UI-02 (Data management & responsive UI), AT04 (Food & Category Management), A4 (Audit Logging).
+Files changed:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/core/services/sync_service.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `CHANGELOG.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Root Cause Analysis:
+1. In `FoodManagementPage._showManageCategoriesDialog()`, the dialog used an unmanaged `FutureBuilder(future: repo.getCategories())` inside a `StatefulBuilder`. When `archiveCategory` was executed, calling `setDialogState(() {})` did not re-fetch the future, leaving the deleted category in the dialog view until full app restart.
+2. In `FoodManagementPage`, deleting the currently selected category filter retained an invalid `_selectedCategory`, leaving an empty food table without resetting to "All".
+3. In `FoodRepository.archiveCategory()`, `_syncService.syncToCloud()` was unhandled with try/catch, meaning any network/sync failure threw an uncaught error before UI refresh completed. Also, category archival was missing audit logging.
+4. In `SyncService._syncFromSupabase()`, incoming remote category rows unconditionally overwrote local status, risking remote active records resurrecting locally archived categories on subsequent sync intervals.
+Remediation:
+- Converted `_showManageCategoriesDialog` to actively manage `categoriesFuture` with an explicit `refreshCategories()` callback called on add, edit, or archive.
+- Awaited `showDialog` dismissal and triggered `await _loadData()` to immediately synchronize the main Food Management page and tabs.
+- Added automatic filter fallback: if `_selectedCategory` is no longer active in categories, reset `_selectedCategory = 'All'`.
+- Wrapped `syncToCloud()` in `try/catch` within `archiveCategory` and logged `Food Category Archived` to audit logs with timestamp tracking on category and reassigned food items.
+- Enhanced `SyncService._syncFromSupabase` to respect locally archived categories and prevent remote status overwrites from reviving archived categories.
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test test/unit/category_sync_test.dart`: 3/3 passed.
+  - `flutter test test/security/`: 84/84 passed.
+- Static analysis:
+  - `flutter analyze lib/features/admin/presentation/pages/food_management_page.dart`: No issues found!
+Evidence paths:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/core/services/sync_service.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `test/unit/category_sync_test.dart`
+Unverified items / remaining risks: None.
+Next concrete step: Stage changes, commit cleanly, and push to origin/bug-fix and origin/main.
+
