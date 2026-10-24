@@ -11,6 +11,10 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ### Fixed — 2026-10-24
 
+- Fixed category deletion state management in Manage Categories dialog to immediately refresh the category list upon deletion, edit, or addition.
+- Added automatic filter reset to 'All' in Food Management when the active category is deleted.
+- Hardened `FoodRepository.archiveCategory` with error-handled cloud sync, audit logging, and timestamp updates.
+- Prevented incoming cloud sync from resurrecting locally archived categories.
 - Replaced transient `Overlay` wrapper in `MaterialApp.builder` with `Material` to prevent child element deactivation errors on window maximize/resize events.
 - Added stack trace logging to `PlatformDispatcher.instance.onError` in debug mode.
 

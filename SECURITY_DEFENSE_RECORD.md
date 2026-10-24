@@ -1442,3 +1442,40 @@ Evidence paths:
 Unverified items / remaining risks: None.
 Next concrete step: Stage changes, commit cleanly, and push to remote.
 
+## Category Deletion State Management & Sync Defense Remediation — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T12:20:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Resolve issue where deleted category remains displayed in the "Manage Categories" modal dialog and ensure deleted categories are properly updated across UI and persistent state without being resurrected by background sync.
+Rubric / risk / acceptance-test IDs: UI-02 (Data management & responsive UI), AT04 (Food & Category Management), A4 (Audit Logging).
+Files changed:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/core/services/sync_service.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `CHANGELOG.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Root Cause Analysis:
+1. In `FoodManagementPage._showManageCategoriesDialog()`, the dialog used an unmanaged `FutureBuilder(future: repo.getCategories())` inside a `StatefulBuilder`. When `archiveCategory` was executed, calling `setDialogState(() {})` did not re-fetch the future, leaving the deleted category in the dialog view until full app restart.
+2. In `FoodManagementPage`, deleting the currently selected category filter retained an invalid `_selectedCategory`, leaving an empty food table without resetting to "All".
+3. In `FoodRepository.archiveCategory()`, `_syncService.syncToCloud()` was unhandled with try/catch, meaning any network/sync failure threw an uncaught error before UI refresh completed. Also, category archival was missing audit logging.
+4. In `SyncService._syncFromSupabase()`, incoming remote category rows unconditionally overwrote local status, risking remote active records resurrecting locally archived categories on subsequent sync intervals.
+Remediation:
+- Converted `_showManageCategoriesDialog` to actively manage `categoriesFuture` with an explicit `refreshCategories()` callback called on add, edit, or archive.
+- Awaited `showDialog` dismissal and triggered `await _loadData()` to immediately synchronize the main Food Management page and tabs.
+- Added automatic filter fallback: if `_selectedCategory` is no longer active in categories, reset `_selectedCategory = 'All'`.
+- Wrapped `syncToCloud()` in `try/catch` within `archiveCategory` and logged `Food Category Archived` to audit logs with timestamp tracking on category and reassigned food items.
+- Enhanced `SyncService._syncFromSupabase` to respect locally archived categories and prevent remote status overwrites from reviving archived categories.
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test test/unit/category_sync_test.dart`: 3/3 passed.
+  - `flutter test test/security/`: 84/84 passed.
+- Static analysis:
+  - `flutter analyze lib/features/admin/presentation/pages/food_management_page.dart`: No issues found!
+Evidence paths:
+- `lib/core/database/repositories/food_repository.dart`
+- `lib/core/services/sync_service.dart`
+- `lib/features/admin/presentation/pages/food_management_page.dart`
+- `test/unit/category_sync_test.dart`
+Unverified items / remaining risks: None.
+Next concrete step: Stage changes, commit cleanly, and push to origin/bug-fix and origin/main.
+

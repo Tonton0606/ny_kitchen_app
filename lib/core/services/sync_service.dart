@@ -669,6 +669,12 @@ class SyncService {
                     limit: 1,
                   );
                   if (existing.isNotEmpty) {
+                    final localStatus = (existing.first['status'] as String? ?? '').trim();
+                    final cloudStatus = (record['status'] as String? ?? '').trim();
+                    if (localStatus == 'archived' && cloudStatus != 'archived') {
+                      // Do not revive locally archived categories from a stale cloud record
+                      continue;
+                    }
                     await db.update(
                       'food_categories',
                       record,

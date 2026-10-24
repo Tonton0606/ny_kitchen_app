@@ -301,7 +301,10 @@ class FoodRepository {
       action: 'Update Food Category',
     );
     final db = await _dbHelper.database;
-    final data = <String, dynamic>{'name': name};
+    final data = <String, dynamic>{
+      'name': name,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
     if (iconUrl != null) {
       String finalIcon = iconUrl;
       if (finalIcon.startsWith('http') ||
@@ -327,11 +330,23 @@ class FoodRepository {
   }
 
   Future<int> archiveCategory(int id) async {
-    await RepositorySecurityGuard.requireAdmin(
+    final admin = await RepositorySecurityGuard.requireAdmin(
       module: 'Food Management',
       action: 'Archive Food Category',
     );
     final db = await _dbHelper.database;
+    final now = DateTime.now().toIso8601String();
+
+    // Query category name for audit log before updating
+    final targetCat = await db.query(
+      'food_categories',
+      columns: ['name'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    final catName = targetCat.isNotEmpty ? targetCat.first['name'] as String? : 'ID $id';
+
     // Before archiving category, reassign items to another category
     final activeCats = await db.query(
       'food_categories',
@@ -343,7 +358,10 @@ class FoodRepository {
       final fallbackId = activeCats.first['id'] as int;
       await db.update(
         'food_items',
-        {'category_id': fallbackId},
+        {
+          'category_id': fallbackId,
+          'updated_at': now,
+        },
         where: 'category_id = ?',
         whereArgs: [id],
       );
@@ -351,11 +369,29 @@ class FoodRepository {
 
     int count = await db.update(
       'food_categories',
-      {'status': 'archived'},
+      {
+        'status': 'archived',
+        'updated_at': now,
+      },
       where: 'id = ?',
       whereArgs: [id],
     );
-    await _syncService.syncToCloud();
+
+    try {
+      await _syncService.syncToCloud();
+    } catch (_) {}
+
+    // Audit category archival
+    await _auditRepo.logAction(
+      userId: admin['id'] as int?,
+      username: admin['username'] as String? ?? 'Admin',
+      role: 'admin',
+      module: 'Food Management',
+      action: 'Food Category Archived',
+      status: 'Success',
+      description: 'Archived food category "$catName" (ID: $id)',
+    );
+
     return count;
   }
 }

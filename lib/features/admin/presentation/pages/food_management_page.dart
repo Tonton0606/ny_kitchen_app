@@ -90,6 +90,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     setState(() {
       _foods = foods;
       _categories = categories;
+      if (_selectedCategory != 'All' && !categories.any((c) => c['name'] == _selectedCategory)) {
+        _selectedCategory = 'All';
+      }
       final maxPages = (foods.length + _pageSize - 1) ~/ _pageSize;
       if (_currentPage > maxPages && maxPages > 0) {
         _currentPage = maxPages;
@@ -113,6 +116,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     setState(() {
       _foods = foods;
       _categories = categories;
+      if (_selectedCategory != 'All' && !categories.any((c) => c['name'] == _selectedCategory)) {
+        _selectedCategory = 'All';
+      }
       final maxPages = (foods.length + _pageSize - 1) ~/ _pageSize;
       if (_currentPage > maxPages && maxPages > 0) {
         _currentPage = maxPages;
@@ -2323,12 +2329,18 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
     final repo = FoodRepository();
     String newCategoryIcon = 'utensils';
     final TextEditingController categoryController = TextEditingController();
+    Future<List<Map<String, dynamic>>> categoriesFuture = repo.getCategories();
 
-    showDialog(
+    await showDialog(
       context: context,
-      builder: (ctx) {
+      builder: (dialogCtx) {
         return StatefulBuilder(
-          builder: (context, setDialogState) {
+          builder: (dialogContext, setDialogState) {
+            void refreshCategories() {
+              setDialogState(() {
+                categoriesFuture = repo.getCategories();
+              });
+            }
             return AlertDialog(
               backgroundColor: Colors.white,
               surfaceTintColor: Colors.transparent,
@@ -2353,7 +2365,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                         InkWell(
                           onTap: () async {
                             final selected = await showDialog<String>(
-                              context: context,
+                              context: dialogContext,
                               builder: (_) => FoodIconPickerDialog(
                                 currentIcon: newCategoryIcon,
                               ),
@@ -2421,9 +2433,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                               );
                               categoryController.clear();
                               newCategoryIcon = 'utensils';
-                              if (!mounted) return;
-                              _loadData();
-                              setDialogState(() {});
+                              refreshCategories();
+                              if (mounted) _loadData();
                             }
                           },
                           child: const Icon(Icons.add),
@@ -2434,14 +2445,14 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                     SizedBox(
                       height: 300,
                       child: FutureBuilder<List<Map<String, dynamic>>>(
-                        future: repo.getCategories(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
+                        future: categoriesFuture,
+                        builder: (futureCtx, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
                             return const Center(
                               child: CircularProgressIndicator(),
                             );
                           }
-                          final cats = snapshot.data!;
+                          final cats = snapshot.data ?? [];
                           if (cats.isEmpty) {
                             return const Center(
                               child: Text(
@@ -2452,10 +2463,11 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                           }
                           return ListView.builder(
                             itemCount: cats.length,
-                            itemBuilder: (context, index) {
+                            itemBuilder: (itemCtx, index) {
                               final cat = cats[index];
                               final String iconStr = (cat['icon_url'] as String?) ?? 'utensils';
                               return Padding(
+                                key: ValueKey('category_${cat['id']}'),
                                 padding: const EdgeInsets.only(bottom: 8),
                                 child: Material(
                                   color: Colors.white,
@@ -2497,7 +2509,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                           String editIcon = iconStr;
 
                                           await showDialog(
-                                            context: context,
+                                            context: dialogContext,
                                             builder: (editCtx) => StatefulBuilder(
                                               builder: (ctx2, setEditState) => AlertDialog(
                                                 backgroundColor: Colors.white,
@@ -2579,8 +2591,9 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                                           iconUrl: editIcon,
                                                         );
                                                         if (!editCtx.mounted) return;
-                                                        _loadData();
                                                         Navigator.pop(editCtx);
+                                                        refreshCategories();
+                                                        if (mounted) _loadData();
                                                       }
                                                     },
                                                     child: const Text('Save'),
@@ -2589,7 +2602,6 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                               ),
                                             ),
                                           );
-                                          setDialogState(() {});
                                         },
                                       ),
                                       IconButton(
@@ -2600,7 +2612,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                         ),
                                         onPressed: () async {
                                           final confirm = await showDialog<bool>(
-                                            context: context,
+                                            context: dialogContext,
                                             builder: (confirmCtx) => AlertDialog(
                                               backgroundColor: Colors.white,
                                               surfaceTintColor: Colors.transparent,
@@ -2608,11 +2620,11 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                                 borderRadius: BorderRadius.circular(16),
                                                 side: const BorderSide(color: Color(0xFFE2E8F0)),
                                               ),
-                                              title: Row(
+                                              title: const Row(
                                                 children: [
                                                   Icon(Icons.warning_amber_rounded, color: AppColors.brandRed),
-                                                  const SizedBox(width: 8),
-                                                  const Text('Delete Category?'),
+                                                  SizedBox(width: 8),
+                                                  Text('Delete Category?'),
                                                 ],
                                               ),
                                               content: Text('Are you sure you want to delete "${cat['name']}"?'),
@@ -2631,9 +2643,20 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
                                           );
                                           
                                           if (confirm == true) {
-                                            await repo.archiveCategory(cat['id']);
-                                            _loadData();
-                                            setDialogState(() {});
+                                            try {
+                                              await repo.archiveCategory(cat['id']);
+                                            } catch (e) {
+                                              if (dialogContext.mounted) {
+                                                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('Failed to delete category: $e'),
+                                                    backgroundColor: AppColors.brandRed,
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                            refreshCategories();
+                                            if (mounted) await _loadData();
                                           }
                                         },
                                       ),
@@ -2652,7 +2675,7 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(ctx),
+                  onPressed: () => Navigator.pop(dialogContext),
                   child: const Text('Close'),
                 ),
               ],
@@ -2661,5 +2684,8 @@ class _FoodManagementPageState extends State<FoodManagementPage> {
         );
       },
     );
+    if (mounted) {
+      await _loadData();
+    }
   }
 }
