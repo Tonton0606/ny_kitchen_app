@@ -1166,6 +1166,7 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
               minWidth: constraints.maxWidth,
             ),
             child: DataTable(
+              showCheckboxColumn: false,
               headingRowHeight: 44,
               dataRowMinHeight: 48,
               dataRowMaxHeight: 64,
