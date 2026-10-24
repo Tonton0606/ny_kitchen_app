@@ -505,6 +505,24 @@ class SyncService {
                   }
                 }
               }
+            } else if (table == 'transactions') {
+              try {
+                await client.from(table).upsert(dataToSync);
+              } on PostgrestException catch (e) {
+                // If cloud schema cache or legacy Supabase instance lacks optional columns (PGRST204),
+                // retry upload without unmapped optional columns so core sales are still reliably preserved.
+                if (e.code == 'PGRST204') {
+                  final fallbackData = dataToSync.map((record) {
+                    final stripped = Map<String, dynamic>.from(record);
+                    stripped.remove('order_type');
+                    stripped.remove('packaging_fee');
+                    return stripped;
+                  }).toList();
+                  await client.from(table).upsert(fallbackData);
+                } else {
+                  rethrow;
+                }
+              }
             } else {
               await client.from(table).upsert(dataToSync);
             }

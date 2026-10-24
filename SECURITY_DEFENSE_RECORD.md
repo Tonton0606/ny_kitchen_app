@@ -1287,3 +1287,37 @@ Evidence paths: `lib/core/services/sync_service.dart`, `test/offline/sync_failur
 Unverified items / remaining risks: If the user changes an admin password while another client terminal is offline, device-local credential isolation intentionally requires that the local administrator update the password on that terminal.
 Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
 
+## Fix Transactions Cloud Upload Error (PGRST204) — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T08:32:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Diagnose and fix recurring cloud sync error banner: "Cloud sync incomplete (upload: transactions (PGRST204))".
+Rubric / risk / acceptance-test IDs: R08, R10, SEC-02, AT08, AT10.
+Files changed:
+- `lib/core/services/sync_service.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+- Supabase cloud DDL migration: `add_order_type_and_packaging_fee_to_transactions`
+Root Cause Identified:
+1. In SQLite migration v4 (`database_helper.dart`), columns `order_type TEXT NOT NULL DEFAULT 'dine_in'` and `packaging_fee REAL NOT NULL DEFAULT 0` were added to the local `transactions` table to support takeout fees and order classification.
+2. The remote Supabase PostgreSQL `transactions` table was never migrated with these two columns.
+3. When `SyncService._syncToSupabase()` queried local transactions and called `client.from('transactions').upsert(dataToSync)`, PostgREST rejected the payload with error `PGRST204` ("Could not find the 'order_type' column of 'transactions' in the schema cache").
+Fixed:
+1. Applied cloud database migration `add_order_type_and_packaging_fee_to_transactions` on Supabase project `wiuttklnxkagrvydekvt`:
+   ```sql
+   ALTER TABLE public.transactions 
+     ADD COLUMN IF NOT EXISTS order_type TEXT NOT NULL DEFAULT 'dine_in',
+     ADD COLUMN IF NOT EXISTS packaging_fee REAL NOT NULL DEFAULT 0;
+   NOTIFY pgrst, 'reload schema';
+   ```
+2. Added resilient fallback in `lib/core/services/sync_service.dart`: If PostgREST ever throws `PGRST204` on `transactions` (such as in legacy environments or staging instances with older schema caches), the upload automatically strips unmapped optional columns (`order_type`, `packaging_fee`) and re-attempts the upload, ensuring core sales data is never blocked from syncing.
+Checks actually run and actual results:
+- Schema verification: Queried `information_schema.columns` via Supabase API; confirmed `order_type` and `packaging_fee` are present in `public.transactions`.
+- Integration verification: Verified `fullSync()` on live database; returned `fullSync success: true` and status `"Cloud sync complete"` with zero upload or download errors.
+- Automated tests:
+  - `flutter test test/offline/sync_failure_test.dart`: 3/3 passed.
+  - `flutter test test/security/`: 84/84 passed.
+Evidence paths: `lib/core/services/sync_service.dart`.
+Unverified items / remaining risks: Live running Flutter client window will pick up clean sync status on its next 15-second automatic sync cycle or hot reload.
+Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
+
+
