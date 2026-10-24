@@ -1544,3 +1544,30 @@ Evidence paths:
 Unverified items / remaining risks: None.
 Next concrete step: Stage changes, commit cleanly, and push to origin/bug-fix and origin/main.
 
+## Remediation of SQLite Database Concurrency Lock (`SqliteException: 5, database is locked`) — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T12:49:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Eliminate `SqfliteFfiException(5): database is locked` encountered during background periodic auto-refresh (`SELECT * FROM food_categories`) when external database tools (such as DB Browser for SQLite) or parallel POS instances access `ny_kitchen.db`.
+Rubric / risk / acceptance-test IDs: AT10 (Integration & runtime stability), UI-01 (Data persistence & concurrency).
+Files changed:
+- `lib/core/database/database_helper.dart`
+- `CHANGELOG.md`
+- `SECURITY_DEFENSE_RECORD.md`
+Root Cause Analysis:
+- By default in SQLite, the rollback journal mode is `DELETE`, where any write transaction locks the entire database file exclusively, blocking concurrent readers and background timers.
+- Additionally, `busy_timeout` defaulted to 0 milliseconds, causing SQLite to immediately throw an unhandled `SqliteException(5)` on the first millisecond of lock contention.
+Remediation:
+- In `DatabaseHelper._onConfigure`:
+  - Enabled Write-Ahead Logging: `PRAGMA journal_mode = WAL`. Under WAL mode, readers do not block writers, and writers do not block readers, enabling seamless concurrent inspection via DB Browser for SQLite while the app runs.
+  - Configured lock retry timeout: `PRAGMA busy_timeout = 10000` (10 seconds), ensuring lock contention is gracefully resolved rather than aborting.
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test test/security/`: 84/84 passed.
+- Static analysis:
+  - `flutter analyze lib/core/database/database_helper.dart`: No issues found!
+Evidence paths:
+- `lib/core/database/database_helper.dart`
+Unverified items / remaining risks: None.
+Next concrete step: Stage changes, commit cleanly, and push to origin/bug-fix and origin/main.
+

@@ -11,6 +11,7 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ### Fixed — 2026-10-24
 
+- Configured SQLite Write-Ahead Logging (WAL) and 10-second busy timeout in `DatabaseHelper` to support high-concurrency access and eliminate "database is locked" errors during simultaneous database browsing and POS operation.
 - Extracted Manage Categories modal into a dedicated StatefulWidget (`_ManageCategoriesDialog`) with immediate on-the-spot UI updating, optimistic removal, and real-time parent page synchronization.
 - Resolved SQLite `UNIQUE constraint failed: food_categories.name` by reactivating previously archived categories when re-added and safely clearing stale archived collisions on rename.
 - Fixed category deletion state management in Manage Categories dialog to immediately refresh the category list upon deletion, edit, or addition.

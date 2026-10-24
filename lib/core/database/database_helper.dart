@@ -152,6 +152,14 @@ class DatabaseHelper {
   Future _onConfigure(Database db) async {
     // Enable foreign keys
     await db.execute('PRAGMA foreign_keys = ON');
+    // Enable Write-Ahead Logging (WAL) for high concurrency and concurrent readers/writers
+    try {
+      await db.execute('PRAGMA journal_mode = WAL');
+    } catch (_) {}
+    // Set busy timeout to 10 seconds to eliminate "database is locked" errors
+    try {
+      await db.execute('PRAGMA busy_timeout = 10000');
+    } catch (_) {}
   }
 
   Future _onCreate(Database db, int version) async {
