@@ -291,105 +291,125 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
   Widget _buildHeaderBar(BuildContext context, List<Map<String, dynamic>> filtered) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Wrap(
-          spacing: AppDesignTokens.space12,
-          runSpacing: AppDesignTokens.space12,
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            // Left: Dateline + Period Selector
-            Wrap(
-              spacing: AppDesignTokens.space16,
-              runSpacing: AppDesignTokens.space8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text(
-                  _getDateLineText(),
-                  style: AppTypography.label,
-                ),
-                _buildPeriodSelector(),
-              ],
-            ),
+        final isNarrow = constraints.maxWidth < 800;
 
-            // Right: Print & Export Actions
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () {
-                    if (filtered.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('No transactions to print')),
-                      );
-                      return;
-                    }
-                    ExportService.printPDF(filtered);
-                  },
-                  icon: const Icon(LucideIcons.printer, size: 16),
-                  label: const Text('Print', style: AppTypography.buttonSmall),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.darkCharcoal,
-                    side: const BorderSide(color: AppColors.softBorder),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDesignTokens.space16,
-                      vertical: AppDesignTokens.space12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
-                    ),
-                    backgroundColor: AppColors.surfaceWhite,
+        final dateWidget = Text(
+          _getDateLineText(),
+          style: AppTypography.label,
+        );
+
+        final controlsWidget = Row(
+          mainAxisSize: isNarrow ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisAlignment: isNarrow ? MainAxisAlignment.start : MainAxisAlignment.end,
+          children: [
+            // Period Selector Pill Group (38px height)
+            _buildPeriodSelector(),
+            const SizedBox(width: AppDesignTokens.space12),
+
+            // Print Action (38px height)
+            SizedBox(
+              height: 38,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  if (filtered.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No transactions to print')),
+                    );
+                    return;
+                  }
+                  ExportService.printPDF(filtered);
+                },
+                icon: const Icon(LucideIcons.printer, size: 16),
+                label: const Text('Print', style: AppTypography.buttonSmall),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.darkCharcoal,
+                  side: const BorderSide(color: AppColors.softBorder),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDesignTokens.space16,
                   ),
-                ),
-                const SizedBox(width: AppDesignTokens.space8),
-                PopupMenuButton<String>(
-                  offset: const Offset(0, 42),
-                  onSelected: (value) {
-                    if (filtered.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('No transactions to export')),
-                      );
-                      return;
-                    }
-                    if (value == 'excel') {
-                      ExportService.exportToExcel(filtered, context);
-                    } else if (value == 'pdf') {
-                      ExportService.exportToPDF(filtered, context);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'excel',
-                      child: Text('Export as Excel (.xlsx)', style: AppTypography.buttonSmall),
-                    ),
-                    const PopupMenuItem(
-                      value: 'pdf',
-                      child: Text('Export as PDF (.pdf)', style: AppTypography.buttonSmall),
-                    ),
-                  ],
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDesignTokens.space16,
-                      vertical: AppDesignTokens.space12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.goldenYellow,
-                      borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(LucideIcons.download, size: 16, color: AppColors.darkCharcoal),
-                        SizedBox(width: AppDesignTokens.space8),
-                        Text(
-                          'Export',
-                          style: AppTypography.buttonSmall,
-                        ),
-                      ],
-                    ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
                   ),
+                  backgroundColor: AppColors.surfaceWhite,
                 ),
-              ],
+              ),
             ),
+            const SizedBox(width: AppDesignTokens.space8),
+
+            // Export Action (38px height)
+            SizedBox(
+              height: 38,
+              child: PopupMenuButton<String>(
+                offset: const Offset(0, 42),
+                onSelected: (value) {
+                  if (filtered.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No transactions to export')),
+                    );
+                    return;
+                  }
+                  if (value == 'excel') {
+                    ExportService.exportToExcel(filtered, context);
+                  } else if (value == 'pdf') {
+                    ExportService.exportToPDF(filtered, context);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'excel',
+                    child: Text('Export as Excel (.xlsx)', style: AppTypography.buttonSmall),
+                  ),
+                  const PopupMenuItem(
+                    value: 'pdf',
+                    child: Text('Export as PDF (.pdf)', style: AppTypography.buttonSmall),
+                  ),
+                ],
+                child: Container(
+                  height: 38,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDesignTokens.space16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.goldenYellow,
+                    borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(LucideIcons.download, size: 16, color: AppColors.darkCharcoal),
+                      SizedBox(width: AppDesignTokens.space8),
+                      Text(
+                        'Export',
+                        style: AppTypography.buttonSmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+
+        if (isNarrow) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              dateWidget,
+              const SizedBox(height: AppDesignTokens.space12),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: controlsWidget,
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            dateWidget,
+            controlsWidget,
           ],
         );
       },
@@ -398,7 +418,8 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
 
   Widget _buildPeriodSelector() {
     return Container(
-      padding: const EdgeInsets.all(AppDesignTokens.space4),
+      height: 38,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(AppDesignTokens.radius12),
@@ -418,9 +439,10 @@ class _SalesReportsPageState extends State<SalesReportsPage> {
             borderRadius: BorderRadius.circular(AppDesignTokens.radius8),
             child: AnimatedContainer(
               duration: AppDesignTokens.motionFast,
+              height: double.infinity,
+              alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(
                 horizontal: AppDesignTokens.space12,
-                vertical: AppDesignTokens.space4 + 2,
               ),
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.goldenYellow : Colors.transparent,
