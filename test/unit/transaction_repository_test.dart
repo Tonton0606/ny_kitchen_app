@@ -69,6 +69,8 @@ void main() {
                   amount_received REAL,
                   change REAL,
                   status TEXT NOT NULL,
+                  order_type TEXT NOT NULL DEFAULT 'dine_in',
+                  packaging_fee REAL NOT NULL DEFAULT 0,
                   void_reason TEXT,
                   refund_reason TEXT,
                   created_at TEXT NOT NULL,
@@ -206,6 +208,108 @@ void main() {
       final summary = await transactionRepository.getTopSellingFoods();
       expect(summary.length, equals(1));
       expect(summary.first['sold'], equals(2));
+    });
+
+    test('createTransaction with dine_in sets packaging fee to 0.0 and total = subtotal', () async {
+      final items = [
+        {
+          'food_item_id': 101,
+          'food_name': 'Burger',
+          'food_price': 150.0,
+          'quantity': 2,
+          'subtotal': 300.0,
+        }
+      ];
+
+      final result = await transactionRepository.createTransaction(
+        userId: 1,
+        orderType: 'dine_in',
+        totalAmount: 300.0,
+        amountReceived: 500.0,
+        change: 200.0,
+        items: items,
+      );
+
+      expect(result['order_type'], equals('dine_in'));
+      expect(result['packaging_fee'], equals(0.0));
+      expect(result['total_amount'], equals(300.0));
+
+      final tx = (await db.query('transactions', where: 'id = ?', whereArgs: [result['id']])).first;
+      expect(tx['order_type'], equals('dine_in'));
+      expect(tx['packaging_fee'], equals(0.0));
+      expect(tx['total_amount'], equals(300.0));
+    });
+
+    test('createTransaction with takeout computes 3.00 packaging fee and authoritative total', () async {
+      final items = [
+        {
+          'food_item_id': 101,
+          'food_name': 'Burger',
+          'food_price': 150.0,
+          'quantity': 2,
+          'subtotal': 300.0,
+        }
+      ];
+
+      final result = await transactionRepository.createTransaction(
+        userId: 1,
+        orderType: 'takeout',
+        totalAmount: 300.0, // Tentative from client; repo must enforce +3.00
+        amountReceived: 500.0,
+        change: 197.0,
+        items: items,
+      );
+
+      expect(result['order_type'], equals('takeout'));
+      expect(result['packaging_fee'], equals(3.0));
+      expect(result['total_amount'], equals(303.0));
+
+      final tx = (await db.query('transactions', where: 'id = ?', whereArgs: [result['id']])).first;
+      expect(tx['order_type'], equals('takeout'));
+      expect(tx['packaging_fee'], equals(3.0));
+      expect(tx['total_amount'], equals(303.0));
+    });
+
+    test('v8 to v9 migration adds order_type and packaging_fee columns to existing transactions', () async {
+      final dbPath = 'v8_migration_test_${DateTime.now().microsecondsSinceEpoch}.db';
+      await databaseFactory.deleteDatabase(dbPath);
+      final v8Db = await databaseFactory.openDatabase(
+        dbPath,
+        options: OpenDatabaseOptions(
+          version: 8,
+          onCreate: (db, version) async {
+            await db.execute('''
+              CREATE TABLE transactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                receipt_number TEXT UNIQUE NOT NULL,
+                total_amount REAL NOT NULL,
+                payment_method TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL
+              )
+            ''');
+            await db.insert('transactions', {
+              'receipt_number': 'OLD-REC-1',
+              'total_amount': 250.0,
+              'payment_method': 'cash',
+              'status': 'Served',
+              'created_at': '2026-10-23T12:00:00',
+            });
+          },
+        ),
+      );
+
+      // Apply v8 -> v9 migration statements
+      await v8Db.execute("ALTER TABLE transactions ADD COLUMN order_type TEXT NOT NULL DEFAULT 'dine_in'");
+      await v8Db.execute("ALTER TABLE transactions ADD COLUMN packaging_fee REAL NOT NULL DEFAULT 0");
+
+      final rows = await v8Db.query('transactions');
+      expect(rows.length, equals(1));
+      expect(rows.first['order_type'], equals('dine_in'));
+      expect(rows.first['packaging_fee'], equals(0));
+
+      await v8Db.close();
+      await databaseFactory.deleteDatabase(dbPath);
     });
   });
 }

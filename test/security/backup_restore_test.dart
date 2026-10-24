@@ -84,6 +84,8 @@ void main() {
               amount_received REAL,
               change REAL,
               status TEXT NOT NULL,
+              order_type TEXT NOT NULL DEFAULT 'dine_in',
+              packaging_fee REAL NOT NULL DEFAULT 0,
               void_reason TEXT,
               refund_reason TEXT,
               created_at TEXT NOT NULL,
@@ -378,6 +380,37 @@ INSERT INTO `food_items` (`id`, `invalid_column_that_does_not_exist`) VALUES (99
       final afterFood = await db.query('food_items');
       expect(afterFood.length, equals(1));
       expect(afterFood.first['name'], equals('Original Burger'));
+    });
+
+    test('SQL dump restores order_type and packaging_fee accurately', () async {
+      SessionManager().setSession({
+        'id': 1,
+        'username': 'admin',
+        'role': 'admin',
+        'status': 'active',
+      });
+
+      final now = DateTime.now().toIso8601String();
+      final takeoutSql = '''
+-- NY Kitchen Takeout Backup Test
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+INSERT INTO `users` (`id`, `full_name`, `username`, `password_hash`, `role`, `status`, `created_at`) VALUES (1, 'Admin Restored', 'admin', 'hash123', 'admin', 'active', '$now');
+INSERT INTO `transactions` (`id`, `receipt_number`, `order_number`, `user_id`, `total_amount`, `discount`, `payment_method`, `amount_received`, `change`, `status`, `order_type`, `packaging_fee`, `created_at`) VALUES (99, 'REC-TAKEOUT-99', 99, 1, 103.0, 0, 'cash', 150.0, 47.0, 'Served', 'takeout', 3.0, '$now');
+COMMIT;
+''';
+
+      final sqlFile = File(p.join(tempDir.path, 'takeout_backup.sql'));
+      await sqlFile.writeAsString(takeoutSql);
+
+      final success = await backupRepo.restoreDatabase(sqlFile);
+      expect(success, isTrue);
+
+      final tx = await db.query('transactions', where: 'id = ?', whereArgs: [99]);
+      expect(tx.length, equals(1));
+      expect(tx.first['order_type'], equals('takeout'));
+      expect(tx.first['packaging_fee'], equals(3.0));
+      expect(tx.first['total_amount'], equals(103.0));
     });
   });
 }

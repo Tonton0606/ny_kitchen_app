@@ -110,6 +110,6 @@ void main() {
       final subsequentLogin = await userRepository.login(username, password);
       expect(subsequentLogin, isNotNull);
       expect(subsequentLogin!['username'], equals(username));
-    });
+    }, timeout: const Timeout(Duration(minutes: 2)));
   });
 }

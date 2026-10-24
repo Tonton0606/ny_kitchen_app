@@ -84,6 +84,8 @@ void main() {
               amount_received REAL,
               change REAL,
               status TEXT NOT NULL,
+              order_type TEXT NOT NULL DEFAULT 'dine_in',
+              packaging_fee REAL NOT NULL DEFAULT 0,
               void_reason TEXT,
               refund_reason TEXT,
               created_at TEXT NOT NULL

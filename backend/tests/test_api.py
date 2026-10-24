@@ -109,3 +109,31 @@ def test_persistence_and_no_mutation_endpoint(configured, sale):
         response = client.get('/v1/admin/sales?limit=1000', headers=header('admin'))
         assert response.status_code == 422
         assert response.headers['cache-control'] == 'no-store'
+
+
+def test_takeout_sale_accepted_and_wrong_total_rejected(client, sale):
+    # Valid takeout sale with 300 cents (₱3.00) packaging fee
+    takeout_sale = dict(
+        sale,
+        local_id=10,
+        receipt_number="DEMO-TAKEOUT-01",
+        order_type="takeout",
+        packaging_fee_cents=300,
+        total_cents=10300,  # 10000 + 300
+    )
+    res = client.post('/v1/sales/sync', json={'sales': [takeout_sale]}, headers=header('device'))
+    assert res.status_code == 200
+    assert res.json() == {'accepted': 1, 'new_revisions': 1}
+
+    # Wrong total (e.g. forgot packaging fee in total)
+    wrong_total = dict(takeout_sale, local_id=11, total_cents=10000)
+    assert client.post('/v1/sales/sync', json={'sales': [wrong_total]}, headers=header('device')).status_code == 422
+
+    # Wrong packaging fee (e.g. 0 for takeout)
+    wrong_fee = dict(takeout_sale, local_id=12, packaging_fee_cents=0, total_cents=10000)
+    assert client.post('/v1/sales/sync', json={'sales': [wrong_fee]}, headers=header('device')).status_code == 422
+
+    # Dine-in with non-zero packaging fee rejected
+    dinein_wrong_fee = dict(sale, local_id=13, order_type="dine_in", packaging_fee_cents=300, total_cents=10300)
+    assert client.post('/v1/sales/sync', json={'sales': [dinein_wrong_fee]}, headers=header('device')).status_code == 422
+

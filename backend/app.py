@@ -34,6 +34,8 @@ class Sale(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     local_id: int = Field(ge=1)
     receipt_number: str = Field(min_length=1, max_length=100)
+    order_type: Literal["dine_in", "takeout"] = "dine_in"
+    packaging_fee_cents: int = Field(ge=0, le=1000000000, default=0)
     total_cents: int = Field(ge=0, le=1000000000)
     discount_cents: int = Field(ge=0, le=1000000000)
     payment_method: str = Field(min_length=1, max_length=40)
@@ -192,7 +194,10 @@ def create_app(database=None, credentials=None, requests_per_minute=120):
             for sale in batch.sales:
                 if any(i.subtotal_cents != i.unit_price_cents * i.quantity for i in sale.items):
                     raise HTTPException(422, "Invalid sale totals")
-                if sum(i.subtotal_cents for i in sale.items) - sale.discount_cents != sale.total_cents:
+                expected_packaging = 300 if sale.order_type == "takeout" else 0
+                if sale.packaging_fee_cents != expected_packaging:
+                    raise HTTPException(422, "Invalid packaging fee")
+                if sum(i.subtotal_cents for i in sale.items) + sale.packaging_fee_cents - sale.discount_cents != sale.total_cents:
                     raise HTTPException(422, "Invalid sale totals")
                 try:
                     datetime.fromisoformat(sale.created_at)
