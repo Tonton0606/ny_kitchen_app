@@ -1368,3 +1368,24 @@ Checks actually run and actual results:
 Evidence paths: `lib/features/admin/presentation/pages/account_management_page.dart`.
 Unverified items / remaining risks: None.
 Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
+
+## Position Add User Account Drawer to Right Side — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T08:52:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Move the "Add User Account" slide-over drawer in Account Management to the right side of the screen instead of the left.
+Rubric / risk / acceptance-test IDs: UI-USABILITY, SEC-01.
+Files changed:
+- `lib/features/admin/presentation/pages/account_management_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root Cause / UX Alignment:
+- In `_buildAddUserDrawer()`, the form container was the first child of the `Row`, causing the drawer to dock to the left side and casting shadow to the right. Since the "Add Account" action button is positioned on the right and other admin management drawers (like Food Management) dock to the right, users expected the panel to open on the right side.
+Fixed:
+1. Reordered `_buildAddUserDrawer()` `Row` children so the dismissable `Backdrop` (`Expanded` with `GestureDetector`) comes first, docking the panel container to the right side.
+2. Updated container decoration: border switched from `right:` to `left: BorderSide(...)`, and shadow offset switched from `Offset(4, 0)` to `Offset(-4, 0)`.
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test test/security/`: 84/84 passed.
+Evidence paths: `lib/features/admin/presentation/pages/account_management_page.dart`.
+Unverified items / remaining risks: None.
+Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.

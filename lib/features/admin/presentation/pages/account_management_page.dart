@@ -1716,16 +1716,24 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
         final panelWidth = constraints.maxWidth > 520 ? 460.0 : constraints.maxWidth;
         return Row(
           children: [
+            // Backdrop
+            Expanded(
+              child: GestureDetector(
+                onTap: _closeAddUser,
+                child: Container(color: Colors.black.withValues(alpha: 0.35)),
+              ),
+            ),
+
             Container(
               width: panelWidth,
               decoration: const BoxDecoration(
                 color: Colors.white,
-                border: Border(right: BorderSide(color: Color(0xFFE2E8F0))),
+                border: Border(left: BorderSide(color: Color(0xFFE2E8F0))),
                 boxShadow: [
                   BoxShadow(
                     color: Color(0x1A000000),
                     blurRadius: 16,
-                    offset: Offset(4, 0),
+                    offset: Offset(-4, 0),
                   ),
                 ],
               ),
@@ -1929,14 +1937,6 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                     ),
                   ),
                 ],
-              ),
-            ),
-
-            // Backdrop
-            Expanded(
-              child: GestureDetector(
-                onTap: _closeAddUser,
-                child: Container(color: Colors.black.withValues(alpha: 0.35)),
               ),
             ),
           ],
