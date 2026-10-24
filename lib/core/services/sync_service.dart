@@ -617,6 +617,8 @@ class SyncService {
                   record['change'] = record['change'] ?? current.first['change'];
                   record['void_reason'] = record['void_reason'] ?? current.first['void_reason'];
                   record['refund_reason'] = record['refund_reason'] ?? current.first['refund_reason'];
+                  await db.update('transactions', record, where: 'id = ?', whereArgs: [record['id']]);
+                  continue;
                 }
               }
               if (table == 'users') {
@@ -627,6 +629,56 @@ class SyncService {
                 );
                 record.clear();
                 record.addAll(merged);
+                if (existing.isNotEmpty) {
+                  await db.update('users', record, where: 'id = ?', whereArgs: [record['id']]);
+                  continue;
+                }
+              }
+              if (table == 'food_categories') {
+                final id = record['id'];
+                if (id != null) {
+                  final existing = await db.query(
+                    'food_categories',
+                    where: 'id = ?',
+                    whereArgs: [id],
+                    limit: 1,
+                  );
+                  if (existing.isNotEmpty) {
+                    await db.update(
+                      'food_categories',
+                      record,
+                      where: 'id = ?',
+                      whereArgs: [id],
+                    );
+                    continue;
+                  }
+                }
+              }
+              if (table == 'food_items') {
+                final id = record['id'];
+                if (id != null) {
+                  final existing = await db.query(
+                    'food_items',
+                    where: 'id = ?',
+                    whereArgs: [id],
+                    limit: 1,
+                  );
+                  if (existing.isNotEmpty) {
+                    final localUpdated = DateTime.tryParse(existing.first['updated_at']?.toString() ?? '');
+                    final cloudUpdated = DateTime.tryParse(record['updated_at']?.toString() ?? '');
+                    if (localUpdated != null && cloudUpdated != null && localUpdated.isAfter(cloudUpdated)) {
+                      // Local modification is newer than cloud; preserve local edits
+                      continue;
+                    }
+                    await db.update(
+                      'food_items',
+                      record,
+                      where: 'id = ?',
+                      whereArgs: [id],
+                    );
+                    continue;
+                  }
+                }
               }
 
               await db.insert(

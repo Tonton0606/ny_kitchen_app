@@ -1228,3 +1228,32 @@ Evidence paths: `lib/core/services/sync_service.dart`, `test/offline/sync_failur
 Unverified items / remaining risks: Live automatic sync will now retry against Supabase on the running instance; existing 14 status differences between Supabase and local SQLite remain separate.
 Next concrete step: Commit changes cleanly and push to `origin/main` / `origin/bug-fix` per collaborative workflow.
 
+## Fix Food Category Sync and Foreign Key Nullification Cascade — 2026-10-24 (Asia/Manila)
+
+Date/time and timezone: 2026-10-24T08:08:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Fix food item category updating not syncing to Cashier when chosen in Admin.
+Rubric / risk / acceptance-test IDs: R08, R10, R13, SEC-02, AT02, AT10.
+Files changed:
+- `lib/core/services/sync_service.dart`
+- `lib/features/cashier/presentation/pages/home_page.dart`
+- `test/unit/category_sync_test.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- Mandatory Git sync: Fetched and merged `origin/main` commit `097045a` into branch `bug-fix`.
+- Root Cause Identified:
+  1. `SyncService._syncFromSupabase()` previously downloaded `food_categories` using `ConflictAlgorithm.replace`. In SQLite, `INSERT OR REPLACE` deletes existing category rows before inserting the replacement.
+  2. Because `food_items.category_id` has `FOREIGN KEY (category_id) REFERENCES food_categories (id) ON DELETE SET NULL` and `PRAGMA foreign_keys = ON;` is enforced, the replacement deleted the category and immediately triggered `ON DELETE SET NULL`, setting all associated `food_items.category_id` to `NULL`.
+  3. When Cashier loaded (`getCategories()`), `repairOrphanFoodCategories()` detected `category_id == null` and reassigned all food items back to `cats.first['id']` ("Chicken Pastil Meals"), wiping out the admin's chosen category.
+  4. `CashierHomePage` also lacked a periodic refresh timer and did not render dynamic category icons (`buildCategoryIconWidget`).
+- Fixed:
+  1. Updated `SyncService._syncFromSupabase()` to perform in-place `db.update(...)` for existing rows in `food_categories`, `food_items`, `users`, and `transactions` rather than destructive `ConflictAlgorithm.replace`, preventing foreign key cascades (`ON DELETE SET NULL` and `ON DELETE CASCADE`) from firing during cloud sync pulls.
+  2. Added live auto-refresh timer (`Timer.periodic`) and proper cleanup in `CashierHomePage` so menu changes and category assignments propagate to Cashier in real-time.
+  3. Integrated `buildCategoryIconWidget` for category chip icons in `CashierHomePage`.
+- Automated tests:
+  - `flutter test test/unit/category_sync_test.dart`: 3/3 tests passed.
+  - `flutter test test/security/`: 82/82 tests passed.
+Evidence paths: `lib/core/services/sync_service.dart`, `lib/features/cashier/presentation/pages/home_page.dart`, `test/unit/category_sync_test.dart`.
+Unverified items / remaining risks: Categories archived by admin are reassigned according to existing `archiveCategory` logic; live client running in another process may need a hot reload / restart to pick up the code changes.
+Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
+

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
@@ -9,6 +10,7 @@ import '../widgets/order_summary_panel.dart';
 import '../../../../../core/database/repositories/food_repository.dart';
 import '../../../../../core/database/repositories/transaction_repository.dart';
 import '../../../../../core/session/session_manager.dart';
+import '../../../admin/presentation/widgets/food_icon_picker_dialog.dart';
 
 final NumberFormat _currencyFormat = NumberFormat.currency(
   symbol: '₱',
@@ -30,6 +32,7 @@ class _CashierHomePageState extends State<CashierHomePage> {
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _foods = [];
   bool _isLoading = true;
+  Timer? _refreshTimer;
 
   String _selectedCategoryId = 'all';
   String _searchQuery = '';
@@ -46,6 +49,15 @@ class _CashierHomePageState extends State<CashierHomePage> {
   void initState() {
     super.initState();
     _loadData();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      _loadDataSilent();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -59,6 +71,24 @@ class _CashierHomePageState extends State<CashierHomePage> {
       ];
       _foods = foods;
       _isLoading = false;
+    });
+  }
+
+  Future<void> _loadDataSilent() async {
+    if (!mounted) return;
+    final cats = await _foodRepo.getCategories();
+    final foods = await _foodRepo.getAllFoodItems();
+    if (!mounted) return;
+    setState(() {
+      _categories = [
+        {'id': 'all', 'name': 'All Foods'},
+        ...cats,
+      ];
+      _foods = foods;
+      if (_selectedCategoryId != 'all' &&
+          !_categories.any((c) => c['id'].toString() == _selectedCategoryId)) {
+        _selectedCategoryId = 'all';
+      }
     });
   }
 
@@ -718,13 +748,21 @@ class _CashierHomePageState extends State<CashierHomePage> {
                             : AppColors.pageBackground,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(
-                        iconData,
-                        size: 17,
-                        color: isSelected
-                            ? AppColors.goldenYellow
-                            : AppColors.mutedBrown,
-                      ),
+                      child: catId == 'all'
+                          ? Icon(
+                              LucideIcons.layout_grid,
+                              size: 17,
+                              color: isSelected
+                                  ? AppColors.goldenYellow
+                                  : AppColors.mutedBrown,
+                            )
+                          : buildCategoryIconWidget(
+                              cat['icon_url'] as String?,
+                              size: 17,
+                              color: isSelected
+                                  ? AppColors.goldenYellow
+                                  : AppColors.mutedBrown,
+                            ),
                     ),
                     const SizedBox(width: 10),
                     Column(
