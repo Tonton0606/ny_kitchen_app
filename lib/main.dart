@@ -40,7 +40,7 @@ void main() async {
       return true; // Harmless framework assertion on Windows Alt-key; ignore
     }
     if (kDebugMode) {
-      debugPrint('Async Error Caught: $error');
+      debugPrint('Async Error Caught: $error\n$stack');
     }
     return true; // Prevent app crash
   };
@@ -273,52 +273,51 @@ class _NYKitchenAppState extends State<NYKitchenApp> {
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
         builder: (context, child) {
-          return Overlay(
-            initialEntries: [
-              OverlayEntry(
-                builder: (context) => Material(
-                  child: Column(
-                    children: [
-                      const CustomTitleBar(),
-                      Expanded(child: child ?? const SizedBox.shrink()),
-                      if (SyncService.backendMode)
-                        SafeArea(top: false, child: Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: BackendSyncService.instance == null
-                              ? const Text('Online sync not configured; working locally')
-                              : ValueListenableBuilder<String>(
-                                  valueListenable: BackendSyncService.instance!.status,
-                                  builder: (context, value, child) => Text(value,
-                                    style: Theme.of(context).textTheme.bodySmall),
-                                ),
-                        ))
-                      else
-                        ValueListenableBuilder<String>(
-                          valueListenable: SyncService.syncModeNotifier,
-                          builder: (context, mode, _) {
-                            if (mode != 'automatic') return const SizedBox.shrink();
-                            return SafeArea(
-                              top: false,
-                              child: Padding(
-                                padding: const EdgeInsets.all(6),
-                                child: ValueListenableBuilder<String>(
-                                  valueListenable: SyncService.syncStatusNotifier,
-                                  builder: (context, status, _) => Text(
-                                    'Cloud sync: $status',
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
+          return Material(
+            child: Column(
+              children: [
+                const CustomTitleBar(),
+                Expanded(child: child ?? const SizedBox.shrink()),
+                if (SyncService.backendMode)
+                  SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: BackendSyncService.instance == null
+                          ? const Text('Online sync not configured; working locally')
+                          : ValueListenableBuilder<String>(
+                              valueListenable: BackendSyncService.instance!.status,
+                              builder: (context, value, child) => Text(
+                                value,
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
-                            );
-                          },
+                            ),
+                    ),
+                  )
+                else
+                  ValueListenableBuilder<String>(
+                    valueListenable: SyncService.syncModeNotifier,
+                    builder: (context, mode, _) {
+                      if (mode != 'automatic') return const SizedBox.shrink();
+                      return SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: ValueListenableBuilder<String>(
+                            valueListenable: SyncService.syncStatusNotifier,
+                            builder: (context, status, _) => Text(
+                              'Cloud sync: $status',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ),
-                    ],
+                      );
+                    },
                   ),
-                ),
-              ),
-            ],
+              ],
+            ),
           );
         },
         home: const LoginPage(),

@@ -9,6 +9,11 @@ This file follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) f
 
 ## [Unreleased]
 
+### Fixed — 2026-10-24
+
+- Replaced transient `Overlay` wrapper in `MaterialApp.builder` with `Material` to prevent child element deactivation errors on window maximize/resize events.
+- Added stack trace logging to `PlatformDispatcher.instance.onError` in debug mode.
+
 ### Documentation — 2026-10-24
 
 - Added defense notes for the owner-operated Ubuntu HTTPS API demonstration, including the successful synthetic sale response and the explicit limitation that Flutter-to-Ubuntu sync remains unverified.
