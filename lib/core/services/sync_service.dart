@@ -334,12 +334,17 @@ class SyncService {
       merged['must_change_password'] = existingLocal['must_change_password'];
 
       // Sticky administrative & account security status:
-      // If a user account has been disabled ('inactive') or locked out ('locked') locally,
-      // a lagged or stale cloud sync pull must never resurrect it back to 'active'.
+      // 1. If an account has been disabled ('inactive') or locked out ('locked') locally,
+      //    a lagged or stale cloud sync pull must never resurrect it back to 'active'.
+      // 2. Lockout ('locked') is a credential-defense mechanism isolated to device-local auth.
+      //    A stale cloud lockout must never lock out a locally active account with 0 failed logins.
       final localStatus = existingLocal['status'] as String?;
       final cloudStatus = cloudRecord['status'] as String?;
+      final localFailedCount = (existingLocal['failed_login_count'] as int?) ?? 0;
       if ((localStatus == 'inactive' || localStatus == 'locked') && cloudStatus == 'active') {
         merged['status'] = localStatus;
+      } else if (localStatus == 'active' && localFailedCount == 0 && cloudStatus == 'locked') {
+        merged['status'] = 'active';
       }
     } else {
       // A profile pulled to a new device has no local credential yet. Store an
@@ -498,6 +503,24 @@ class SyncService {
                   } catch (_) {
                     await client.from('users').upsert(userRecord);
                   }
+                }
+              }
+            } else if (table == 'transactions') {
+              try {
+                await client.from(table).upsert(dataToSync);
+              } on PostgrestException catch (e) {
+                // If cloud schema cache or legacy Supabase instance lacks optional columns (PGRST204),
+                // retry upload without unmapped optional columns so core sales are still reliably preserved.
+                if (e.code == 'PGRST204') {
+                  final fallbackData = dataToSync.map((record) {
+                    final stripped = Map<String, dynamic>.from(record);
+                    stripped.remove('order_type');
+                    stripped.remove('packaging_fee');
+                    return stripped;
+                  }).toList();
+                  await client.from(table).upsert(fallbackData);
+                } else {
+                  rethrow;
                 }
               }
             } else {

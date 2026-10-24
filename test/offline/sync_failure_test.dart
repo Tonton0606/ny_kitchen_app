@@ -254,6 +254,27 @@ void main() {
       final mergedCloudDisable = SyncService.mergePulledUserRecord(cloudInactive, localActive);
       expect(mergedCloudDisable['status'], equals('inactive'),
           reason: 'Cloud inactive status should disable locally active account');
+
+      // Stale cloud lockout must NOT lock out a locally active account with 0 failed logins
+      final cloudLocked = {
+        'id': 5,
+        'full_name': 'Admin User',
+        'username': 'admin',
+        'role': 'admin',
+        'status': 'locked', // Stale cloud lockout
+      };
+      final localActiveAdmin = {
+        'id': 5,
+        'full_name': 'Admin User',
+        'username': 'admin',
+        'role': 'admin',
+        'status': 'active',
+        'failed_login_count': 0,
+        'password_hash': 'local_hash',
+      };
+      final mergedStaleCloudLock = SyncService.mergePulledUserRecord(cloudLocked, localActiveAdmin);
+      expect(mergedStaleCloudLock['status'], equals('active'),
+          reason: 'Stale cloud lockout must not lock out locally active user with 0 failed logins');
     });
   });
 }
