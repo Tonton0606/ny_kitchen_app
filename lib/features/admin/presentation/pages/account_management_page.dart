@@ -1228,7 +1228,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
 
   Widget _buildFilterBar() {
     return LayoutBuilder(builder: (context, constraints) {
-      final isNarrow = constraints.maxWidth < 920;
+      final isNarrow = constraints.maxWidth < 960;
       final addAccountButton = ElevatedButton.icon(
         onPressed: _openAddUser,
         icon: const Icon(LucideIcons.user_plus, size: 18),
@@ -1237,7 +1237,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
           backgroundColor: AppColors.goldenYellow,
           foregroundColor: AppColors.darkCharcoal,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
@@ -1305,10 +1305,12 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
         );
       }
 
+      final searchWidth = (constraints.maxWidth - 740).clamp(180.0, 300.0);
+
       return Row(
         children: [
           SizedBox(
-            width: 300,
+            width: searchWidth,
             height: 44,
             child: TextField(
               inputFormatters: [
@@ -1333,7 +1335,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 10),
           _buildSegmentedFilterContainer(
             children: [
               _buildPill('All Roles', isSelected: _roleFilter == 'all', onTap: () => setState(() => _roleFilter = 'all')),
@@ -1341,7 +1343,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
               _buildPill('Admins', isSelected: _roleFilter == 'admin', onTap: () => setState(() => _roleFilter = 'admin')),
             ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           _buildSegmentedFilterContainer(
             children: [
               _buildPill('All Status', isSelected: _statusFilter == 'all', onTap: () => setState(() => _statusFilter = 'all')),
@@ -1376,7 +1378,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.goldenYellow : Colors.transparent,
           borderRadius: BorderRadius.circular(16),

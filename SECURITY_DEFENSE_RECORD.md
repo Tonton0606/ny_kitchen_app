@@ -1346,5 +1346,25 @@ Evidence paths: `lib/features/admin/presentation/pages/sales_reports_page.dart`.
 Unverified items / remaining risks: None. The running Flutter client will display the new modal on hot reload or next interaction.
 Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
 
+## Fix Account Management Filter Bar RenderFlex Horizontal Overflow — 2026-10-24 (Asia/Manila)
 
-
+Date/time and timezone: 2026-10-24T08:48:00+08:00 (Asia/Manila)
+Session owner (self-reported): MJ Daz
+Requested task and scope: Fix horizontal RenderFlex overflow error on Account Management page when exiting full-screen mode on Windows desktop.
+Rubric / risk / acceptance-test IDs: UI-RESPONSIVENESS, SEC-01.
+Files changed:
+- `lib/features/admin/presentation/pages/account_management_page.dart`
+- `SECURITY_DEFENSE_RECORD.md`
+Root Cause Identified:
+- In `AccountManagementPage._buildFilterBar()`, `isNarrow = constraints.maxWidth < 920`. When exiting full screen on a standard Windows display, the viewport width restored to `996.0px`.
+- In the wide layout row, a rigid `SizedBox(width: 300)` search field combined with segmented filter containers (~225px and ~285px) and the `Add Account` button (~162px) required ~1,018px, exceeding the 996px constraint and overflowing horizontally by 22 pixels.
+Fixed:
+1. Replaced the rigid 300px width with an adaptive responsive width calculation: `(constraints.maxWidth - 740).clamp(180.0, 300.0)`.
+2. Tightened inter-item horizontal gaps from 14/12px to 10px, reduced pill padding from 14px to 12px, and reduced `Add Account` button padding from 20px to 16px.
+3. Updated the `isNarrow` threshold from 920 to 960, ensuring narrower or split-screen viewports cleanly adopt the scrollable vertical column layout with zero clipping.
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test test/security/`: 84/84 passed.
+Evidence paths: `lib/features/admin/presentation/pages/account_management_page.dart`.
+Unverified items / remaining risks: None.
+Next concrete step: Commit and push changes to `origin/bug-fix` and `origin/main`.
