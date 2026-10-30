@@ -1566,8 +1566,30 @@ Checks actually run and actual results:
   - `flutter test test/security/`: 84/84 passed.
 - Static analysis:
   - `flutter analyze lib/core/database/database_helper.dart`: No issues found!
+## Database Schema & ERD Documentation Generation — 2026-10-30 (Asia/Manila)
+
+Date/time and timezone: 2026-10-30T14:49:00+08:00 (Asia/Manila)
+Session owner (self-reported): Hancr Gonzales
+Requested task and scope: Generate database schema and entity relationship diagram (ERD) matching academic capstone systems analysis and design documentation standards (as exemplified in team documentation), providing high-resolution PNG renders, standalone interactive HTML sources, Mermaid diagrams, and a complete field-level data dictionary.
+Rubric / risk / acceptance-test IDs: R01-R03 (Security context, data assets, and system architecture), AT10 (Integration & documentation assurance).
+Files changed:
+- `docs/DATABASE_SCHEMA_AND_ERD.md`
+- `docs/diagrams/ny_kitchen_database_schema.html`
+- `docs/diagrams/ny_kitchen_database_schema.png`
+- `docs/diagrams/ny_kitchen_erd.html`
+- `docs/diagrams/ny_kitchen_erd.png`
+- `SECURITY_DEFENSE_RECORD.md`
+Checks actually run and actual results:
+- Automated tests:
+  - `flutter test test/security/`: 84/84 passed cleanly.
+- Visual diagram render & validation:
+  - Headless Chrome rendering at native resolution verified: `docs/diagrams/ny_kitchen_database_schema.png` (1820x1120px) and `docs/diagrams/ny_kitchen_erd.png` (1750x950px).
 Evidence paths:
-- `lib/core/database/database_helper.dart`
+- `docs/DATABASE_SCHEMA_AND_ERD.md`
+- `docs/diagrams/ny_kitchen_database_schema.png`
+- `docs/diagrams/ny_kitchen_erd.png`
+- `docs/diagrams/ny_kitchen_database_schema.html`
+- `docs/diagrams/ny_kitchen_erd.html`
 Unverified items / remaining risks: None.
-Next concrete step: Stage changes, commit cleanly, and push to origin/bug-fix and origin/main.
+Next concrete step: Commit and push changes to `origin/main`.
 

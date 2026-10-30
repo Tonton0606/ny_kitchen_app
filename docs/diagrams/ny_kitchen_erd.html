@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>N.Y Kitchen POS - Entity Relationship Diagram (ERD)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #FFFFFF;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1F1A24;
+    width: 1750px;
+    height: 950px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  svg#connectors {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  .entity-card {
+    position: absolute;
+    background: #FFFFFF;
+    border: 1.5px solid #4A154B;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(74, 21, 75, 0.07);
+    z-index: 10;
+    width: 250px;
+  }
+
+  .entity-header {
+    background: #4A154B;
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 13px;
+    text-align: center;
+    padding: 7px 10px;
+    letter-spacing: 0.8px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .entity-body {
+    padding: 9px 12px;
+    background: #FFFFFF;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+
+  .pk-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #1F1A24;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  .badge-pk {
+    background: #FDE88A;
+    color: #795900;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .relation-label {
+    position: absolute;
+    background: #FFFFFF;
+    border: 1px solid #D8CFDC;
+    padding: 2.5px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #4A154B;
+    z-index: 15;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+  }
+
+  .legend-card {
+    position: absolute;
+    background: #FFFFFF;
+    border: 1px solid #CED4DA;
+    border-radius: 6px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    z-index: 10;
+  }
+
+  .legend-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #333;
+  }
+  .legend-row:last-child { margin-bottom: 0; }
+
+  .doc-title-bar {
+    position: absolute;
+    top: 24px;
+    left: 60px;
+    z-index: 10;
+  }
+  .doc-title-bar h1 {
+    font-size: 22px;
+    color: #4A154B;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .doc-title-bar p {
+    font-size: 12.5px;
+    color: #6C757D;
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-title-bar">
+  <h1>N.Y Kitchen Secure Order & Sales Management System</h1>
+  <p>Figure 5. Entity Relationship Diagram (ERD)</p>
+</div>
+
+<svg id="connectors"></svg>
+
+<!-- ROW 1: CORE SALES PIPELINE -->
+<div class="entity-card" id="ent_category" style="top: 100px; left: 60px;">
+  <div class="entity-header">FOOD CATEGORY</div>
+  <div class="entity-body">
+    <div class="pk-row"><span class="badge-pk">PK</span> id</div>
+  </div>
+</div>
+
+<div class="entity-card" id="ent_food_item" style="top: 100px; left: 390px;">
+  <div class="entity-header">FOOD ITEM</div>
+  <div class="entity-body">
+    <div class="pk-row"><span class="badge-pk">PK</span> id</div>
+  </div>
+</div>
+
+<div class="entity-card" id="ent_item" style="top: 100px; left: 720px;">
+  <div class="entity-header">TRANSACTION ITEM</div>
+  <div class="entity-body">
+    <div class="pk-row"><span class="badge-pk">PK</span> id</div>
+  </div>
+</div>
+
+<div class="entity-card" id="ent_transaction" style="top: 100px; left: 1050px;">
+  <div class="entity-header">TRANSACTION</div>
+  <div class="entity-body">
+    <div class="pk-row"><span class="badge-pk">PK</span> id</div>
+  </div>
+</div>
+
+<div class="entity-card" id="ent_user" style="top: 100px; left: 1380px;">
+  <div class="entity-header">USER</div>
+  <div class="entity-body">
+    <div class="pk-row"><span class="badge-pk">PK</span> id</div>
+  </div>
+</div>
+
+<!-- ROW 2: CONFIG, SYNC & AUDIT -->
+<div class="entity-card" id="ent_settings" style="top: 360px; left: 60px;">
+  <div class="entity-header">APP SETTING</div>
+  <div class="entity-body">
+    <div class="pk-row"><span class="badge-pk">PK</span> key</div>
+  </div>
+</div>
+
+<div class="entity-card" id="ent_revisions" style="top: 360px; left: 1050px; border-style: dashed; border-color: #6A216B;">
+  <div class="entity-header" style="background: #2D082E;">SERVER REVISION</div>
+  <div class="entity-body">
+    <div class="pk-row"><span class="badge-pk">PK</span> revision_id</div>
+  </div>
+</div>
+
+<div class="entity-card" id="ent_log" style="top: 360px; left: 1380px;">
+  <div class="entity-header">ACTIVITY LOG</div>
+  <div class="entity-body">
+    <div class="pk-row"><span class="badge-pk">PK</span> id</div>
+  </div>
+</div>
+
+<!-- ROW 3: BACKUP, LOGIN & LEGEND -->
+<div class="entity-card" id="ent_backup" style="top: 600px; left: 1050px;">
+  <div class="entity-header">BACKUP RECORD</div>
+  <div class="entity-body">
+    <div class="pk-row"><span class="badge-pk">PK</span> id</div>
+  </div>
+</div>
+
+<div class="entity-card" id="ent_login" style="top: 600px; left: 1380px;">
+  <div class="entity-header">LOGIN ATTEMPT</div>
+  <div class="entity-body">
+    <div class="pk-row"><span class="badge-pk">PK</span> id</div>
+  </div>
+</div>
+
+<!-- RELATIONSHIP LABELS -->
+<div class="relation-label" style="top: 135px; left: 345px;">groups</div>
+<div class="relation-label" style="top: 135px; left: 675px;">sold as</div>
+<div class="relation-label" style="top: 135px; left: 1005px;">contains</div>
+<div class="relation-label" style="top: 135px; left: 1335px;">processes</div>
+<div class="relation-label" style="top: 260px; left: 1175px;">replicates to</div>
+<div class="relation-label" style="top: 260px; left: 1505px;">logs</div>
+<div class="relation-label" style="top: 500px; left: 1505px;">tracks</div>
+<div class="relation-label" style="top: 500px; left: 1175px;">creates backup</div>
+
+<!-- LEGEND BOX matching Figure 5 -->
+<div class="legend-card" style="top: 520px; left: 390px; width: 440px;">
+  <div class="legend-row">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <svg width="40" height="12">
+        <line x1="4" y1="6" x2="36" y2="6" stroke="#4A154B" stroke-width="1.8"/>
+        <line x1="12" y1="1" x2="12" y2="11" stroke="#4A154B" stroke-width="1.8"/>
+        <line x1="18" y1="1" x2="18" y2="11" stroke="#4A154B" stroke-width="1.8"/>
+      </svg>
+      <span>exactly one parent</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <svg width="30" height="12">
+        <line x1="2" y1="6" x2="20" y2="6" stroke="#4A154B" stroke-width="1.8"/>
+        <line x1="20" y1="6" x2="28" y2="1" stroke="#4A154B" stroke-width="1.8"/>
+        <line x1="20" y1="6" x2="28" y2="11" stroke="#4A154B" stroke-width="1.8"/>
+      </svg>
+      <span>crow's foot = many</span>
+    </div>
+  </div>
+  <div class="legend-row" style="margin-top: 6px;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <svg width="40" height="12">
+        <line x1="4" y1="6" x2="36" y2="6" stroke="#4A154B" stroke-width="1.8"/>
+        <circle cx="12" cy="6" r="3" fill="#FFF" stroke="#4A154B" stroke-width="1.5"/>
+        <line x1="20" y1="1" x2="20" y2="11" stroke="#4A154B" stroke-width="1.8"/>
+      </svg>
+      <span>optional parent</span>
+    </div>
+    <div>
+      <span class="badge-pk">PK</span> = primary key
+    </div>
+  </div>
+</div>
+
+<script>
+function drawERDLine(id1, id2, p1Side, p2Side) {
+  const e1 = document.getElementById(id1);
+  const e2 = document.getElementById(id2);
+  if (!e1 || !e2) return;
+
+  const r1 = e1.getBoundingClientRect();
+  const r2 = e2.getBoundingClientRect();
+
+  function getPt(r, side) {
+    if (side === 'left') return { x: r.left, y: r.top + r.height/2 };
+    if (side === 'right') return { x: r.right, y: r.top + r.height/2 };
+    if (side === 'top') return { x: r.left + r.width/2, y: r.top };
+    if (side === 'bottom') return { x: r.left + r.width/2, y: r.bottom };
+  }
+
+  const p1 = getPt(r1, p1Side);
+  const p2 = getPt(r2, p2Side);
+
+  const svg = document.getElementById('connectors');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  
+  let d = `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
+  path.setAttribute('d', d);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', '#4A154B');
+  path.setAttribute('stroke-width', '1.8');
+  svg.appendChild(path);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  // 1. category -> food_item (horizontal)
+  drawERDLine('ent_category', 'ent_food_item', 'right', 'left');
+
+  // 2. food_item -> transaction_item (horizontal)
+  drawERDLine('ent_food_item', 'ent_item', 'right', 'left');
+
+  // 3. transaction -> transaction_item (horizontal)
+  drawERDLine('ent_transaction', 'ent_item', 'left', 'right');
+
+  // 4. user -> transaction (horizontal)
+  drawERDLine('ent_user', 'ent_transaction', 'left', 'right');
+
+  // 5. transaction -> server revision (vertical down)
+  drawERDLine('ent_transaction', 'ent_revisions', 'bottom', 'top');
+
+  // 6. user -> activity_log (vertical down)
+  drawERDLine('ent_user', 'ent_log', 'bottom', 'top');
+
+  // 7. activity_log -> login_attempt (vertical down)
+  drawERDLine('ent_log', 'ent_login', 'bottom', 'top');
+
+  // 8. server_revisions -> backup_record (vertical down)
+  drawERDLine('ent_revisions', 'ent_backup', 'bottom', 'top');
+});
+</script>
+
+</body>
+</html>

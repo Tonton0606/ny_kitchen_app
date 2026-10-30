@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>N.Y Kitchen POS - Physical Database Schema</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #FFFFFF;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1F1A24;
+    width: 1820px;
+    height: 1120px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  svg#connectors {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  .table-card {
+    position: absolute;
+    background: #FFFFFF;
+    border: 1.5px solid #4A154B;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(74, 21, 75, 0.08);
+    z-index: 10;
+  }
+
+  .table-header {
+    background: #4A154B;
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 14.5px;
+    text-align: center;
+    padding: 7px 12px;
+    letter-spacing: 0.5px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+  }
+
+  .table-sub {
+    background: #6A216B;
+    color: #E2D9F3;
+    font-size: 11px;
+    text-align: center;
+    padding: 2px 0 4px;
+    font-weight: 400;
+  }
+
+  .table-body {
+    padding: 4px 0;
+  }
+
+  .field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4.5px 12px;
+    font-size: 12.5px;
+    line-height: 1.3;
+    border-bottom: 1px solid #F5F2F7;
+    height: 27px;
+  }
+  .field-row:last-child {
+    border-bottom: none;
+  }
+
+  .field-left {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .field-name {
+    font-weight: 600;
+    color: #1F1A24;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12.5px;
+  }
+
+  .field-type {
+    color: #6C757D;
+    font-size: 11px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  .badges {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-align: center;
+    min-width: 23px;
+  }
+
+  .badge-pk { background: #FDE88A; color: #795900; }
+  .badge-fk { background: #C4E8F8; color: #0C5460; }
+  .badge-uk { background: #E8DCF7; color: #4A154B; }
+  .badge-nn { background: #E9ECEF; color: #495057; }
+
+  .legend-card {
+    position: absolute;
+    background: #FFFFFF;
+    border: 1px solid #CED4DA;
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    z-index: 10;
+  }
+
+  .legend-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1F1A24;
+    margin-bottom: 12px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #333;
+  }
+
+  .legend-note {
+    font-size: 11px;
+    color: #6C757D;
+    margin-top: 10px;
+    line-height: 1.4;
+    border-top: 1px solid #EEE;
+    padding-top: 8px;
+  }
+
+  .doc-title-bar {
+    position: absolute;
+    top: 24px;
+    left: 70px;
+    z-index: 10;
+  }
+  .doc-title-bar h1 {
+    font-size: 22px;
+    color: #4A154B;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .doc-title-bar p {
+    font-size: 12.5px;
+    color: #6C757D;
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-title-bar">
+  <h1>N.Y Kitchen Secure Order & Sales Management System</h1>
+  <p>Figure 6. PostgreSQL & SQLite Physical Database Schema</p>
+</div>
+
+<svg id="connectors">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#4A154B" />
+    </marker>
+    <marker id="dot" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="5" markerHeight="5">
+      <circle cx="4" cy="4" r="3" fill="#4A154B" />
+    </marker>
+  </defs>
+</svg>
+
+<!-- COLUMN 1: USERS & AUDIT (Shifted slightly right so left loops don't clip) -->
+<div class="table-card" id="tbl_users" style="top: 90px; left: 70px; width: 350px;">
+  <div class="table-header">users</div>
+  <div class="table-body">
+    <div class="field-row" id="row_users_id">
+      <div class="field-left"><span class="field-name">id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-pk">PK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">full_name</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">username</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-uk">UK</span><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">password_hash</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">role</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">status</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">last_login</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">failed_login_count</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">must_change_password</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">created_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card" id="tbl_activity_logs" style="top: 450px; left: 70px; width: 350px;">
+  <div class="table-header">activity_logs</div>
+  <div class="table-body">
+    <div class="field-row" id="row_activity_logs_id">
+      <div class="field-left"><span class="field-name">id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-pk">PK</span></div>
+    </div>
+    <div class="field-row" id="row_activity_logs_user_id">
+      <div class="field-left"><span class="field-name">user_id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-fk">FK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">username</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">role</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">module</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">action</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">status</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">description</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">device_info</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">created_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card" id="tbl_backup_records" style="top: 810px; left: 70px; width: 350px;">
+  <div class="table-header">backup_records</div>
+  <div class="table-body">
+    <div class="field-row" id="row_backup_records_id">
+      <div class="field-left"><span class="field-name">id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-pk">PK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">filename</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">file_path</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">file_size</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row" id="row_backup_records_created_by">
+      <div class="field-left"><span class="field-name">created_by</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-fk">FK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">created_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- COLUMN 2: SALES & TRANSACTIONS -->
+<div class="table-card" id="tbl_transactions" style="top: 90px; left: 490px; width: 360px;">
+  <div class="table-header">transactions</div>
+  <div class="table-body">
+    <div class="field-row" id="row_transactions_id">
+      <div class="field-left"><span class="field-name">id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-pk">PK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">receipt_number</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-uk">UK</span><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">order_number</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row" id="row_transactions_user_id">
+      <div class="field-left"><span class="field-name">user_id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-fk">FK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">order_type</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">packaging_fee</span><span class="field-type">REAL</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">total_amount</span><span class="field-type">REAL</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">discount</span><span class="field-type">REAL</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">payment_method</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">amount_received</span><span class="field-type">REAL</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">change</span><span class="field-type">REAL</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">status</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">void_reason</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">refund_reason</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">created_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card" id="tbl_transaction_items" style="top: 610px; left: 490px; width: 360px;">
+  <div class="table-header">transaction_items</div>
+  <div class="table-body">
+    <div class="field-row" id="row_transaction_items_id">
+      <div class="field-left"><span class="field-name">id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-pk">PK</span></div>
+    </div>
+    <div class="field-row" id="row_transaction_items_transaction_id">
+      <div class="field-left"><span class="field-name">transaction_id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-fk">FK</span><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row" id="row_transaction_items_food_item_id">
+      <div class="field-left"><span class="field-name">food_item_id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-fk">FK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">food_name</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">food_price</span><span class="field-type">REAL</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">quantity</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">subtotal</span><span class="field-type">REAL</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- COLUMN 3: MENU & CATALOG -->
+<div class="table-card" id="tbl_food_categories" style="top: 90px; left: 930px; width: 350px;">
+  <div class="table-header">food_categories</div>
+  <div class="table-body">
+    <div class="field-row" id="row_food_categories_id">
+      <div class="field-left"><span class="field-name">id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-pk">PK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">name</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-uk">UK</span><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">icon_url</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">status</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">created_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">updated_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card" id="tbl_food_items" style="top: 360px; left: 930px; width: 350px;">
+  <div class="table-header">food_items</div>
+  <div class="table-body">
+    <div class="field-row" id="row_food_items_id">
+      <div class="field-left"><span class="field-name">id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-pk">PK</span></div>
+    </div>
+    <div class="field-row" id="row_food_items_category_id">
+      <div class="field-left"><span class="field-name">category_id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-fk">FK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">name</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">description</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">price</span><span class="field-type">REAL</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">image_path</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">availability</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">status</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">created_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">updated_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+  </div>
+</div>
+
+<!-- COLUMN 4: SECURITY & SETTINGS -->
+<div class="table-card" id="tbl_login_attempts" style="top: 90px; left: 1360px; width: 350px;">
+  <div class="table-header">login_attempts</div>
+  <div class="table-body">
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-pk">PK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">username</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">status</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">ip_address</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">device_info</span><span class="field-type">TEXT</span></div>
+      <div class="badges"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">created_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card" id="tbl_app_settings" style="top: 350px; left: 1360px; width: 350px;">
+  <div class="table-header">app_settings</div>
+  <div class="table-body">
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">key</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-pk">PK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">value</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">updated_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card" id="tbl_ubuntu_revisions" style="top: 520px; left: 1360px; width: 350px; border-style: dashed; border-color: #6A216B;">
+  <div class="table-header" style="background: #2D082E;">Ubuntu Server Revisions</div>
+  <div class="table-sub">One-way Sales Ingest & Audit History</div>
+  <div class="table-body">
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">revision_id</span><span class="field-type">INTEGER</span></div>
+      <div class="badges"><span class="badge badge-pk">PK</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">client_id</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">payload</span><span class="field-type">TEXT (JSON)</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+    <div class="field-row">
+      <div class="field-left"><span class="field-name">created_at</span><span class="field-type">TEXT</span></div>
+      <div class="badges"><span class="badge badge-nn">NN</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="legend-card" style="top: 760px; left: 1360px; width: 350px;">
+  <div class="legend-title">Legend</div>
+  <div class="legend-item">
+    <svg width="40" height="12">
+      <circle cx="6" cy="6" r="3" fill="#4A154B"/>
+      <line x1="6" y1="6" x2="34" y2="6" stroke="#4A154B" stroke-width="2"/>
+      <polygon points="30,3 38,6 30,9" fill="#4A154B"/>
+    </svg>
+    <span>Foreign key &rarr; referenced primary key</span>
+  </div>
+  <div class="legend-item" style="display: flex; gap: 16px;">
+    <div><span class="badge badge-pk">PK</span> primary key</div>
+    <div><span class="badge badge-fk">FK</span> foreign key</div>
+  </div>
+  <div class="legend-item" style="display: flex; gap: 16px;">
+    <div><span class="badge badge-uk">UK</span> unique</div>
+    <div><span class="badge badge-nn">NN</span> NOT NULL</div>
+  </div>
+  <div class="legend-note">
+    Types follow SQLite 3 and PostgreSQL / Supabase DDL.<br>
+    INTEGER AUTOINCREMENT / SERIAL = auto-increment integer key.<br>
+    REAL / DECIMAL = high-precision monetary amounts.
+  </div>
+</div>
+
+<script>
+function connectFields(fromId, toId, fromSide, toSide, curveOffset) {
+  const fromEl = document.getElementById(fromId);
+  const toEl = document.getElementById(toId);
+  if (!fromEl || !toEl) return;
+
+  const rFrom = fromEl.getBoundingClientRect();
+  const rTo = toEl.getBoundingClientRect();
+
+  let x1 = fromSide === 'right' ? rFrom.right : rFrom.left;
+  let y1 = rFrom.top + rFrom.height / 2;
+
+  let x2 = toSide === 'right' ? rTo.right : rTo.left;
+  let y2 = rTo.top + rTo.height / 2;
+
+  let d = '';
+  if (fromSide === 'left' && toSide === 'right') {
+    let cx1 = x1 - (curveOffset || 40);
+    let cx2 = x2 + (curveOffset || 40);
+    d = `M ${x1} ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${x2} ${y2}`;
+  } else if (fromSide === 'right' && toSide === 'left') {
+    let cx1 = x1 + (curveOffset || 40);
+    let cx2 = x2 - (curveOffset || 40);
+    d = `M ${x1} ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${x2} ${y2}`;
+  } else if (fromSide === 'left' && toSide === 'left') {
+    let minX = Math.min(x1, x2) - (curveOffset || 35);
+    d = `M ${x1} ${y1} C ${minX} ${y1}, ${minX} ${y2}, ${x2} ${y2}`;
+  } else if (fromSide === 'right' && toSide === 'right') {
+    let maxX = Math.max(x1, x2) + (curveOffset || 35);
+    d = `M ${x1} ${y1} C ${maxX} ${y1}, ${maxX} ${y2}, ${x2} ${y2}`;
+  }
+
+  const svg = document.getElementById('connectors');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', '#4A154B');
+  path.setAttribute('stroke-width', '1.8');
+  path.setAttribute('marker-start', 'url(#dot)');
+  path.setAttribute('marker-end', 'url(#arrow)');
+  svg.appendChild(path);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  // 1. transactions.user_id -> users.id (transactions left to users right)
+  connectFields('row_transactions_user_id', 'row_users_id', 'left', 'right', 35);
+
+  // 2. transaction_items.transaction_id -> transactions.id (loop on left of col 2)
+  connectFields('row_transaction_items_transaction_id', 'row_transactions_id', 'left', 'left', 40);
+
+  // 3. transaction_items.food_item_id -> food_items.id (col 2 right to col 3 left)
+  connectFields('row_transaction_items_food_item_id', 'row_food_items_id', 'right', 'left', 40);
+
+  // 4. food_items.category_id -> food_categories.id (loop on left of col 3)
+  connectFields('row_food_items_category_id', 'row_food_categories_id', 'left', 'left', 35);
+
+  // 5. activity_logs.user_id -> users.id (loop on left side of col 1 so no crossing with col 2)
+  connectFields('row_activity_logs_user_id', 'row_users_id', 'left', 'left', 35);
+
+  // 6. backup_records.created_by -> users.id (loop on left side of col 1)
+  connectFields('row_backup_records_created_by', 'row_users_id', 'left', 'left', 55);
+});
+</script>
+
+</body>
+</html>
